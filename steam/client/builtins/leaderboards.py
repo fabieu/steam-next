@@ -1,7 +1,6 @@
 """
 Reading the leaderboards with :class:`SteamLeaderboard` is as easy as iterating over a list.
 """
-import logging
 from steam.core.msg import MsgProto
 from steam.enums import EResult, ELeaderboardDataRequest, ELeaderboardSortMethod, ELeaderboardDisplayType
 from steam.enums.emsg import EMsg
@@ -69,10 +68,10 @@ class SteamLeaderboard(object):
 
     app_id = 0
     name = ''  #: leaderboard name
-    id = 0 #: leaderboard id
+    id = 0  #: leaderboard id
     entry_count = 0
-    sort_method = ELeaderboardSortMethod.NONE      #: :class:`steam.enums.common.ELeaderboardSortMethod`
-    display_type = ELeaderboardDisplayType.NONE    #: :class:`steam.enums.common.ELeaderboardDisplayType`
+    sort_method = ELeaderboardSortMethod.NONE  #: :class:`steam.enums.common.ELeaderboardSortMethod`
+    display_type = ELeaderboardDisplayType.NONE  #: :class:`steam.enums.common.ELeaderboardDisplayType`
     data_request = ELeaderboardDataRequest.Global  #: :class:`steam.enums.common.ELeaderboardDataRequest`
 
     def __init__(self, steam, app_id, name, data=None):
@@ -95,7 +94,7 @@ class SteamLeaderboard(object):
             len(self),
             self.sort_method,
             self.display_type,
-            )
+        )
 
     def __len__(self):
         return self.entry_count
@@ -155,7 +154,7 @@ class SteamLeaderboard(object):
             if x < 0 or x >= self.entry_count:
                 raise IndexError('list index out of range')
 
-        entries = self.get_entries(start+1, stop)
+        entries = self.get_entries(start + 1, stop)
 
         if isinstance(x, slice):
             return [entries[i] for i in _range(0, len(entries), step)]
@@ -176,6 +175,7 @@ class SteamLeaderboard(object):
         we are not sending messages too fast.
         For example, the ``__iter__`` method on this class uses ``get_iter(1, 1, 2000)``
         """
+
         def entry_generator():
             with ConstantRateLimit(times, seconds, sleep_func=self._steam.sleep) as r:
                 for entries in chunks(self, chunk_size):
@@ -184,6 +184,7 @@ class SteamLeaderboard(object):
                     for entry in entries:
                         yield entry
                     r.wait()
+
         return entry_generator()
 
     def __iter__(self):

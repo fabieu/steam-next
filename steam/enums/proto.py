@@ -1,10 +1,12 @@
 from steam.enums.base import SteamIntEnum
 
+
 class E_STAR_GlyphWriteResult(SteamIntEnum):
     Success = 0
     InvalidMessage = 1
     InvalidJSON = 2
     SQLError = 3
+
 
 class EACState(SteamIntEnum):
     Unknown = 0
@@ -12,15 +14,18 @@ class EACState(SteamIntEnum):
     Connected = 2
     ConnectedSlow = 3
 
+
 class EAgreementType(SteamIntEnum):
     Invalid = -1
     GlobalSSA = 0
     ChinaSSA = 1
 
+
 class EAudioFormat(SteamIntEnum):
     EAudioFormatNone = 0
     EAudioFormat16BitLittleEndian = 1
     EAudioFormatFloat = 2
+
 
 EAuthSessionGuardType = SteamIntEnum('EAuthSessionGuardType', {
     'Unknown': 0,
@@ -31,12 +36,14 @@ EAuthSessionGuardType = SteamIntEnum('EAuthSessionGuardType', {
     'EmailConfirmation': 5,
     'MachineToken': 6,
     'LegacyMachineAuth': 7
-    })
+})
+
 
 class EAuthSessionSecurityHistory(SteamIntEnum):
     Invalid = 0
     UsedPreviously = 1
     NoPriorHistory = 2
+
 
 class EAuthTokenPlatformType(SteamIntEnum):
     Unknown = 0
@@ -44,11 +51,13 @@ class EAuthTokenPlatformType(SteamIntEnum):
     WebBrowser = 2
     MobileApp = 3
 
+
 class EAuthTokenRevokeAction(SteamIntEnum):
     EAuthTokenRevokeLogout = 0
     EAuthTokenRevokePermanent = 1
     EAuthTokenRevokeReplaced = 2
     EAuthTokenRevokeSupport = 3
+
 
 class EAuthTokenState(SteamIntEnum):
     Invalid = 0
@@ -59,11 +68,13 @@ class EAuthTokenState(SteamIntEnum):
     LoggedOut = 5
     Revoked = 99
 
+
 class EBatteryState(SteamIntEnum):
     Unknown = 0
     Discharging = 1
     Charging = 2
     Full = 3
+
 
 class EBluetoothDeviceType(SteamIntEnum):
     BluetoothDeviceType_Invalid = 0
@@ -79,9 +90,11 @@ class EBluetoothDeviceType(SteamIntEnum):
     BluetoothDeviceType_Gamepad = 10
     BluetoothDeviceType_Keyboard = 11
 
+
 class EBroadcastChatPermission(SteamIntEnum):
     EBroadcastChatPermissionPublic = 0
     EBroadcastChatPermissionOwnsApp = 1
+
 
 EBroadcastImageType = SteamIntEnum('EBroadcastImageType', {
     'None': 0,
@@ -91,7 +104,8 @@ EBroadcastImageType = SteamIntEnum('EBroadcastImageType', {
     'Summary': 4,
     'Background': 5,
     'Emoticon': 6,
-    })
+})
+
 
 class EBroadcastWatchLocation(SteamIntEnum):
     Invalid = 0
@@ -109,6 +123,7 @@ class EBroadcastWatchLocation(SteamIntEnum):
     Chat_Friends = 12
     SteamTV_Web = 13
 
+
 class EChatRoomGroupRank(SteamIntEnum):
     Default = 0
     Viewer = 10
@@ -119,12 +134,14 @@ class EChatRoomGroupRank(SteamIntEnum):
     Owner = 50
     TestInvalid = 99
 
+
 EChatRoomJoinState = SteamIntEnum('EChatRoomJoinState', {
     'Default': 0,
     'None': 1,
     'Joined': 2,
     'TestInvalid': 99,
-    })
+})
+
 
 class EChatRoomMemberStateChange(SteamIntEnum):
     Invalid = 0
@@ -138,10 +155,12 @@ class EChatRoomMemberStateChange(SteamIntEnum):
     Banned = 10
     RolesChanged = 12
 
+
 class EChatRoomMessageReactionType(SteamIntEnum):
     Invalid = 0
     Emoticon = 1
     Sticker = 2
+
 
 class EChatRoomNotificationLevel(SteamIntEnum):
     EChatroomNotificationLevel_Invalid = 0
@@ -149,6 +168,7 @@ class EChatRoomNotificationLevel(SteamIntEnum):
     EChatroomNotificationLevel_MentionMe = 2
     EChatroomNotificationLevel_MentionAll = 3
     EChatroomNotificationLevel_AllMessages = 4
+
 
 class EChatRoomServerMessage(SteamIntEnum):
     EChatRoomServerMsg_Invalid = 0
@@ -162,16 +182,19 @@ class EChatRoomServerMessage(SteamIntEnum):
     EChatRoomServerMsg_ChatRoomAvatarChanged = 10
     EChatRoomServerMsg_AppCustom = 11
 
+
 class ECloudStoragePersistState(SteamIntEnum):
     ECloudStoragePersistStatePersisted = 0
     ECloudStoragePersistStateForgotten = 1
     ECloudStoragePersistStateDeleted = 2
+
 
 class EColorProfile(SteamIntEnum):
     Invalid = 0
     Native = 1
     Standard = 2
     Vivid = 3
+
 
 class ECommunityItemClass(SteamIntEnum):
     Invalid = 0
@@ -192,17 +215,20 @@ class ECommunityItemClass(SteamIntEnum):
     AnimatedAvatar = 15
     SteamDeckKeyboardSkin = 16
 
+
 class EContentCheckProvider(SteamIntEnum):
     Invalid = 0
     Google = 1
     Amazon = 2
     Local = 3
 
+
 class ECPUGovernor(SteamIntEnum):
     Invalid = 0
     Perf = 1
     Powersave = 2
     Manual = 3
+
 
 class EExternalAccountType(SteamIntEnum):
     EExternalNone = 0
@@ -213,6 +239,7 @@ class EExternalAccountType(SteamIntEnum):
     EExternalTwitchAccount = 5
     EExternalYouTubeChannelAccount = 6
     EExternalFacebookPage = 7
+
 
 class EFrameAccumulatedStat(SteamIntEnum):
     EFrameStatFPS = 0
@@ -235,12 +262,14 @@ class EFrameAccumulatedStat(SteamIntEnum):
     EFrameStatLinkBandwidthKbitPerSec = 17
     EFrameStatPacketLossPercentage = 18
 
+
 EGameSearchAction = SteamIntEnum('EGameSearchAction', {
     'None': 0,
     'Accept': 1,
     'Decline': 2,
     'Cancel': 3,
-    })
+})
+
 
 class EGameSearchResult(SteamIntEnum):
     Invalid = 0
@@ -251,6 +280,7 @@ class EGameSearchResult(SteamIntEnum):
     SearchCompleteDeclined = 5
     SearchCanceled = 6
 
+
 class EGetChannelsAlgorithm(SteamIntEnum):
     Default = 1
     Friends = 2
@@ -258,10 +288,12 @@ class EGetChannelsAlgorithm(SteamIntEnum):
     Developer = 4
     Following = 5
 
+
 class EGetGamesAlgorithm(SteamIntEnum):
     Default = 1
     MostPlayed = 2
     PopularNew = 3
+
 
 class EGPUPerformanceLevel(SteamIntEnum):
     Invalid = 0
@@ -271,6 +303,7 @@ class EGPUPerformanceLevel(SteamIntEnum):
     High = 4
     Profiling = 5
 
+
 class EGraphicsPerfOverlayLevel(SteamIntEnum):
     Hidden = 0
     Basic = 1
@@ -278,14 +311,17 @@ class EGraphicsPerfOverlayLevel(SteamIntEnum):
     Full = 3
     Minimal = 4
 
+
 class EInternalAccountType(SteamIntEnum):
     EInternalSteamAccountType = 1
     EInternalClanType = 2
     EInternalAppType = 3
     EInternalBroadcastChannelType = 4
 
+
 class EKeyEscrowUsage(SteamIntEnum):
     EKeyEscrowUsageStreamingDevice = 0
+
 
 class ELobbyStatus(SteamIntEnum):
     ELobbyStatusInvalid = 0
@@ -293,10 +329,12 @@ class ELobbyStatus(SteamIntEnum):
     ELobbyStatusDoesNotExist = 2
     ELobbyStatusNotAMember = 3
 
+
 class ELogFileType(SteamIntEnum):
     ELogFileSystemBoot = 0
     ELogFileSystemReset = 1
     ELogFileSystemDebug = 2
+
 
 class EMarketingMessageAssociationType(SteamIntEnum):
     EMarketingMessageNoAssociation = 0
@@ -306,12 +344,14 @@ class EMarketingMessageAssociationType(SteamIntEnum):
     EMarketingMessageGenreAssociation = 4
     EMarketingMessageBundleAssociation = 5
 
+
 class EMarketingMessageLookupType(SteamIntEnum):
     EMarketingMessageLookupInvalid = 0
     EMarketingMessageLookupByGID = 1
     EMarketingMessageLookupActive = 2
     EMarketingMessageLookupByTitleWithType = 3
     EMarketingMessageLookupByGIDList = 4
+
 
 class EMarketingMessageType(SteamIntEnum):
     EMarketingMessageInvalid = 0
@@ -325,19 +365,23 @@ class EMarketingMessageType(SteamIntEnum):
     EMarketingMessageGifting = 8
     EMarketingMessageEJsKorner = 9
 
+
 class EMarketingMessageVisibility(SteamIntEnum):
     EMarketingMessageVisibleBeta = 1
     EMarketingMessageVisiblePublic = 2
+
 
 class EMessageReactionType(SteamIntEnum):
     Invalid = 0
     Emoticon = 1
     Sticker = 2
 
+
 class ENotificationSetting(SteamIntEnum):
     ENotificationSettingNotifyUseDefault = 0
     ENotificationSettingAlways = 1
     ENotificationSettingNever = 2
+
 
 class EOSBranch(SteamIntEnum):
     Unknown = 0
@@ -347,11 +391,13 @@ class EOSBranch(SteamIntEnum):
     BetaCandidate = 4
     Main = 5
 
+
 class EPlaytestStatus(SteamIntEnum):
     ETesterStatusNone = 0
     ETesterStatusPending = 1
     ETesterStatusInvited = 2
     ETesterStatusGranted = 3
+
 
 class EProfileCustomizationStyle(SteamIntEnum):
     EProfileCustomizationStyleDefault = 0
@@ -360,6 +406,7 @@ class EProfileCustomizationStyle(SteamIntEnum):
     EProfileCustomizationStyleMostRecent = 3
     EProfileCustomizationStyleRandom = 4
     EProfileCustomizationStyleHighestRated = 5
+
 
 class EProfileCustomizationType(SteamIntEnum):
     EProfileCustomizationTypeInvalid = 0
@@ -387,14 +434,17 @@ class EProfileCustomizationType(SteamIntEnum):
     EProfileCustomizationTypeSingleArtworkShowcase = 22
     EProfileCustomizationTypeAchievementsCompletionist = 23
 
+
 class EProtoExecutionSite(SteamIntEnum):
     EProtoExecutionSiteUnknown = 0
     EProtoExecutionSiteSteamClient = 2
+
 
 class EProvideDeckFeedbackPreference(SteamIntEnum):
     Unset = 0
     Yes = 1
     No = 2
+
 
 class EPublishedFileForSaleStatus(SteamIntEnum):
     PFFSS_NotForSale = 0
@@ -404,6 +454,7 @@ class EPublishedFileForSaleStatus(SteamIntEnum):
     PFFSS_NoLongerForSale = 4
     PFFSS_TentativeApproval = 5
 
+
 class EPublishedFileRevision(SteamIntEnum):
     Default = 0
     Latest = 1
@@ -412,11 +463,13 @@ class EPublishedFileRevision(SteamIntEnum):
     RejectedSnapshot = 4
     RejectedSnapshot_China = 5
 
+
 class EPublishedFileStorageSystem(SteamIntEnum):
     EPublishedFileStorageSystemInvalid = 0
     EPublishedFileStorageSystemLegacyCloud = 1
     EPublishedFileStorageSystemDepot = 2
     EPublishedFileStorageSystemUGCCloud = 3
+
 
 class EScalingFilter(SteamIntEnum):
     Invalid = 0
@@ -426,6 +479,7 @@ class EScalingFilter(SteamIntEnum):
     Linear = 4
     NIS = 5
 
+
 class ESDCardFormatStage(SteamIntEnum):
     Invalid = 0
     Starting = 1
@@ -434,10 +488,12 @@ class ESDCardFormatStage(SteamIntEnum):
     Formatting = 4
     Finalizing = 5
 
+
 class ESessionPersistence(SteamIntEnum):
     Invalid = -1
     Ephemeral = 0
     Persistent = 1
+
 
 class ESteamDeckCompatibilityCategory(SteamIntEnum):
     Unknown = 0
@@ -445,11 +501,13 @@ class ESteamDeckCompatibilityCategory(SteamIntEnum):
     Playable = 2
     Verified = 3
 
+
 class ESteamDeckCompatibilityFeedback(SteamIntEnum):
     Unset = 0
     Agree = 1
     Disagree = 2
     Ignore = 3
+
 
 class ESteamDeckCompatibilityResultDisplayType(SteamIntEnum):
     Invisible = 0
@@ -457,6 +515,7 @@ class ESteamDeckCompatibilityResultDisplayType(SteamIntEnum):
     Unsupported = 2
     Playable = 3
     Verified = 4
+
 
 class ESteamTVContentTemplate(SteamIntEnum):
     Invalid = 0
@@ -469,6 +528,7 @@ class ESteamTVContentTemplate(SteamIntEnum):
     Developer = 7
     Event = 8
 
+
 class EStorageBlockContentType(SteamIntEnum):
     Invalid = 0
     Unknown = 1
@@ -476,11 +536,13 @@ class EStorageBlockContentType(SteamIntEnum):
     Crypto = 3
     Raid = 4
 
+
 class EStorageBlockFileSystemType(SteamIntEnum):
     Invalid = 0
     Unknown = 1
     VFat = 2
     Ext4 = 3
+
 
 class EStoreAppType(SteamIntEnum):
     Game = 0
@@ -499,6 +561,7 @@ class EStoreAppType(SteamIntEnum):
     Tool = 13
     Advertising = 14
 
+
 class EStoreCategoryType(SteamIntEnum):
     Category = 0
     SupportedPlayers = 1
@@ -506,6 +569,7 @@ class EStoreCategoryType(SteamIntEnum):
     ControllerSupport = 3
     CloudGaming = 4
     MAX = 5
+
 
 class EStoreDiscoveryQueueType(SteamIntEnum):
     EStoreDiscoveryQueueTypeNew = 0
@@ -524,6 +588,7 @@ class EStoreDiscoveryQueueType(SteamIntEnum):
     EStoreDiscoveryQueueTypeDLCTopSellers = 14
     EStoreDiscoveryQueueTypeMAX = 15
 
+
 class EStoreItemType(SteamIntEnum):
     Invalid = -1
     App = 0
@@ -531,12 +596,14 @@ class EStoreItemType(SteamIntEnum):
     Bundle = 2
     Mtx = 3
 
+
 class EStreamActivity(SteamIntEnum):
     EStreamActivityIdle = 1
     EStreamActivityGame = 2
     EStreamActivityDesktop = 3
     EStreamActivitySecureDesktop = 4
     EStreamActivityMusic = 5
+
 
 class EStreamAudioCodec(SteamIntEnum):
     EStreamAudioCodecNone = 0
@@ -546,9 +613,11 @@ class EStreamAudioCodec(SteamIntEnum):
     EStreamAudioCodecMP3 = 4
     EStreamAudioCodecAAC = 5
 
+
 class EStreamBitrate(SteamIntEnum):
     EStreamBitrateAutodetect = -1
     EStreamBitrateUnlimited = 0
+
 
 class EStreamChannel(SteamIntEnum):
     EStreamChannelInvalid = -1
@@ -557,6 +626,7 @@ class EStreamChannel(SteamIntEnum):
     EStreamChannelStats = 2
     EStreamChannelDataChannelStart = 3
 
+
 class EStreamColorspace(SteamIntEnum):
     Unknown = 0
     BT601 = 1
@@ -564,12 +634,14 @@ class EStreamColorspace(SteamIntEnum):
     BT709 = 3
     BT709_Full = 4
 
+
 class EStreamControllerConfigMsg(SteamIntEnum):
     RequestConfigsForApp = 0
     ConfigResponse = 1
     PersonalizationResponse = 2
     ActiveConfigChange = 3
     RequestActiveConfig = 4
+
 
 class EStreamControlMessage(SteamIntEnum):
     EStreamControlAuthenticationRequest = 1
@@ -663,13 +735,16 @@ class EStreamControlMessage(SteamIntEnum):
     EStreamControlShowOnScreenKeyboard = 136
     EStreamControlControllerConfigMsg = 137
 
+
 class EStreamDataMessage(SteamIntEnum):
     EStreamDataPacket = 1
     EStreamDataLost = 2
 
+
 class EStreamDiscoveryMessage(SteamIntEnum):
     EStreamDiscoveryPingRequest = 1
     EStreamDiscoveryPingResponse = 2
+
 
 class EStreamFrameEvent(SteamIntEnum):
     EStreamInputEventStart = 0
@@ -692,6 +767,7 @@ class EStreamFrameEvent(SteamIntEnum):
     EStreamFrameEventUploadEnd = 17
     EStreamFrameEventComplete = 18
 
+
 class EStreamFramerateLimiter(SteamIntEnum):
     EStreamFramerateSlowCapture = 1
     EStreamFramerateSlowConvert = 2
@@ -700,6 +776,7 @@ class EStreamFramerateLimiter(SteamIntEnum):
     EStreamFramerateSlowDecode = 16
     EStreamFramerateSlowGame = 32
     EStreamFramerateSlowDisplay = 64
+
 
 class EStreamFrameResult(SteamIntEnum):
     EStreamFrameResultPending = 0
@@ -711,14 +788,17 @@ class EStreamFrameResult(SteamIntEnum):
     EStreamFrameResultDroppedLate = 6
     EStreamFrameResultDroppedReset = 7
 
+
 class EStreamHostPlayAudioPreference(SteamIntEnum):
     EStreamHostPlayAudioDefault = 0
     EStreamHostPlayAudioAlways = 1
+
 
 class EStreamingDataType(SteamIntEnum):
     EStreamingAudioData = 0
     EStreamingVideoData = 1
     EStreamingMicrophoneData = 2
+
 
 class EStreamMouseButton(SteamIntEnum):
     EStreamMouseButtonLeft = 1
@@ -728,11 +808,13 @@ class EStreamMouseButton(SteamIntEnum):
     EStreamMouseButtonX2 = 64
     EStreamMouseButtonUnknown = 4096
 
+
 class EStreamMouseWheelDirection(SteamIntEnum):
     EStreamMouseWheelUp = 120
     EStreamMouseWheelDown = -120
     EStreamMouseWheelLeft = 3
     EStreamMouseWheelRight = 4
+
 
 class EStreamP2PScope(SteamIntEnum):
     EStreamP2PScopeAutomatic = 0
@@ -741,11 +823,13 @@ class EStreamP2PScope(SteamIntEnum):
     EStreamP2PScopeFriends = 3
     EStreamP2PScopeEveryone = 4
 
+
 class EStreamQualityPreference(SteamIntEnum):
     EStreamQualityAutomatic = -1
     EStreamQualityFast = 1
     EStreamQualityBalanced = 2
     EStreamQualityBeautiful = 3
+
 
 class EStreamStatsMessage(SteamIntEnum):
     EStreamStatsFrameEvents = 1
@@ -755,9 +839,11 @@ class EStreamStatsMessage(SteamIntEnum):
     EStreamStatsLogUploadData = 5
     EStreamStatsLogUploadComplete = 6
 
+
 class EStreamVersion(SteamIntEnum):
     EStreamVersionNone = 0
     EStreamVersionCurrent = 1
+
 
 class EStreamVideoCodec(SteamIntEnum):
     EStreamVideoCodecNone = 0
@@ -768,6 +854,7 @@ class EStreamVideoCodec(SteamIntEnum):
     EStreamVideoCodecHEVC = 5
     EStreamVideoCodecORBX1 = 6
     EStreamVideoCodecORBX2 = 7
+
 
 class ESystemAudioChannel(SteamIntEnum):
     SystemAudioChannel_Invalid = 0
@@ -781,15 +868,18 @@ class ESystemAudioChannel(SteamIntEnum):
     SystemAudioChannel_Unknown = 8
     SystemAudioChannel_Mono = 9
 
+
 class ESystemAudioDirection(SteamIntEnum):
     SystemAudioDirection_Invalid = 0
     SystemAudioDirection_Input = 1
     SystemAudioDirection_Output = 2
 
+
 class ESystemAudioPortDirection(SteamIntEnum):
     SystemAudioPortDirection_Invalid = 0
     SystemAudioPortDirection_Input = 1
     SystemAudioPortDirection_Output = 2
+
 
 class ESystemAudioPortType(SteamIntEnum):
     SystemAudioPortType_Invalid = 0
@@ -798,21 +888,25 @@ class ESystemAudioPortType(SteamIntEnum):
     SystemAudioPortType_Midi8b = 3
     SystemAudioPortType_Video32RGBA = 4
 
+
 class ESystemFanControlMode(SteamIntEnum):
     SystemFanControlMode_Invalid = 0
     SystemFanControlMode_Disabled = 1
     SystemFanControlMode_Default = 2
+
 
 class ESystemServiceState(SteamIntEnum):
     Unavailable = 0
     Disabled = 1
     Enabled = 2
 
+
 class ETextFilterSetting(SteamIntEnum):
     ETextFilterSettingSteamLabOptedOut = 0
     ETextFilterSettingEnabled = 1
     ETextFilterSettingEnabledAllowProfanity = 2
     ETextFilterSettingDisabled = 3
+
 
 class ETouchGesture(SteamIntEnum):
     ETouchGestureNone = 0
@@ -830,6 +924,7 @@ class ETouchGesture(SteamIntEnum):
     ETouchGestureFlingStart = 12
     ETouchGestureFlingCancelled = 13
 
+
 class EUpdaterState(SteamIntEnum):
     Invalid = 0
     UpToDate = 2
@@ -838,6 +933,7 @@ class EUpdaterState(SteamIntEnum):
     Applying = 5
     ClientRestartPending = 6
     SystemRestartPending = 7
+
 
 class EUpdaterType(SteamIntEnum):
     Invalid = 0
@@ -848,6 +944,7 @@ class EUpdaterType(SteamIntEnum):
     Test1 = 5
     Test2 = 6
     Dummy = 7
+
 
 EUserReviewScore = SteamIntEnum('EUserReviewScore', {
     'None': 0,
@@ -860,17 +957,20 @@ EUserReviewScore = SteamIntEnum('EUserReviewScore', {
     'Positive': 7,
     'VeryPositive': 8,
     'OverwhelminglyPositive': 9,
-    })
+})
+
 
 class EUserReviewScorePreference(SteamIntEnum):
     Unset = 0
     IncludeAll = 1
     ExcludeBombs = 2
 
+
 class EVideoFormat(SteamIntEnum):
     EVideoFormatNone = 0
     EVideoFormatYV12 = 1
     EVideoFormatAccel = 2
+
 
 __all__ = [
     'E_STAR_GlyphWriteResult',
@@ -972,4 +1072,4 @@ __all__ = [
     'EUserReviewScore',
     'EUserReviewScorePreference',
     'EVideoFormat',
-    ]
+]

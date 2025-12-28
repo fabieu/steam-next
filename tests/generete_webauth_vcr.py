@@ -1,5 +1,5 @@
 from __future__ import print_function
-import re
+
 import os
 import sys
 
@@ -10,16 +10,12 @@ sys.path.insert(0, rootdir)
 
 from getpass import getpass
 import json
-import mock
 import vcr
-import requests
 
 from steam import webauth as wa
 
-try:
-    _input = raw_input
-except:
-    _input = input
+_input = input
+
 
 # personal info scrubbers
 # -----------------------
@@ -32,16 +28,17 @@ def request_scrubber(r):
     r.body = ''
     return r
 
+
 def response_scrubber(r):
     r['headers'].pop('date', None)
     r['headers'].pop('expires', None)
 
     if 'set-cookie' in r['headers'] and 'steamLogin' in ''.join(r['headers']['set-cookie']):
         r['headers']['set-cookie'] = [
-            'steamLogin=0%7C%7C{}; path=/; httponly'.format('A'*16),
-            'steamLoginSecure=0%7C%7C{}; path=/; httponly; secure'.format('B'*16),
-            'steamMachineAuth0={}; path=/; httponly'.format('C'*16),
-            ]
+            'steamLogin=0%7C%7C{}; path=/; httponly'.format('A' * 16),
+            'steamLoginSecure=0%7C%7C{}; path=/; httponly; secure'.format('B' * 16),
+            'steamMachineAuth0={}; path=/; httponly'.format('C' * 16),
+        ]
     else:
         r['headers'].pop('set-cookie', None)
 
@@ -54,9 +51,9 @@ def response_scrubber(r):
             data['timestamp'] = 12345678
         if 'transfer_parameters' in data:
             data['transfer_parameters']['steamid'] = '0'
-            data['transfer_parameters']['token'] = 'A'*16
-            data['transfer_parameters']['token_secure'] = 'B'*16
-            data['transfer_parameters']['auth'] = 'Z'*16
+            data['transfer_parameters']['token'] = 'A' * 16
+            data['transfer_parameters']['token_secure'] = 'B' * 16
+            data['transfer_parameters']['auth'] = 'Z' * 16
 
         body = json.dumps(data)
         r['body']['string'] = body
@@ -67,6 +64,7 @@ def response_scrubber(r):
 
     return r
 
+
 anon_vcr = vcr.VCR(
     before_record=request_scrubber,
     before_record_response=response_scrubber,
@@ -74,6 +72,7 @@ anon_vcr = vcr.VCR(
     record_mode='new_episodes',
     cassette_library_dir=os.path.join(rootdir, 'vcr'),
 )
+
 
 # scenarios
 # -----------------
@@ -86,9 +85,11 @@ def user_pass_only():
     user_pass_only_success(u, p)
     user_pass_only_fail(u, p + '123')
 
+
 @anon_vcr.use_cassette('webauth_user_pass_only_success.yaml')
 def user_pass_only_success(u, p):
     wa.WebAuth(u, p).login()
+
 
 @anon_vcr.use_cassette('webauth_user_pass_only_fail.yaml')
 def user_pass_only_fail(u, p):
@@ -96,6 +97,7 @@ def user_pass_only_fail(u, p):
         wa.WebAuth(u, p).login()
     except wa.LoginIncorrect:
         pass
+
 
 # run
 # -----------------

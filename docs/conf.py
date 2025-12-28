@@ -51,7 +51,7 @@ master_doc = 'index'
 # General information about the project.
 from steam import __version__, __author__
 
-project = u'steam'
+project = u'steam-next'
 copyright = u'2019, %s' % __author__
 author = __author__
 
@@ -293,9 +293,8 @@ texinfo_documents = [
 # LINK PYTHON DOCS
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.6', None),
+    'python': ('https://docs.python.org/3.9', None),
     'gevent': ('http://www.gevent.org', None),
-    'requests': ('https://2.python-requests.org/en/master/', None),
     }
 
 # AUTODOC

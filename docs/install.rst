@@ -7,7 +7,7 @@ Linux
 Steps assume that ``python`` and ``pip`` are already installed.
 
 1. Install dependencies (see sections below)
-2. Run ``pip install steam``
+2. Run ``pip install steam-next``
 
 .. note::
     Consider using `virtualenv <https://virtualenv.pypa.io>`_
@@ -30,23 +30,23 @@ Cygwin
     - Open cygwin terminal
     - Run ``easy_install-3.4 pip``
 
-3. Run ``pip install steam``
+3. Run ``pip install steam-next``
 
 .. note::
     Consider using `virtualenv <https://virtualenv.pypa.io>`_
     in order to keep you system packages untouched.
 
 .. note::
-    Installation may take a while as a number of dependecies will be compiled
+    Installation may take a while as a number of dependencies will be compiled
 
 
 Native Python
 ^^^^^^^^^^^^^
 
-1. Download & install python 3.5 from https://www.python.org/downloads/windows/
+1. Download & install python 3.9 from https://www.python.org/downloads/windows/
 
 .. note::
     Installing for all users will require administrator rights
 
-2. Then from ``cmd`` run ``pip install steam``
+2. Then from ``cmd`` run ``pip install steam-next``
 

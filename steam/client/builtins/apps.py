@@ -1,8 +1,9 @@
 from binascii import hexlify
+
 import vdf
-from steam.enums import EResult, EServerType
-from steam.enums.emsg import EMsg
 from steam.core.msg import MsgProto
+from steam.enums import EResult
+from steam.enums.emsg import EMsg
 from steam.utils.proto import proto_fill_from_dict
 
 
@@ -41,7 +42,8 @@ class Apps(object):
         else:
             return EResult(resp.eresult)
 
-    def get_product_info(self, apps=[], packages=[], meta_data_only=False, raw=False, auto_access_tokens=True, timeout=15):
+    def get_product_info(self, apps=[], packages=[], meta_data_only=False, raw=False, auto_access_tokens=True,
+                         timeout=15):
         """Get product info for apps and packages
 
         :param apps: items in the list should be either just ``app_id``, or :class:`dict`
@@ -97,35 +99,37 @@ class Apps(object):
             return
 
         if auto_access_tokens:
-            tokens = self.get_access_tokens(app_ids=list(map(lambda app: app['appid'] if isinstance(app, dict) else app, apps)),
-                                            package_ids=list(map(lambda pkg: pkg['packageid'] if isinstance(pkg, dict) else pkg, packages))
-                                            )
+            tokens = self.get_access_tokens(
+                app_ids=list(map(lambda app: app['appid'] if isinstance(app, dict) else app, apps)),
+                package_ids=list(map(lambda pkg: pkg['packageid'] if isinstance(pkg, dict) else pkg, packages))
+            )
         else:
             tokens = None
 
         message = MsgProto(EMsg.ClientPICSProductInfoRequest)
 
         for app in apps:
-                app_info = message.body.apps.add()
+            app_info = message.body.apps.add()
 
-                if tokens:
-                    app_info.access_token = tokens['apps'].get(app['appid'] if isinstance(app, dict) else app, 0)
+            if tokens:
+                app_info.access_token = tokens['apps'].get(app['appid'] if isinstance(app, dict) else app, 0)
 
-                if isinstance(app, dict):
-                        proto_fill_from_dict(app_info, app)
-                else:
-                        app_info.appid = app
+            if isinstance(app, dict):
+                proto_fill_from_dict(app_info, app)
+            else:
+                app_info.appid = app
 
         for package in packages:
-                package_info = message.body.packages.add()
+            package_info = message.body.packages.add()
 
-                if tokens:
-                    package_info.access_token = tokens['packages'].get(package['packageid'] if isinstance(package, dict) else package, 0)
+            if tokens:
+                package_info.access_token = tokens['packages'].get(
+                    package['packageid'] if isinstance(package, dict) else package, 0)
 
-                if isinstance(package, dict):
-                        proto_fill_from_dict(package_info, package)
-                else:
-                        package_info.packageid = package
+            if isinstance(package, dict):
+                proto_fill_from_dict(package_info, package)
+            else:
+                package_info.packageid = package
 
         message.body.meta_data_only = meta_data_only
         message.body.num_prev_failed = 0
@@ -182,14 +186,14 @@ class Apps(object):
         :type app_changes: :class:`bool`
         :param package_changes: whether to inclued package changes
         :type package_changes: :class:`bool`
-        :return: `CMsgClientPICSChangesSinceResponse <https://github.com/ValvePython/steam/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver.proto#L1171-L1191>`_
+        :return: `CMsgClientPICSChangesSinceResponse <https://github.com/fabieu/steam-next/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver.proto#L1171-L1191>`_
         :rtype: proto message instance, or :class:`None` on timeout
         """
         return self.send_job_and_wait(MsgProto(EMsg.ClientPICSChangesSinceRequest),
                                       {
-                                       'since_change_number': change_number,
-                                       'send_app_info_changes': app_changes,
-                                       'send_package_info_changes': package_changes,
+                                          'since_change_number': change_number,
+                                          'send_app_info_changes': app_changes,
+                                          'send_package_info_changes': package_changes,
                                       },
                                       timeout=10
                                       )
@@ -199,7 +203,7 @@ class Apps(object):
 
         :param app_id: app id
         :type app_id: :class:`int`
-        :return: `CMsgClientGetAppOwnershipTicketResponse <https://github.com/ValvePython/steam/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver.proto#L158-L162>`_
+        :return: `CMsgClientGetAppOwnershipTicketResponse <https://github.com/fabieu/steam-next/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver.proto#L158-L162>`_
         :rtype: proto message
         """
         return self.send_job_and_wait(MsgProto(EMsg.ClientGetAppOwnershipTicket),
@@ -213,7 +217,7 @@ class Apps(object):
         :type  app_id: :class:`int`
         :param userdata: userdata
         :type  userdata: :class:`bytes`
-        :return: `EncryptedAppTicket <https://github.com/ValvePython/steam/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/encrypted_app_ticket.proto>_`
+        :return: `EncryptedAppTicket <https://github.com/fabieu/steam-next/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/encrypted_app_ticket.proto>_`
         :rtype: proto message
         """
         return self.send_job_and_wait(MsgProto(EMsg.ClientRequestEncryptedAppTicket),
@@ -228,13 +232,13 @@ class Apps(object):
         :type  app_id: :class:`int`
         :param depot_id: depot id
         :type  depot_id: :class:`int`
-        :return: `CMsgClientGetDepotDecryptionKeyResponse <https://github.com/ValvePython/steam/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver_2.proto#L533-L537>`_
+        :return: `CMsgClientGetDepotDecryptionKeyResponse <https://github.com/fabieu/steam-next/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver_2.proto#L533-L537>`_
         :rtype: proto message
         """
         return self.send_job_and_wait(MsgProto(EMsg.ClientGetDepotDecryptionKey),
                                       {
-                                       'app_id': app_id,
-                                       'depot_id': depot_id,
+                                          'app_id': app_id,
+                                          'depot_id': depot_id,
                                       },
                                       timeout=10
                                       )
@@ -249,13 +253,13 @@ class Apps(object):
         :type  depot_id: :class:`int`
         :param hostname: cdn hostname
         :type  hostname: :class:`str`
-        :return: `CMsgClientGetCDNAuthTokenResponse <https://github.com/ValvePython/steam/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver_2.proto#L585-L589>`_
+        :return: `CMsgClientGetCDNAuthTokenResponse <https://github.com/fabieu/steam-next/blob/39627fe883feeed2206016bacd92cf0e4580ead6/protobufs/steammessages_clientserver_2.proto#L585-L589>`_
         :rtype: proto message
         """
         return self.send_job_and_wait(MsgProto(EMsg.ClientGetCDNAuthToken),
                                       {
-                                       'depot_id': depot_id,
-                                       'host_name': hostname,
+                                          'depot_id': depot_id,
+                                          'host_name': hostname,
                                       },
                                       timeout=10
                                       )
@@ -281,8 +285,8 @@ class Apps(object):
 
         resp = self.send_job_and_wait(MsgProto(EMsg.ClientPICSAccessTokenRequest),
                                       {
-                                       'appids': map(int, app_ids),
-                                       'packageids': map(int, package_ids),
+                                          'appids': map(int, app_ids),
+                                          'packageids': map(int, package_ids),
                                       },
                                       timeout=10
                                       )

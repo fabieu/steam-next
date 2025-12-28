@@ -31,7 +31,9 @@ All globals params (``key``, ``https``, ``format``, ``raw``) can be specified on
     }
 """
 import json as _json
+
 from steam.utils.web import make_requests_session as _make_session
+
 
 class APIHost(object):
     """Enum of currently available API hosts."""
@@ -43,6 +45,7 @@ class APIHost(object):
     .. note::
         Key is required for every request. If not supplied you will get HTTP 403.
     """
+
 
 DEFAULT_PARAMS = {
     # api parameters
@@ -87,20 +90,20 @@ class WebAPI(object):
     apihost = DEFAULT_PARAMS['apihost']
     interfaces = []
 
-    def __init__(self, key, format = DEFAULT_PARAMS['format'],
-                            raw = DEFAULT_PARAMS['raw'],
-                            https = DEFAULT_PARAMS['https'],
-                            http_timeout = DEFAULT_PARAMS['http_timeout'],
-                            apihost = DEFAULT_PARAMS['apihost'],
-                            auto_load_interfaces = True):
-        self.key = key                              #: api key
-        self.format = format                        #: format (``json``, ``vdf``, or ``xml``)
-        self.raw = raw                              #: return raw reponse or parse
-        self.https = https                          #: use https or not
-        self.http_timeout = http_timeout            #: HTTP timeout in seconds
-        self.apihost = apihost                      #: ..versionadded:: 0.8.3 apihost hostname
-        self.interfaces = []                        #: list of all interfaces
-        self.session = _make_session()              #: :class:`requests.Session` from :func:`.make_requests_session`
+    def __init__(self, key, format=DEFAULT_PARAMS['format'],
+                 raw=DEFAULT_PARAMS['raw'],
+                 https=DEFAULT_PARAMS['https'],
+                 http_timeout=DEFAULT_PARAMS['http_timeout'],
+                 apihost=DEFAULT_PARAMS['apihost'],
+                 auto_load_interfaces=True):
+        self.key = key  #: api key
+        self.format = format  #: format (``json``, ``vdf``, or ``xml``)
+        self.raw = raw  #: return raw reponse or parse
+        self.https = https  #: use https or not
+        self.http_timeout = http_timeout  #: HTTP timeout in seconds
+        self.apihost = apihost  #: ..versionadded:: 0.8.3 apihost hostname
+        self.interfaces = []  #: list of all interfaces
+        self.session = _make_session()  #: :class:`requests.Session` from :func:`.make_requests_session`
 
         if auto_load_interfaces:
             self.load_interfaces(self.fetch_interfaces())
@@ -110,7 +113,7 @@ class WebAPI(object):
             self.__class__.__name__,
             repr(self.key),
             repr(self.https),
-            )
+        )
 
     def fetch_interfaces(self):
         """
@@ -121,14 +124,14 @@ class WebAPI(object):
         The returned value can passed to :meth:`load_interfaces`
         """
         return get('ISteamWebAPIUtil', 'GetSupportedAPIList', 1,
-            https=self.https,
-            apihost=self.apihost,
-            caller=None,
-            session=self.session,
-            params={'format': 'json',
-                    'key': self.key,
-                    },
-            )
+                   https=self.https,
+                   apihost=self.apihost,
+                   caller=None,
+                   session=self.session,
+                   params={'format': 'json',
+                           'key': self.key,
+                           },
+                   )
 
     def load_interfaces(self, interfaces_dict):
         """
@@ -165,7 +168,6 @@ class WebAPI(object):
 
         interface, method = method_path.split('.', 1)
         return getattr(getattr(self, interface), method)(**kwargs)
-
 
     def doc(self):
         """
@@ -205,7 +207,7 @@ class WebAPIInterface(object):
             self.__class__.__name__,
             repr(self.name),
             repr(len(list(self))),
-            )
+        )
 
     def __iter__(self):
         return iter(self.methods)
@@ -247,7 +249,7 @@ class WebAPIInterface(object):
 
     @property
     def __doc__(self):
-        doc = "%s\n%s\n" % (self.name, '-'*len(self.name))
+        doc = "%s\n%s\n" % (self.name, '-' * len(self.name))
         for method in self.methods:
             doc += "  %s\n" % method.__doc__.replace("\n", "\n  ")
         return doc
@@ -281,8 +283,8 @@ class WebAPIMethod(object):
                 self._parent.name,
                 self.name,
                 self.version,
-                )),
-            )
+            )),
+        )
 
     def __call__(self, **kwargs):
         possible_kwargs = set(self._dict['parameters'].keys()) | set(DEFAULT_PARAMS.keys())
@@ -313,7 +315,7 @@ class WebAPIMethod(object):
                     raise ValueError("Expected %s to be a list, got %s" % (
                         repr(name),
                         repr(type(kwargs[name])))
-                        )
+                                     )
                 params[name] = kwargs[name]
 
         url = "%s://%s/%s/%s/v%s/" % (
@@ -322,7 +324,7 @@ class WebAPIMethod(object):
             self._parent.name,
             self.name,
             self.version,
-            )
+        )
 
         return webapi_request(
             url=url,
@@ -330,7 +332,7 @@ class WebAPIMethod(object):
             caller=self,
             session=self._parent.session,
             params=params,
-            )
+        )
 
     @property
     def version(self):
@@ -368,16 +370,17 @@ class WebAPIMethod(object):
             for param in sorted(self.parameters.values(), key=lambda x: x['name']):
                 doc += "    %s %s %s%s\n" % (
                     param['name'].ljust(25),
-                    ((param['type']+"[]") if param['_array'] else
+                    ((param['type'] + "[]") if param['_array'] else
                      param['type']
                      ).ljust(8),
                     'optional' if param['optional'] else 'required',
                     (("\n      - " + param['description'])
                      if 'description' in param and param['description'] else ''
                      ),
-                    )
+                )
 
         return doc
+
 
 def webapi_request(url, method='GET', caller=None, session=None, params=None):
     """Low level function for calling Steam's WebAPI
@@ -410,15 +413,17 @@ def webapi_request(url, method='GET', caller=None, session=None, params=None):
     if onetime['format'] not in ('json', 'vdf', 'xml'):
         raise ValueError("Expected format to be json,vdf or xml; got %s" % onetime['format'])
 
-    for k, v in list(params.items()): # serialize some types
-        if isinstance(v, bool): params[k] = 1 if v else 0
-        elif isinstance(v, dict): params[k] = _json.dumps(v)
+    for k, v in list(params.items()):  # serialize some types
+        if isinstance(v, bool):
+            params[k] = 1 if v else 0
+        elif isinstance(v, dict):
+            params[k] = _json.dumps(v)
         elif isinstance(v, list):
             del params[k]
             for i, lvalue in enumerate(v):
                 params["%s[%d]" % (k, i)] = lvalue
 
-    kwargs = {'params': params} if method == "GET" else {'data': params} # params to data for POST
+    kwargs = {'params': params} if method == "GET" else {'data': params}  # params to data for POST
 
     if session is None: session = _make_session()
 
@@ -440,6 +445,7 @@ def webapi_request(url, method='GET', caller=None, session=None, params=None):
     elif onetime['format'] == 'vdf':
         import vdf as _vdf
         return _vdf.loads(resp.text)
+
 
 def get(interface, method, version=1,
         apihost=DEFAULT_PARAMS['apihost'], https=DEFAULT_PARAMS['https'],
@@ -466,6 +472,7 @@ def get(interface, method, version=1,
     url = u"%s://%s/%s/%s/v%s/" % (
         'https' if https else 'http', apihost, interface, method, version)
     return webapi_request(url, 'GET', caller=caller, session=session, params=params)
+
 
 def post(interface, method, version=1,
          apihost=DEFAULT_PARAMS['apihost'], https=DEFAULT_PARAMS['https'],

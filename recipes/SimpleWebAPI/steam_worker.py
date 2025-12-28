@@ -1,11 +1,12 @@
 import logging
-import gevent
 from binascii import hexlify
+
+import vdf
+
 from steam.client import SteamClient
 from steam.core.msg import MsgProto
 from steam.enums.emsg import EMsg
 from steam.utils.proto import proto_to_dict
-import vdf
 
 LOG = logging.getLogger("Steam Worker")
 
@@ -34,12 +35,12 @@ class SteamWorker(object):
         def handle_after_logon():
             self.logged_on_once = True
 
-            LOG.info("-"*30)
+            LOG.info("-" * 30)
             LOG.info("Logged on as: %s", client.user.name)
             LOG.info("Community profile: %s", client.steam_id.community_url)
             LOG.info("Last logon: %s", client.user.last_logon)
             LOG.info("Last logoff: %s", client.user.last_logoff)
-            LOG.info("-"*30)
+            LOG.info("-" * 30)
 
         @client.on("disconnected")
         def handle_disconnect():
@@ -64,14 +65,20 @@ class SteamWorker(object):
         if self.steam.connected:
             self.steam.disconnect()
 
-    def get_product_info(self, appids=[], packageids=[]):
+    def get_product_info(self, appids=None, packageids=None):
+        if packageids is None:
+            packageids = []
+
+        if appids is None:
+            appids = []
+
         resp = self.steam.send_job_and_wait(MsgProto(EMsg.ClientPICSProductInfoRequest),
-                                           {
-                                               'apps': map(lambda x: {'appid': x}, appids),
-                                               'packages': map(lambda x: {'packageid': x}, packageids),
-                                           },
-                                           timeout=10
-                                           )
+                                            {
+                                                'apps': map(lambda x: {'appid': x}, appids),
+                                                'packages': map(lambda x: {'packageid': x}, packageids),
+                                            },
+                                            timeout=10
+                                            )
 
         if not resp: return {}
 
@@ -88,18 +95,18 @@ class SteamWorker(object):
 
     def get_product_changes(self, since_change_number):
         resp = self.steam.send_job_and_wait(MsgProto(EMsg.ClientPICSChangesSinceRequest),
-                                           {
-                                               'since_change_number': since_change_number,
-                                               'send_app_info_changes': True,
-                                               'send_package_info_changes': True,
-                                           },
-                                           timeout=10
-                                           )
+                                            {
+                                                'since_change_number': since_change_number,
+                                                'send_app_info_changes': True,
+                                                'send_package_info_changes': True,
+                                            },
+                                            timeout=10
+                                            )
         return proto_to_dict(resp) or {}
 
     def get_player_count(self, appid):
         resp = self.steam.send_job_and_wait(MsgProto(EMsg.ClientGetNumberOfCurrentPlayersDP),
-                                           {'appid': appid},
-                                           timeout=10
-                                           )
+                                            {'appid': appid},
+                                            timeout=10
+                                            )
         return proto_to_dict(resp) or {}

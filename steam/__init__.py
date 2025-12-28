@@ -1,4 +1,4 @@
-__version__ = "1.4.4"
-__author__ = "Rossen Georgiev"
+from importlib import metadata
 
-version_info = (1, 4, 4)
+__version__ = metadata.version("steam-next")
+__author__ = "Rossen Georgiev"

@@ -1,8 +1,9 @@
 """Classes to (de)serialize message headers"""
 import struct
+
 from steam.enums.emsg import EMsg
-from steam.protobufs import steammessages_base_pb2
 from steam.protobufs import gc_pb2
+from steam.protobufs import steammessages_base_pb2
 from steam.utils.proto import set_proto_bit, clear_proto_bit
 
 
@@ -27,6 +28,7 @@ class MsgHdr:
                           "targetJobID: %s" % self.targetJobID,
                           "sourceJobID: %s" % self.sourceJobID,
                           ])
+
 
 class ExtendedMsgHdr:
     _size = struct.calcsize("<IBHqqBqi")
@@ -137,6 +139,7 @@ class GCMsgHdr:
                           "sourceJobID: %s" % self.sourceJobID,
                           ])
 
+
 class GCMsgHdrProto:
     _size = struct.calcsize("<Ii")
     headerLength = 0
@@ -166,7 +169,7 @@ class GCMsgHdrProto:
 
         if self.headerLength:
             x = GCMsgHdrProto._size
-            self.proto.ParseFromString(data[x:x+self.headerLength])
+            self.proto.ParseFromString(data[x:x + self.headerLength])
 
     def __str__(self):
         resp = ["msg: %s" % self.msg,

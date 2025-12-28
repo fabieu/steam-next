@@ -34,13 +34,13 @@ Filter code                 What it does
 \\gameaddr\\[ip]            Return only servers on the specified IP address (port supported and optional)
 =========================== =========================================================================================================================
 """
-from steam.steamid import SteamID
 from steam.core.msg import MsgProto
 from steam.enums import EResult
 from steam.enums.emsg import EMsg
+from steam.exceptions import SteamError
+from steam.steamid import SteamID
 from steam.utils import ip4_to_int, ip4_from_int, ip6_from_bytes
 from steam.utils.proto import proto_to_dict
-from steam.exceptions import SteamError
 
 
 class GameServers(object):
@@ -152,8 +152,8 @@ class SteamGameServers(object):
         """
         resp = self._s.send_um_and_wait("GameServers.GetServerList#1",
                                         {
-                                         "filter": filter_text,
-                                         "limit": max_servers,
+                                            "filter": filter_text,
+                                            "limit": max_servers,
                                         },
                                         timeout=20,
                                         )

@@ -13,33 +13,25 @@ Implementation of Steam client based on ``gevent``
     Optional features are available as :mod:`.mixins`. This allows the client to remain light yet flexible.
 
 """
-import os
 import json
+import logging
+import os
+from getpass import getpass
+from io import open
 from random import random
 from time import time
-from io import open
-from getpass import getpass
-import logging
-import six
 
-from eventemitter import EventEmitter
-from steam.enums import EResult, EOSType, EPersonaState
-from steam.enums.emsg import EMsg
-from steam.core.cm import CMClient
-from steam.core.msg import MsgProto
-from steam.core.crypto import sha1_hash
-from steam.steamid import SteamID
-from steam.exceptions import SteamError
 from steam.client.builtins import BuiltinBase
+from steam.core.cm import CMClient
+from steam.core.crypto import sha1_hash
+from steam.core.msg import MsgProto
+from steam.enums import EResult, EOSType
+from steam.enums.emsg import EMsg
+from steam.steamid import SteamID
 from steam.utils import ip4_from_int, ip4_to_int
 from steam.utils.proto import proto_fill_from_dict
 
-
-# TODO: remove py2 support.
-if six.PY2:
-    _cli_input = raw_input
-else:
-    _cli_input = input
+_cli_input = input
 
 
 class SteamClient(CMClient, BuiltinBase):
@@ -55,10 +47,10 @@ class SteamClient(CMClient, BuiltinBase):
     _LOG = logging.getLogger("SteamClient")
     _reconnect_backoff_c = 0
     current_jobid = 0
-    credential_location = None         #: location for sentry
-    username = None                    #: username when logged on
-    login_key = None                   #: can be used for subsequent logins (no 2FA code will be required)
-    chat_mode = 2                      #: chat mode (0=old chat, 2=new chat)
+    credential_location = None  #: location for sentry
+    username = None  #: username when logged on
+    login_key = None  #: can be used for subsequent logins (no 2FA code will be required)
+    chat_mode = 2  #: chat mode (0=old chat, 2=new chat)
 
     def __init__(self):
         CMClient.__init__(self)
@@ -76,9 +68,9 @@ class SteamClient(CMClient, BuiltinBase):
 
     def __repr__(self):
         return "<%s(%s) %s>" % (self.__class__.__name__,
-                              repr(self.current_server_addr),
-                              'online' if self.connected else 'offline',
-                              )
+                                repr(self.current_server_addr),
+                                'online' if self.connected else 'offline',
+                                )
 
     def set_credential_location(self, path):
         """
@@ -149,8 +141,8 @@ class SteamClient(CMClient, BuiltinBase):
             self.cell_id = self.cm_servers.cell_id = data.get('cell_id', 0)
 
     def _handle_cm_list(self, msg):
-        if (self.cm_servers.last_updated + 3600*24 > time()
-           and self.cm_servers.cell_id != 0):
+        if (self.cm_servers.last_updated + 3600 * 24 > time()
+                and self.cm_servers.cell_id != 0):
             return
 
         CMClient._handle_cm_list(self, msg)  # clear and merge
@@ -167,7 +159,7 @@ class SteamClient(CMClient, BuiltinBase):
                 except IOError as e:
                     self._LOG.error("Failed reading %s (%s)", repr(filepath), str(e))
                 else:
-                    if data.get('last_updated', 0) + 3600*24 > time():
+                    if data.get('last_updated', 0) + 3600 * 24 > time():
                         return
 
                 self._LOG.debug("Persisted CM server list is stale")
@@ -261,7 +253,7 @@ class SteamClient(CMClient, BuiltinBase):
         :return: successful connection
         :rtype: :class:`bool`
         """
-        delay_seconds = 2**self._reconnect_backoff_c - 1
+        delay_seconds = 2 ** self._reconnect_backoff_c - 1
 
         if delay_seconds < maxdelay:
             self._reconnect_backoff_c = min(7, self._reconnect_backoff_c + 1)
@@ -391,7 +383,7 @@ class SteamClient(CMClient, BuiltinBase):
         if self.credential_location:
             return os.path.join(self.credential_location,
                                 "%s_sentry.bin" % username
-                                 )
+                                )
         return None
 
     def get_sentry(self, username):
@@ -497,7 +489,7 @@ class SteamClient(CMClient, BuiltinBase):
         :type  two_factor_code: :class:`str`
         :param login_id: number used for identifying logon session
         :type  login_id: :class:`int`
-        :return: logon result, see `CMsgClientLogonResponse.eresult <https://github.com/ValvePython/steam/blob/513c68ca081dc9409df932ad86c66100164380a6/protobufs/steammessages_clientserver.proto#L95-L118>`_
+        :return: logon result, see `CMsgClientLogonResponse.eresult <https://github.com/fabieu/steam-next/blob/513c68ca081dc9409df932ad86c66100164380a6/protobufs/steammessages_clientserver.proto#L95-L118>`_
         :rtype: :class:`.EResult`
 
         .. note::
@@ -575,7 +567,7 @@ class SteamClient(CMClient, BuiltinBase):
     def anonymous_login(self):
         """Login as anonymous user
 
-        :return: logon result, see `CMsgClientLogonResponse.eresult <https://github.com/ValvePython/steam/blob/513c68ca081dc9409df932ad86c66100164380a6/protobufs/steammessages_clientserver.proto#L95-L118>`_
+        :return: logon result, see `CMsgClientLogonResponse.eresult <https://github.com/fabieu/steam-next/blob/513c68ca081dc9409df932ad86c66100164380a6/protobufs/steammessages_clientserver.proto#L95-L118>`_
         :rtype: :class:`.EResult`
         """
         self._LOG.debug("Attempting Anonymous login")
@@ -629,7 +621,7 @@ class SteamClient(CMClient, BuiltinBase):
         :type  username: :class:`str`
         :param password: optionally provide password
         :type  password: :class:`str`
-        :return: logon result, see `CMsgClientLogonResponse.eresult <https://github.com/ValvePython/steam/blob/513c68ca081dc9409df932ad86c66100164380a6/protobufs/steammessages_clientserver.proto#L95-L118>`_
+        :return: logon result, see `CMsgClientLogonResponse.eresult <https://github.com/fabieu/steam-next/blob/513c68ca081dc9409df932ad86c66100164380a6/protobufs/steammessages_clientserver.proto#L95-L118>`_
         :rtype: :class:`.EResult`
 
         Example console output after calling :meth:`cli_login`

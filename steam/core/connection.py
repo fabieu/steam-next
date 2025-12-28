@@ -1,10 +1,10 @@
-import struct
 import logging
+import struct
 
 import gevent
-from gevent import socket
-from gevent import queue
 from gevent import event
+from gevent import queue
+from gevent import socket
 from gevent.select import select as gselect
 
 logger = logging.getLogger("Connection")

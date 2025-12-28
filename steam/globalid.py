@@ -1,10 +1,6 @@
-import sys
 from datetime import datetime, timedelta
 
-if sys.version_info < (3,):
-    intBase = long
-else:
-    intBase = int
+intBase = int
 
 
 class GlobalID(intBase):
@@ -12,6 +8,7 @@ class GlobalID(intBase):
     Represents a globally unique identifier within the Steam network.
     Guaranteed to be unique across all racks and servers for a given Steam universe.
     """
+
     def __new__(cls, *args, **kwargs):
         if len(args) == 1:
             return super(GlobalID, cls).__new__(cls, *args)
@@ -50,7 +47,7 @@ class GlobalID(intBase):
             repr(str(self.start_time)),
             self.process_id,
             self.box_id,
-            )
+        )
 
     @property
     def sequence_count(self):

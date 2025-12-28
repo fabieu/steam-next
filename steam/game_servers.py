@@ -128,10 +128,11 @@ API
 import socket
 from binascii import crc32
 from bz2 import decompress as _bz2_decompress
+from enum import IntEnum
 from re import match as _re_match
 from struct import pack as _pack, unpack_from as _unpack_from
 from time import time as _time
-from enum import IntEnum
+
 from steam.utils.binary import StructReader as _StructReader
 
 __all__ = ['query_master', 'a2s_info', 'a2s_players', 'a2s_rules', 'a2s_ping']
@@ -164,7 +165,7 @@ class MSRegion(IntEnum):
 class MSServer:
     GoldSrc = ('hl1master.steampowered.com', 27010)  #: These have been shutdown
     Source = ('hl2master.steampowered.com', 27011)
-    Source_27015 = ('208.64.200.65', 27015)          #: ``hl2master`` but on different port
+    Source_27015 = ('208.64.200.65', 27015)  #: ``hl2master`` but on different port
 
 
 def query_master(filter_text=r'\nappid\500', max_servers=20, region=MSRegion.World, master=MSServer.Source, timeout=2):
@@ -303,7 +304,7 @@ def _unpack_multipacket_header(payload_offset, packet):
         return pkt_byte >> 2, pkt_byte & 0xF, False  # idx, total, compressed
     elif payload_offset in (10, 12, 18):  # Source
         pkt_id, num_pkts, pkt_idx, = _unpack_from('<LBB', packet, 4)
-        return pkt_idx, num_pkts, (pkt_id & 0x80000000) != 0   # idx, total, compressed
+        return pkt_idx, num_pkts, (pkt_id & 0x80000000) != 0  # idx, total, compressed
     else:
         raise RuntimeError("Unexpected payload_offset - %d" % payload_offset)
 
@@ -335,7 +336,7 @@ def a2s_info(server_addr, timeout=2, force_goldsrc=False, challenge=0):
 
     # request server info
     payload = _pack('<lc', -1, b'T') + b'Source Engine Query\x00'
-    if challenge not in (-1, 0): # If a valid challenge was supplied, append it to the payload
+    if challenge not in (-1, 0):  # If a valid challenge was supplied, append it to the payload
         payload += _pack('<i', challenge)
 
     ss.send(payload)
@@ -460,7 +461,7 @@ def a2s_info(server_addr, timeout=2, force_goldsrc=False, challenge=0):
             raise RuntimeError("Invalid response header for request containing challenge answer - %s" % repr(header))
 
         challenge = data.unpack('<l')
-        return a2s_info(server_addr = server_addr, timeout = timeout, force_goldsrc = force_goldsrc, challenge = challenge[0])
+        return a2s_info(server_addr=server_addr, timeout=timeout, force_goldsrc=force_goldsrc, challenge=challenge[0])
 
     return info
 

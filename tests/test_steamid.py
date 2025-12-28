@@ -326,7 +326,7 @@ class steamid_functions(unittest.TestCase):
         self.assertIsInstance(test_instance, SteamID)
         self.assertEqual(test_instance.as_64, 76580280500085312)
 
-    @mock.patch('steam.steamid.make_requests_session')
+    @mock.patch('steam.utils.web.make_requests_session')
     def test_steam64_from_url_timeout(self, mrs_mock):
         mm = mrs_mock.return_value = mock.MagicMock()
 

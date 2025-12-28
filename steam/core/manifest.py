@@ -1,18 +1,17 @@
-
+import os.path
 from base64 import b64decode
-from io import BytesIO
-from zipfile import ZipFile, ZIP_DEFLATED, BadZipFile
-from struct import pack
 from datetime import datetime
 from fnmatch import fnmatch
-import os.path
+from io import BytesIO
+from struct import pack
+from zipfile import ZipFile, ZIP_DEFLATED, BadZipFile
 
-from steam.enums import EDepotFileFlag
 from steam.core.crypto import symmetric_decrypt
-from steam.utils.binary import StructReader
+from steam.enums import EDepotFileFlag
 from steam.protobufs.content_manifest_pb2 import (ContentManifestMetadata,
                                                   ContentManifestPayload,
                                                   ContentManifestSignature)
+from steam.utils.binary import StructReader
 
 
 class DepotFile(object):
@@ -39,7 +38,7 @@ class DepotFile(object):
             self.manifest.gid,
             repr(self.filename),
             'is_directory=True' if self.is_directory else self.size,
-            )
+        )
 
     @property
     def filename_raw(self):
@@ -56,7 +55,7 @@ class DepotFile(object):
         :type: str
         """
         return os.path.join(*self.filename_raw.split('\\'))
-    
+
     @property
     def linktarget_raw(self):
         """Link target with null terminator and whitespaces removed
@@ -156,12 +155,12 @@ class DepotManifest(object):
 
     def __repr__(self):
         params = ', '.join([
-                    "depot_id=" + str(self.depot_id),
-                    "gid=" + str(self.gid),
-                    "creation_time=" + repr(
-                        datetime.utcfromtimestamp(self.metadata.creation_time).isoformat().replace('T', ' ')
-                        ),
-                    ])
+            "depot_id=" + str(self.depot_id),
+            "gid=" + str(self.gid),
+            "creation_time=" + repr(
+                datetime.utcfromtimestamp(self.metadata.creation_time).isoformat().replace('T', ' ')
+            ),
+        ])
 
         if self.metadata.filenames_encrypted:
             params += ', filenames_encrypted=True'
@@ -169,7 +168,7 @@ class DepotManifest(object):
         return "<%s(%s)>" % (
             self.__class__.__name__,
             params,
-            )
+        )
 
     @property
     def depot_id(self):
@@ -309,11 +308,9 @@ class DepotManifest(object):
         if not self.filenames_encrypted:
             for mapping in self.payload.mappings:
                 if (pattern is not None
-                   and not fnmatch(mapping.filename.rstrip('\x00 \n\t'), pattern)):
+                        and not fnmatch(mapping.filename.rstrip('\x00 \n\t'), pattern)):
                     continue
                 yield self.DepotFileClass(self, mapping)
 
     def __len__(self):
         return len(self.payload.mappings)
-
-

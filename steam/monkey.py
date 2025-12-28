@@ -14,6 +14,7 @@ See :mod:`gevent.monkey` for details
     from steam.client import SteamClient, EMsg
 """
 
+
 def patch_minimal():
     """
     This method needs to be called before any other imports

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Poetry (steam-next)" />
+  </component>
+  <component name="ProjectRootManager" version="2" default="true" project-jdk-name="Poetry (steam-next)" project-jdk-type="Python SDK" />
+</project>

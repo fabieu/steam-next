@@ -1,24 +1,22 @@
-import struct
 import binascii
 import logging
-from gzip import GzipFile
-from time import time
+import struct
 from collections import defaultdict
-from itertools import cycle, count
-
+from gzip import GzipFile
 from io import BytesIO
+from itertools import cycle, count
+from random import shuffle
+from time import time
 
 import gevent
 import gevent.socket as socket
-from random import shuffle
-
-from steam.steamid import SteamID
-from steam.enums import EResult, EUniverse
-from steam.enums.emsg import EMsg
+from eventemitter import EventEmitter
 from steam.core import crypto
 from steam.core.connection import TCPConnection
 from steam.core.msg import Msg, MsgProto
-from eventemitter import EventEmitter
+from steam.enums import EResult, EUniverse
+from steam.enums.emsg import EMsg
+from steam.steamid import SteamID
 from steam.utils import ip4_from_int
 from steam.utils.proto import is_proto, clear_proto_bit
 
@@ -57,24 +55,24 @@ class CMClient(EventEmitter):
     """All incoming messages are emitted with their :class:`.EMsg` number.
     """
 
-    PROTOCOL_TCP = 0                        #: TCP protocol enum
-    PROTOCOL_UDP = 1                        #: UDP protocol enum
-    verbose_debug = False                   #: print message connects in debug
+    PROTOCOL_TCP = 0  #: TCP protocol enum
+    PROTOCOL_UDP = 1  #: UDP protocol enum
+    verbose_debug = False  #: print message connects in debug
 
-    auto_discovery = True                   #: enables automatic CM discovery
-    cm_servers = None                       #: a instance of :class:`.CMServerList`
-    current_server_addr = None              #: (ip, port) tuple
+    auto_discovery = True  #: enables automatic CM discovery
+    cm_servers = None  #: a instance of :class:`.CMServerList`
+    current_server_addr = None  #: (ip, port) tuple
     _seen_logon = False
     _connecting = False
-    connected = False                       #: :class:`True` if connected to CM
-    channel_secured = False                 #: :class:`True` once secure channel handshake is complete
+    connected = False  #: :class:`True` if connected to CM
+    channel_secured = False  #: :class:`True` once secure channel handshake is complete
 
-    channel_key = None                      #: channel encryption key
-    channel_hmac = None                     #: HMAC secret
+    channel_key = None  #: channel encryption key
+    channel_hmac = None  #: HMAC secret
 
-    steam_id = SteamID()                    #: :class:`.SteamID` of the current user
-    session_id = None                       #: session id when logged in
-    cell_id = 0                             #: cell id provided by CM
+    steam_id = SteamID()  #: :class:`.SteamID` of the current user
+    session_id = None  #: session id when logged in
+    cell_id = 0  #: cell id provided by CM
 
     _recv_loop = None
     _heartbeat_loop = None
@@ -135,7 +133,7 @@ class CMClient(EventEmitter):
             if not self.cm_servers.bootstrap_from_webapi():
                 self.cm_servers.bootstrap_from_dns()
 
-        for i, server_addr in enumerate(cycle(self.cm_servers), start=next(i)-1):
+        for i, server_addr in enumerate(cycle(self.cm_servers), start=next(i) - 1):
             if retry and i >= retry:
                 self._connecting = False
                 return False
@@ -337,7 +335,7 @@ class CMClient(EventEmitter):
             self._LOG.debug("Multi: Decompressing payload (%d -> %s)" % (
                 len(msg.body.message_body),
                 msg.body.size_unzipped,
-                ))
+            ))
 
             with GzipFile(fileobj=BytesIO(msg.body.message_body)) as f:
                 data = f.read()
@@ -351,8 +349,8 @@ class CMClient(EventEmitter):
 
         while len(data) > 0:
             size, = struct.unpack_from("<I", data)
-            self._parse_message(data[4:4+size])
-            data = data[4+size:]
+            self._parse_message(data[4:4 + size])
+            data = data[4 + size:]
 
     def __heartbeat(self, interval):
         message = MsgProto(EMsg.ClientHeartBeat)
@@ -427,9 +425,9 @@ class CMServerList(object):
 
     Good = 1
     Bad = 2
-    last_updated = 0       #: timestamp of when the list was last updated
-    cell_id = 0            #: cell id of the server list
-    bad_timestamp = 300    #: how long bad mark lasts in seconds
+    last_updated = 0  #: timestamp of when the list was last updated
+    cell_id = 0  #: cell id of the server list
+    bad_timestamp = 300  #: how long bad mark lasts in seconds
 
     def __init__(self):
         self._LOG = logging.getLogger("CMServerList")

@@ -1,11 +1,11 @@
 import logging
-from six import itervalues
+
 from eventemitter import EventEmitter
-from steam.steamid import SteamID, intBase
+from steam.client.user import SteamUser
+from steam.core.msg import MsgProto
 from steam.enums import EResult, EFriendRelationship
 from steam.enums.emsg import EMsg
-from steam.core.msg import MsgProto
-from steam.client.user import SteamUser
+from steam.steamid import SteamID, intBase
 
 
 class Friends(object):
@@ -14,6 +14,7 @@ class Friends(object):
 
         #: :class:`.SteamFriendlist` instance
         self.friends = SteamFriendlist(self, logger_name="%s.friends" % self.__class__.__name__)
+
 
 class SteamFriendlist(EventEmitter):
     """SteamFriendlist is an object that keeps state of user's friend list.
@@ -93,12 +94,12 @@ class SteamFriendlist(EventEmitter):
             suser = self._steam.get_user(steamid, False)
             rel = EFriendRelationship(friend.efriendrelationship)
 
-            if steamid not in self._fr and rel != EFriendRelationship.NONE: # 0
+            if steamid not in self._fr and rel != EFriendRelationship.NONE:  # 0
                 self._fr[steamid] = suser
                 suser.relationship = rel
                 steamids_to_check.add(steamid)
 
-                if rel in (2,4):  # RequestRecipient = 2, RequestInitiator = 4
+                if rel in (2, 4):  # RequestRecipient = 2, RequestInitiator = 4
                     if rel == EFriendRelationship.RequestRecipient:
                         self.emit(self.EVENT_FRIEND_INVITE, suser)
             else:
@@ -108,7 +109,7 @@ class SteamFriendlist(EventEmitter):
                     suser = self._fr.pop(steamid, None)
                     if suser and oldrel not in (EFriendRelationship.Ignored, 0):
                         self.emit(self.EVENT_FRIEND_REMOVED, suser)
-                elif oldrel in (2,4) and rel == EFriendRelationship.Friend:
+                elif oldrel in (2, 4) and rel == EFriendRelationship.Friend:
                     self.emit(self.EVENT_FRIEND_NEW, suser)
 
         # request persona state for any new entries
@@ -123,13 +124,13 @@ class SteamFriendlist(EventEmitter):
         return "<%s %d users>" % (
             self.__class__.__name__,
             len(self._fr),
-            )
+        )
 
     def __len__(self):
         return len(self._fr)
 
     def __iter__(self):
-        return itervalues(self._fr)
+        return self._fr.values()
 
     def __list__(self):
         return list(iter(self))

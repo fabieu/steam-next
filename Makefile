@@ -7,11 +7,6 @@ Available commands:
 	make test       - run tests and coverage
 	make pylint     - code analysis
 	make build      - pylint + test
-	make docs       - generate html docs using sphinx
-
-	make dist		- build source distribution
-	mage register	- register in pypi
-	make upload 	- upload to pypi
 
 	make pb_fetch   - fetch protobufs from SteamRE
 	make pb_compile - compile with protoc
@@ -27,42 +22,23 @@ help:
 	@echo "$$HELPBODY"
 
 init:
-	pip install -r dev_requirements.txt
-
-init_docs:
-	pip install sphinx==1.8.5 sphinx_rtd_theme
-
-COVOPTS = --cov-config .coveragerc --cov=steam
-
-ifeq ($(NOCOV), 1)
-	COVOPTS =
-endif
+	poetry install --with dev
 
 test:
-	coverage erase
-	PYTHONHASHSEED=0 pytest --tb=short $(COVOPTS) tests
-
-webauth_gen:
-	rm -f vcr/webauth*
-	python tests/generete_webauth_vcr.py
+	pytest --cov=steam
 
 pylint:
 	pylint -r n -f colorized steam || true
 
-build: pylint test docs
-
-.FORCE:
-docs: .FORCE
-	$(MAKE) -C docs html
+build:
+	poetry build
 
 clean:
 	rm -rf dist steam.egg-info steam/*.pyc
 
-dist: clean
-	python setup.py sdist
-
-upload: dist
-	twine upload -r pypi dist/*
+webauth_gen:
+	rm -f vcr/webauth*
+	python3 tests/generete_webauth_vcr.py
 
 pb_fetch:
 	wget -nv --show-progress -N -P ./protobufs/ -i protobuf_list.txt || exit 0
@@ -81,7 +57,7 @@ pb_fetch:
 
 pb_compile:
 	for filepath in ./protobufs/*.proto; do \
-		protoc3 --python_out ./steam/protobufs/ --proto_path=./protobufs "$$filepath"; \
+		protoc --python_out ./steam/protobufs/ --proto_path=./protobufs "$$filepath"; \
 	done;
 	sed -i '/^import sys/! s/^import /import steam.protobufs./' steam/protobufs/*_pb2.py
 
@@ -95,6 +71,6 @@ pb_services:
 	mv steam/core/msg/unified.py.tmp steam/core/msg/unified.py
 
 pb_gen_enums:
-	python generate_enums_from_proto.py > steam/enums/proto.py
+	python3 generate_enums_from_proto.py > steam/enums/proto.py
 
 pb_update: pb_fetch pb_compile pb_services pb_gen_enums

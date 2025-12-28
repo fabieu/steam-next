@@ -1,13 +1,8 @@
-
-import six
 from types import GeneratorType as _GeneratorType
+
 from google.protobuf.message import Message as _ProtoMessageType
 
-
-if six.PY2:
-    _list_types = list, xrange, _GeneratorType
-else:
-    _list_types = list, range, _GeneratorType, map, filter
+_list_types = list, range, _GeneratorType, map, filter
 
 protobuf_mask = 0x80000000
 
@@ -21,6 +16,7 @@ def is_proto(emsg):
     """
     return (int(emsg) & protobuf_mask) > 0
 
+
 def set_proto_bit(emsg):
     """
     :param emsg: emsg number
@@ -30,6 +26,7 @@ def set_proto_bit(emsg):
     """
     return int(emsg) | protobuf_mask
 
+
 def clear_proto_bit(emsg):
     """
     :param emsg: emsg number
@@ -38,6 +35,7 @@ def clear_proto_bit(emsg):
     :rtype: int
     """
     return int(emsg) & ~protobuf_mask
+
 
 def proto_to_dict(message):
     """Converts protobuf message instance to dict
@@ -62,6 +60,7 @@ def proto_to_dict(message):
             data[desc.name] = list(field) if desc.label == desc.LABEL_REPEATED else field
 
     return data
+
 
 def proto_fill_from_dict(message, data, clear=True):
     """Fills protobuf message parameters inplace from a :class:`dict`

@@ -184,7 +184,7 @@ After that we logout.
 
     client.logout()
 
-You can find more examples at https://github.com/ValvePython/steam/tree/master/recipes
+You can find more examples at https://github.com/fabieu/steam-next/tree/master/recipes
 
 Sending a message
 -----------------

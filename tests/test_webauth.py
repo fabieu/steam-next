@@ -1,7 +1,7 @@
 ######################################################
 ####
 #### NOT TO BE RAN WITHOUT GENERATING A VCR FIRST
-#### use ....
+#### use make webauth_gen
 ####
 ######################################################
 import vcr
@@ -12,7 +12,7 @@ import requests
 from steam import webauth as wa
 
 class WACase(unittest.TestCase):
-    @mock.patch('steam.webauth.make_requests_session')
+    @mock.patch('steam.utils.web.make_requests_session')
     def test_http_error(self, mrs_mock):
         mm = mrs_mock.return_value = mock.MagicMock()
 

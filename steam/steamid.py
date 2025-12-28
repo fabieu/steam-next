@@ -1,17 +1,15 @@
-import struct
 import json
-import sys
 import re
+import struct
+
 import requests
-from steam.enums.base import SteamIntEnum
-from steam.enums import EType, EUniverse, EInstanceFlag
 from steam.core.crypto import md5_hash
+from steam.enums import EType, EUniverse, EInstanceFlag
+from steam.enums.base import SteamIntEnum
 from steam.utils.web import make_requests_session
 
-if sys.version_info < (3,):
-    intBase = long
-else:
-    intBase = int
+intBase = int
+
 
 class ETypeChar(SteamIntEnum):
     I = EType.Invalid
@@ -23,20 +21,21 @@ class ETypeChar(SteamIntEnum):
     C = EType.ContentServer
     g = EType.Clan
     T = EType.Chat
-    L = EType.Chat # lobby chat, 'c' for clan chat
-    c = EType.Chat # clan chat
+    L = EType.Chat  # lobby chat, 'c' for clan chat
+    c = EType.Chat  # clan chat
     a = EType.AnonUser
 
     def __str__(self):
         return self.name
 
+
 ETypeChars = ''.join(ETypeChar.__members__.keys())
 
-_icode_hex       = "0123456789abcdef"
-_icode_custom    = "bcdfghjkmnpqrtvw"
+_icode_hex = "0123456789abcdef"
+_icode_custom = "bcdfghjkmnpqrtvw"
 _icode_all_valid = _icode_hex + _icode_custom
-_icode_map       = dict(zip(_icode_hex,    _icode_custom))
-_icode_map_inv   = dict(zip(_icode_custom, _icode_hex   ))
+_icode_map = dict(zip(_icode_hex, _icode_custom))
+_icode_map_inv = dict(zip(_icode_custom, _icode_hex))
 _csgofrcode_chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
 
@@ -55,8 +54,8 @@ class SteamID(intBase):
         SteamID('STEAM_1:0:2')  # steam2
         SteamID('[g:1:4]')  # steam3
     """
-    EType = EType                  #: reference to EType
-    EUniverse = EUniverse          #: reference to EUniverse
+    EType = EType  #: reference to EType
+    EUniverse = EUniverse  #: reference to EUniverse
     EInstanceFlag = EInstanceFlag  #: reference to EInstanceFlag
 
     def __new__(cls, *args, **kwargs):
@@ -76,7 +75,7 @@ class SteamID(intBase):
             repr(self.type.name),
             repr(self.universe.name),
             self.instance,
-            )
+        )
 
     @property
     def id(self):
@@ -148,7 +147,7 @@ class SteamID(intBase):
             int(self.universe),
             self.id % 2,
             self.id >> 1,
-            )
+        )
 
     @property
     def as_steam2_zero(self):
@@ -200,7 +199,7 @@ class SteamID(intBase):
             def repl_mapper(x):
                 return _icode_map[x.group()]
 
-            invite_code = re.sub("["+_icode_hex+"]", repl_mapper, "%x" % self.id)
+            invite_code = re.sub("[" + _icode_hex + "]", repl_mapper, "%x" % self.id)
             split_idx = len(invite_code) // 2
 
             if split_idx:
@@ -328,12 +327,12 @@ def make_steam64(id=0, *args, **kwargs):
             value = int(value)
 
             # 32 bit account id
-            if 0 < value < 2**32:
+            if 0 < value < 2 ** 32:
                 accountid = value
                 etype = EType.Individual
                 universe = EUniverse.Public
             # 64 bit
-            elif value < 2**64:
+            elif value < 2 ** 64:
                 accountid = int(value & 0xFFFFFFFF)
                 instance = int((value >> 32) & 0xFFFFF)
                 etype = int((value >> 52) & 0xF)
@@ -425,11 +424,11 @@ def steam3_to_tuple(value):
     :rtype: :class:`tuple` or :class:`None`
     """
     match = re.match(r"^\["
-                     r"(?P<type>[i%s]):"        # type char
-                     r"(?P<universe>[0-4]):"     # universe
-                     r"(?P<id>\d{1,10})"            # accountid
+                     r"(?P<type>[i%s]):"  # type char
+                     r"(?P<universe>[0-4]):"  # universe
+                     r"(?P<id>\d{1,10})"  # accountid
                      r"(:(?P<instance>\d+))?"  # instance
-                     r"\]$" % ETypeChars,
+                     r"]$" % ETypeChars,
                      value
                      )
     if not match:
@@ -458,6 +457,7 @@ def steam3_to_tuple(value):
 
     return (steam32, etype, universe, instance)
 
+
 def from_invite_code(code, universe=EUniverse.Public):
     """
     Invites urls can be generated at https://steamcommunity.com/my/friends/add
@@ -472,8 +472,8 @@ def from_invite_code(code, universe=EUniverse.Public):
     if not code:
         return None
 
-    m = re.match(r'(https?://s\.team/p/(?P<code1>[\-'+_icode_all_valid+']+))'
-                 r'|(?P<code2>[\-'+_icode_all_valid+']+$)'
+    m = re.match(r'(https?://s\.team/p/(?P<code1>[\-' + _icode_all_valid + ']+))'
+                                                                           r'|(?P<code2>[\-' + _icode_all_valid + ']+$)'
                  , code)
     if not m:
         return None
@@ -483,12 +483,14 @@ def from_invite_code(code, universe=EUniverse.Public):
     def repl_mapper(x):
         return _icode_map_inv[x.group()]
 
-    accountid = int(re.sub("["+_icode_custom+"]", repl_mapper, code), 16)
+    accountid = int(re.sub("[" + _icode_custom + "]", repl_mapper, code), 16)
 
-    if 0 < accountid < 2**32:
+    if 0 < accountid < 2 ** 32:
         return SteamID(accountid, EType.Individual, EUniverse(universe), 1)
 
+
 SteamID.from_invite_code = staticmethod(from_invite_code)
+
 
 def from_csgo_friend_code(code, universe=EUniverse.Public):
     """
@@ -501,7 +503,7 @@ def from_csgo_friend_code(code, universe=EUniverse.Public):
     :return: SteamID instance
     :rtype: :class:`.SteamID` or :class:`None`
     """
-    if not re.match(r'^['+_csgofrcode_chars+'\-]{10}$', code):
+    if not re.match(r'^[' + _csgofrcode_chars + r'-]{10}$', code):
         return None
 
     code = ('AAAA-' + code).replace('-', '')
@@ -524,7 +526,9 @@ def from_csgo_friend_code(code, universe=EUniverse.Public):
 
     return SteamID(accountid, EType.Individual, EUniverse(universe), 1)
 
+
 SteamID.from_csgo_friend_code = staticmethod(from_csgo_friend_code)
+
 
 def steam64_from_url(url, http_timeout=30):
     """
@@ -574,7 +578,7 @@ def steam64_from_url(url, http_timeout=30):
         # group profiles
         else:
             text = web.get(match.group('clean_url'), timeout=http_timeout).text
-            data_match = re.search("OpenGroupChat\( *'(?P<steamid>\d+)'", text)
+            data_match = re.search(r"OpenGroupChat\( *'(?P<steamid>\d+)'", text)
 
             if data_match:
                 return int(data_match.group('steamid'))
@@ -603,5 +607,6 @@ def from_url(url, http_timeout=30):
         return SteamID(steam64)
 
     return None
+
 
 SteamID.from_url = staticmethod(from_url)

@@ -1,16 +1,17 @@
 """Classes to (de)serialize various struct messages"""
 import struct
-import six
+
 import vdf
-from six.moves import range
 from steam.enums import EResult, EUniverse
 from steam.enums.emsg import EMsg
 from steam.utils.binary import StructReader
 
 _emsg_map = {}
 
+
 def get_struct(emsg):
     return _emsg_map.get(emsg, None)
+
 
 class StructMessageMeta(type):
     """Automatically adds subclasses of :class:`StructMessage` to the ``EMsg`` map"""
@@ -26,8 +27,8 @@ class StructMessageMeta(type):
 
         return cls
 
-@six.add_metaclass(StructMessageMeta)
-class StructMessage:
+
+class StructMessage(metaclass=StructMessageMeta):
     def __init__(self, data=None):
         if data: self.load(data)
 
@@ -62,6 +63,7 @@ class ChannelEncryptRequest(StructMessage):
                           "challenge: %s" % repr(self.challenge),
                           ])
 
+
 class ChannelEncryptResponse(StructMessage):
     protocolVersion = 1
     keySize = 128
@@ -92,6 +94,7 @@ class ChannelEncryptResponse(StructMessage):
                           "crc: %s" % self.crc,
                           ])
 
+
 class ChannelEncryptResult(StructMessage):
     eresult = EResult.Invalid
 
@@ -105,6 +108,7 @@ class ChannelEncryptResult(StructMessage):
     def __str__(self):
         return "eresult: %s" % repr(self.eresult)
 
+
 class ClientLogOnResponse(StructMessage):
     eresult = EResult.Invalid
 
@@ -117,6 +121,7 @@ class ClientLogOnResponse(StructMessage):
 
     def __str__(self):
         return "eresult: %s" % repr(self.eresult)
+
 
 class ClientVACBanStatus(StructMessage):
     class VACBanRange(object):
@@ -152,12 +157,13 @@ class ClientVACBanStatus(StructMessage):
                 m.start, m.end = m.end, m.start
 
     def __str__(self):
-        text =  ["numBans: %d" % self.numBans]
+        text = ["numBans: %d" % self.numBans]
 
         for m in self.ranges:  # emulate Protobuf text format
             text.append("ranges " + str(m).replace("\n", "\n    ", 2))
 
         return '\n'.join(text)
+
 
 class ClientChatMsg(StructMessage):
     steamIdChatter = 0
@@ -170,13 +176,13 @@ class ClientChatMsg(StructMessage):
                              self.steamIdChatter,
                              self.steamIdChatRoom,
                              self.ChatMsgType,
-                            )
+                             )
         # utf-8 encode only when unicode in py2 and str in py3
         rbytes += (self.text.encode('utf-8')
                    if (not isinstance(self.text, str) and bytes is str)
                       or isinstance(self.text, str)
                    else self.text
-                  ) + b'\x00'
+                   ) + b'\x00'
 
         return rbytes
 
@@ -192,6 +198,7 @@ class ClientChatMsg(StructMessage):
                           "text: %s" % repr(self.text),
                           ])
 
+
 class ClientJoinChat(StructMessage):
     steamIdChat = 0
     isVoiceSpeaker = False
@@ -200,17 +207,18 @@ class ClientJoinChat(StructMessage):
         return struct.pack("<Q?",
                            self.steamIdChat,
                            self.isVoiceSpeaker
-        )
+                           )
 
     def load(self, data):
         (self.steamIdChat,
          self.isVoiceSpeaker
-        ) = struct.unpack_from("<Q?", data)
+         ) = struct.unpack_from("<Q?", data)
 
     def __str__(self):
         return '\n'.join(["steamIdChat: %d" % self.steamIdChat,
                           "isVoiceSpeaker: %r" % self.isVoiceSpeaker,
                           ])
+
 
 class ClientChatMemberInfo(StructMessage):
     steamIdChat = 0
@@ -226,7 +234,7 @@ class ClientChatMemberInfo(StructMessage):
                            self.steamIdUserActedOn,
                            self.chatAction,
                            self.steamIdUserActedBy
-        )
+                           )
 
     def load(self, data):
         (self.steamIdChat,
@@ -234,7 +242,7 @@ class ClientChatMemberInfo(StructMessage):
          self.steamIdUserActedOn,
          self.chatAction,
          self.steamIdUserActedBy
-        ) = struct.unpack_from("<QIQIQ", data)
+         ) = struct.unpack_from("<QIQIQ", data)
 
     def __str__(self):
         return '\n'.join(["steamIdChat: %d" % self.steamIdChat,
@@ -243,6 +251,7 @@ class ClientChatMemberInfo(StructMessage):
                           "chatAction: %d" % self.chatAction,
                           "steamIdUserActedBy: %d" % self.steamIdUserActedBy
                           ])
+
 
 class ClientMarketingMessageUpdate2(StructMessage):
     class MarketingMessage(object):
@@ -290,10 +299,12 @@ class ClientMarketingMessageUpdate2(StructMessage):
 
         return '\n'.join(text)
 
+
 class ClientUpdateGuestPassesList(StructMessage):
     eresult = EResult.Invalid
     countGuestPassesToGive = 0
     countGuestPassesToRedeem = 0
+
     # there is more to parse, but I dont have an sample to figure it out
     # fairly sure this is deprecated anyway since introduction of the invetory system
 
@@ -301,7 +312,7 @@ class ClientUpdateGuestPassesList(StructMessage):
         (eresult,
          self.countGuestPassesToGive,
          self.countGuestPassesToRedeem,
-        ) = struct.unpack_from("<III", data)
+         ) = struct.unpack_from("<III", data)
 
         self.eresult = EResult(eresult)
 
@@ -350,7 +361,8 @@ class ClientChatEnter(StructMessage):
                           "enterResponse: %r" % self.enterResponse,
                           "numMembers: %r" % self.numMembers,
                           "chatRoomName: %s" % repr(self.chatRoomName),
-        ] + map(lambda x: "memberList: %s" % x, self.memberList))
+                          ] + map(lambda x: "memberList: %s" % x, self.memberList))
+
 
 ##################################################################################################
 
@@ -366,6 +378,7 @@ class _ResultStruct(StructMessage):
 
     def __str__(self):
         return "eresult: %s" % repr(self.eresult)
+
 
 ##################################################################################################
 
@@ -385,6 +398,7 @@ class ClientRequestValidationMail(StructMessage):
 class ClientRequestValidationMailResponse(_ResultStruct):
     pass
 
+
 ##################################################################################################
 
 class ClientRequestChangeMail(StructMessage):
@@ -402,6 +416,7 @@ class ClientRequestChangeMail(StructMessage):
 
 class ClientRequestChangeMailResponse(_ResultStruct):
     pass
+
 
 ##################################################################################################
 
@@ -426,4 +441,3 @@ class ClientPasswordChange3(StructMessage):
 
 class ClientPasswordChangeResponse(_ResultStruct):
     pass
-

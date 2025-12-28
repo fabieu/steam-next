@@ -1,10 +1,6 @@
-import sys
 import time
 
-if sys.version_info >= (3,3):
-    _monotonic = time.monotonic
-else:
-    _monotonic = time.time  # not really monotonic vOv
+_monotonic = time.monotonic
 
 
 class ConstantRateLimit(object):
@@ -56,5 +52,3 @@ class ConstantRateLimit(object):
             delay = max(0, self._ref - now)
             self.sleep_func(delay)
         self._update_ref()
-
-

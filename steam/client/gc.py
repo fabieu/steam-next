@@ -38,13 +38,12 @@ The above code assumes that we have a ``myDotaModule`` that contains the appropr
 protobufs needed to (de)serialize message for communication with GC.
 """
 import logging
-import gevent
+
 from eventemitter import EventEmitter
-from steam.utils.proto import set_proto_bit, clear_proto_bit, is_proto
-from steam.enums.emsg import EMsg
-from steam.enums import EResult
-from steam.core.msg import GCMsgHdr, GCMsgHdrProto, MsgProto
 from steam.client import SteamClient
+from steam.core.msg import GCMsgHdr, GCMsgHdrProto, MsgProto
+from steam.enums.emsg import EMsg
+from steam.utils.proto import set_proto_bit, clear_proto_bit, is_proto
 
 
 class GameCoordinator(EventEmitter):

@@ -1,5 +1,5 @@
-
 import sys
+
 
 def versions_report():
     """Print a report of al dependacy versions, and environment"""
@@ -15,16 +15,16 @@ def versions_report():
     installed_pkgs = {pkg.project_name.lower(): pkg.version for pkg in pkg_resources.working_set}
 
     for dep in [
-                "vdf",
-                "protobuf",
-                "requests",
-                "cachetools",
-                "gevent",
-                "gevent-eventemitter",
-                "pycryptodomex",
-                "enum34",
-                "win-inet-pton",
-                ]:
+        "vdf",
+        "protobuf",
+        "requests",
+        "cachetools",
+        "gevent",
+        "gevent-eventemitter",
+        "pycryptodomex",
+        "enum34",
+        "win-inet-pton",
+    ]:
         print("{:>20}: {}".format(dep, installed_pkgs.get(dep.lower(), "Not Installed")))
 
     # python runtime

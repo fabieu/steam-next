@@ -55,27 +55,18 @@ Example usage:
 
 """
 import json
-from time import time, sleep
 from base64 import b64encode
 from getpass import getpass
-import six
-import requests
+from time import time
 
+import requests
+from steam.core.crypto import rsa_publickey, pkcs1v15_encrypt
 from steam.enums.proto import EAuthSessionGuardType
 from steam.steamid import SteamID
 from steam.utils.web import generate_session_id
-from steam.core.crypto import rsa_publickey, pkcs1v15_encrypt
 
-
-# TODO: Remove python2 support.
-# TODO: Encrease min python version to 3.5
-
-if six.PY2:
-    intBase = long
-    _cli_input = raw_input
-else:
-    intBase = int
-    _cli_input = input
+intBase = int
+_cli_input = input
 
 API_HEADERS = {
     'origin': 'https://steamcommunity.com',
@@ -85,7 +76,8 @@ API_HEADERS = {
 
 API_URL = 'https://api.steampowered.com/{}Service/{}/v{}'
 
-SUPPORTED_AUTH_TYPES = [EAuthSessionGuardType.EmailCode, EAuthSessionGuardType.DeviceCode, EAuthSessionGuardType.DeviceConfirmation]
+SUPPORTED_AUTH_TYPES = [EAuthSessionGuardType.EmailCode, EAuthSessionGuardType.DeviceCode,
+                        EAuthSessionGuardType.DeviceConfirmation]
 
 
 class WebAuth(object):
@@ -180,7 +172,7 @@ class WebAuth(object):
     def _get_rsa_key(self):
         """Get rsa key to crypt password."""
         return self.send_api_request({'account_name': self.username},
-                              "IAuthentication", 'GetPasswordRSAPublicKey', 1)
+                                     "IAuthentication", 'GetPasswordRSAPublicKey', 1)
 
     def _encrypt_password(self):
         """Encrypt password via RSA key
@@ -221,7 +213,8 @@ class WebAuth(object):
         self.client_id = resp['response']['client_id']
         self.request_id = resp['response']['request_id']
         self.steam_id = SteamID(resp['response']['steamid'])
-        self.allowed_confirmations = [EAuthSessionGuardType(confirm_type['confirmation_type']) for confirm_type in resp['response']['allowed_confirmations']]
+        self.allowed_confirmations = [EAuthSessionGuardType(confirm_type['confirmation_type']) for confirm_type in
+                                      resp['response']['allowed_confirmations']]
 
     def _startLoginSession(self):
         """Starts login session via credentials."""
@@ -277,9 +270,8 @@ class WebAuth(object):
             'code_type': code_type
         }
         res = self.send_api_request(data, 'IAuthentication',
-                             'UpdateAuthSessionWithSteamGuardCode', 1)
+                                    'UpdateAuthSessionWithSteamGuardCode', 1)
         return res
-
 
     def login(self, username: str = '', password: str = '', code: str = None,
               email_required=False):
@@ -332,6 +324,7 @@ class WebAuth(object):
                     self._pollLoginStatus()
                     self._finalizeLogin()
                     return self.session
+
                 return end_login
             if res.get('result') == 29:
                 # This code 100% means some data not valid
@@ -352,11 +345,11 @@ class WebAuth(object):
         Can be VERY useful e.g. for users, who practice account rent.
         """
         session_id = self.session.cookies.get('sessionid',
-                    domain='store.steampowered.com')
+                                              domain='store.steampowered.com')
 
         # By the times I saw session can be both of keys, so select valid.
         session_id = session_id or self.session.cookies.get(
-                'sessionId', domain='store.steampowered.com')
+            'sessionId', domain='store.steampowered.com')
         data = {
             "action": "deauthorize",
             "sessionid": session_id
@@ -368,8 +361,8 @@ class WebAuth(object):
 
         return resp.status_code == 200
 
-    def cli_login(self, username: str = '', password: str = '', code: str =     '',
-                      email_required: bool = False):
+    def cli_login(self, username: str = '', password: str = '', code: str = '',
+                  email_required: bool = False):
         """Generates CLI prompts to perform the entire login process
 
         If you use email confirm, provide email_required = True,
@@ -411,11 +404,11 @@ class WebAuth(object):
 
                     if prompt != '':
                         prompt += ': '
-                        twofactor_code = input(prompt) 
+                        twofactor_code = input(prompt)
 
                     if can_confirm_with_app:
                         try:
-                            self._pollLoginStatus() # test to see if they've authenticated via app
+                            self._pollLoginStatus()  # test to see if they've authenticated via app
                             break
                         except TwoFactorAuthNotProvided:
                             # they've not authenticated via the app, let's see if we can use their provided code
@@ -423,7 +416,8 @@ class WebAuth(object):
 
                     if twofactor_code.strip():
                         using_email_code = EAuthSessionGuardType.EmailCode in allowed
-                        self._update_login_token(twofactor_code, EAuthSessionGuardType.EmailCode if using_email_code else EAuthSessionGuardType.DeviceCode)
+                        self._update_login_token(twofactor_code,
+                                                 EAuthSessionGuardType.EmailCode if using_email_code else EAuthSessionGuardType.DeviceCode)
                         try:
                             self._pollLoginStatus()
                             break
@@ -448,7 +442,7 @@ class WebAuth(object):
                 return self.session
 
 
-#TODO: DEPRECATED, must be rewritten, like WebAuth
+# TODO: DEPRECATED, must be rewritten, like WebAuth
 class MobileWebAuth(WebAuth):
     """Identical to :class:`WebAuth`, except it authenticates as a mobile device."""
     oauth_token = None  #: holds oauth_token after successful login

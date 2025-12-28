@@ -2,9 +2,9 @@
 Web related features
 """
 from steam import webapi
+from steam.core.crypto import generate_session_key, symmetric_encrypt
 from steam.core.msg import MsgProto
 from steam.enums.emsg import EMsg
-from steam.core.crypto import generate_session_key, symmetric_encrypt
 from steam.utils.web import make_requests_session, generate_session_id
 
 
@@ -20,7 +20,7 @@ class Web(object):
         self._web_session = None
 
     # TODO: DEPRECATED. This function not work anymore.
-    #This function must be rewritten to use  WebAuth
+    # This function must be rewritten to use  WebAuth
     def get_web_session_cookies(self):
         """Get web authentication cookies via WebAPI's ``AuthenticateUser``
 

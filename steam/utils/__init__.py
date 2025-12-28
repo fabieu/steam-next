@@ -1,15 +1,9 @@
 """Utility package with various useful functions
 """
-import six
-from six.moves import xrange as _range
-import sys
 
-if six.PY2 and sys.platform == 'win32':
-    import win_inet_pton
-
-import weakref
-import struct
 import socket
+import struct
+import weakref
 
 
 def ip4_from_int(ip):
@@ -22,6 +16,7 @@ def ip4_from_int(ip):
     """
     return socket.inet_ntoa(struct.pack(">L", ip))
 
+
 def ip4_to_int(ip):
     """Convert IPv4 string to :py:class:`int`
 
@@ -31,8 +26,10 @@ def ip4_to_int(ip):
     """
     return struct.unpack(">L", socket.inet_aton(ip))[0]
 
+
 ip_to_int = ip4_to_int
 ip_from_int = ip4_from_int
+
 
 def ip6_from_bytes(ip):
     """Convert :py:class:`bytes` to IPv6 string
@@ -42,6 +39,7 @@ def ip6_from_bytes(ip):
     :rtype: str
     """
     return socket.inet_ntop(socket.AF_INET6, ip)
+
 
 def ip6_to_bytes(ip):
     """Convert IPv6 string to :py:class:`bytes`
@@ -63,8 +61,8 @@ def chunks(arr, size):
     :return: generator object
     :rtype: :class:`generator`
     """
-    for i in _range(0, len(arr), size):
-        yield arr[i:i+size]
+    for i in range(0, len(arr), size):
+        yield arr[i:i + size]
 
 
 class WeakRefKeyDict(object):
@@ -72,6 +70,7 @@ class WeakRefKeyDict(object):
     Use any object (even unhashable) as key and store a value.
     Once the object is garbage collected, the entry is destroyed automatically.
     """
+
     def __init__(self):
         self.refs = {}
 
@@ -93,8 +92,10 @@ class WeakRefKeyDict(object):
     def __len__(self):
         return len(self.refs)
 
+
 class WeakRefCallback(object):
     def __init__(self, refs, key):
         self.__dict__.update(locals())
+
     def __call__(self, wr):
         del self.refs[self.key]

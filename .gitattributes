@@ -1,0 +1,9 @@
+# =========================
+# Line endings
+# =========================
+
+# Default: normalize text files
+* text=auto
+
+# Enforce LF for protobuf files
+*.proto text eol=lf

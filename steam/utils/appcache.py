@@ -39,10 +39,12 @@ Appache file parsing examples:
 """
 
 import struct
+
 from vdf import binary_load
 
 uint32 = struct.Struct('<I')
 uint64 = struct.Struct('<Q')
+
 
 def parse_appinfo(fp):
     """Parse appinfo.vdf from the Steam appcache folder
@@ -52,21 +54,21 @@ def parse_appinfo(fp):
     :rtype: (:class:`dict`, :class:`Generator`)
     :return: (header, apps iterator)
     """
-# format:
-#   uint32   - MAGIC: "'DV\x07" or "(DV\x07"
-#   uint32   - UNIVERSE: 1
-#   ---- repeated app sections ----
-#   uint32   - AppID
-#   uint32   - size
-#   uint32   - infoState
-#   uint32   - lastUpdated
-#   uint64   - accessToken
-#   20bytes  - SHA1
-#   uint32   - changeNumber
-#   20bytes  - binary_vdf SHA1 (added in "(DV\x07"
-#   variable - binary_vdf
-#   ---- end of section ---------
-#   uint32   - EOF: 0
+    # format:
+    #   uint32   - MAGIC: "'DV\x07" or "(DV\x07"
+    #   uint32   - UNIVERSE: 1
+    #   ---- repeated app sections ----
+    #   uint32   - AppID
+    #   uint32   - size
+    #   uint32   - infoState
+    #   uint32   - lastUpdated
+    #   uint64   - accessToken
+    #   20bytes  - SHA1
+    #   uint32   - changeNumber
+    #   20bytes  - binary_vdf SHA1 (added in "(DV\x07"
+    #   variable - binary_vdf
+    #   ---- end of section ---------
+    #   uint32   - EOF: 0
 
     magic = fp.read(4)
     if magic not in (b"'DV\x07", b"(DV\x07"):
@@ -94,17 +96,17 @@ def parse_appinfo(fp):
             if magic == b"(DV\x07":
                 app['data_sha1'] = fp.read(20)
 
-            app['data'] =  binary_load(fp)
+            app['data'] = binary_load(fp)
 
             yield app
 
-
     return ({
-              'magic': magic,
-              'universe': universe,
+                'magic': magic,
+                'universe': universe,
             },
             apps_iter()
-            )
+    )
+
 
 def parse_packageinfo(fp):
     """Parse packageinfo.vdf from the Steam appcache folder
@@ -114,17 +116,17 @@ def parse_packageinfo(fp):
     :rtype: (:class:`dict`, :class:`Generator`)
     :return: (header, packages iterator)
     """
-# format:
-#   uint32   - MAGIC: b"'UV\x06" or b"(UV\x06"
-#   uint32   - UNIVERSE: 1
-#   ---- repeated package sections ----
-#   uint32   - PackageID
-#   20bytes  - SHA1
-#   uint32   - changeNumber
-#   uint64   - token           (only on b"(UV\x06")
-#   variable - binary_vdf
-#   ---- end of section ---------
-#   uint32   - EOF: 0xFFFFFFFF
+    # format:
+    #   uint32   - MAGIC: b"'UV\x06" or b"(UV\x06"
+    #   uint32   - UNIVERSE: 1
+    #   ---- repeated package sections ----
+    #   uint32   - PackageID
+    #   20bytes  - SHA1
+    #   uint32   - changeNumber
+    #   uint64   - token           (only on b"(UV\x06")
+    #   variable - binary_vdf
+    #   ---- end of section ---------
+    #   uint32   - EOF: 0xFFFFFFFF
 
     magic = fp.read(4)
     if magic not in (b"'UV\x06", b"(UV\x06"):
@@ -152,10 +154,9 @@ def parse_packageinfo(fp):
 
             yield pkg
 
-
     return ({
-              'magic': magic,
-              'universe': universe,
+                'magic': magic,
+                'universe': universe,
             },
             pkgs_iter()
-            )
+    )

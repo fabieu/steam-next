@@ -63,29 +63,29 @@ Format of ``secrets.json`` file:
     }
 """
 import json
-import subprocess
 import struct
-import requests
+import subprocess
 from base64 import b64decode, b64encode
 from binascii import hexlify
 from time import time
+
+import requests
 from steam import webapi
-from steam.enums import ETwoFactorTokenType
-from steam.steamid import SteamID
 from steam.core.crypto import hmac_sha1, sha1_hash
+from steam.enums import ETwoFactorTokenType
 from steam.enums.common import EResult
-from steam.webauth import MobileWebAuth
 from steam.utils.proto import proto_to_dict
+from steam.webauth import MobileWebAuth
 
 
 class SteamAuthenticator(object):
     """Add/Remove authenticator from an account. Generate 2FA and confirmation codes."""
     _finalize_attempts = 5
-    backend = None               #: instance of :class:`.MobileWebAuth` or :class:`.SteamClient`
-    steam_time_offset = None     #: offset from steam server time
-    align_time_every = 0         #: how often to align time with Steam (``0`` never, otherwise interval in seconds)
+    backend = None  #: instance of :class:`.MobileWebAuth` or :class:`.SteamClient`
+    steam_time_offset = None  #: offset from steam server time
+    align_time_every = 0  #: how often to align time with Steam (``0`` never, otherwise interval in seconds)
     _offset_last_check = 0
-    secrets = None               #: :class:`dict` with authenticator secrets
+    secrets = None  #: :class:`dict` with authenticator secrets
 
     def __init__(self, secrets=None, backend=None):
         """
@@ -108,8 +108,8 @@ class SteamAuthenticator(object):
         :rtype: int
         """
         if (self.steam_time_offset is None
-           or (self.align_time_every and (time() - self._offset_last_check) > self.align_time_every)
-           ):
+                or (self.align_time_every and (time() - self._offset_last_check) > self.align_time_every)
+        ):
             self.steam_time_offset = get_time_offset()
 
             if self.steam_time_offset is not None:
@@ -213,7 +213,8 @@ class SteamAuthenticator(object):
             'activation_code': activation_code,
         })
 
-        if resp['status'] != EResult.TwoFactorActivationCodeMismatch and resp.get('want_more', False) and self._finalize_attempts:
+        if resp['status'] != EResult.TwoFactorActivationCodeMismatch and resp.get('want_more',
+                                                                                  False) and self._finalize_attempts:
             self.steam_time_offset += 30
             self._finalize_attempts -= 1
             self.finalize(activation_code)
@@ -252,7 +253,7 @@ class SteamAuthenticator(object):
         if not resp['success']:
             raise SteamAuthenticatorError("Failed to remove authenticator. (attempts remaining: %s)" % (
                 resp['revocation_attempts_remaining'],
-                ))
+            ))
 
         self.secrets.clear()
 
@@ -350,7 +351,7 @@ class SteamAuthenticator(object):
                                  'checkfortos': 0,
                                  'skipvoip': 0,
                                  'sessionid': sess.cookies.get('sessionid', domain='steamcommunity.com'),
-                                 },
+                             },
                              timeout=15).json()
         except:
             return {'success': False}
@@ -383,7 +384,7 @@ class SteamAuthenticator(object):
                                  'checkfortos': 1,
                                  'skipvoip': 1,
                                  'sessionid': sess.cookies.get('sessionid', domain='steamcommunity.com'),
-                                 },
+                             },
                              timeout=15).json()
         except:
             return {'fatal': True, 'success': False}
@@ -414,7 +415,7 @@ class SteamAuthenticator(object):
                                  'checkfortos': 1,
                                  'skipvoip': 1,
                                  'sessionid': sess.cookies.get('sessionid', domain='steamcommunity.com'),
-                                 },
+                             },
                              timeout=15).json()
         except:
             return {'success': False}
@@ -444,7 +445,7 @@ class SteamAuthenticator(object):
                                  'checkfortos': 0,
                                  'skipvoip': 1,
                                  'sessionid': sess.cookies.get('sessionid', domain='steamcommunity.com'),
-                                 },
+                             },
                              timeout=15).json()
         except:
             return {'success': False}
@@ -472,9 +473,9 @@ class SteamAuthenticator(object):
         try:
             resp = sess.post('https://store.steampowered.com/phone/validate',
                              data={
-                                'phoneNumber': phone_number,
-                                'sessionID': sess.cookies.get('sessionid', domain='store.steampowered.com'),
-                                },
+                                 'phoneNumber': phone_number,
+                                 'sessionID': sess.cookies.get('sessionid', domain='store.steampowered.com'),
+                             },
                              allow_redirects=False,
                              timeout=15).json()
         except:
@@ -497,6 +498,7 @@ def generate_twofactor_code(shared_secret):
     """
     return generate_twofactor_code_for_time(shared_secret, time() + (get_time_offset() or 0))
 
+
 def generate_twofactor_code_for_time(shared_secret, timestamp):
     """Generate Steam 2FA code for timestamp
 
@@ -508,10 +510,10 @@ def generate_twofactor_code_for_time(shared_secret, timestamp):
     :rtype: str
     """
     hmac = hmac_sha1(bytes(shared_secret),
-                     struct.pack('>Q', int(timestamp)//30))  # this will NOT stop working in 2038
+                     struct.pack('>Q', int(timestamp) // 30))  # this will NOT stop working in 2038
 
     start = ord(hmac[19:20]) & 0xF
-    codeint = struct.unpack('>I', hmac[start:start+4])[0] & 0x7fffffff
+    codeint = struct.unpack('>I', hmac[start:start + 4])[0] & 0x7fffffff
 
     charset = '23456789BCDFGHJKMNPQRTVWXY'
     code = ''
@@ -521,6 +523,7 @@ def generate_twofactor_code_for_time(shared_secret, timestamp):
         code += charset[i]
 
     return code
+
 
 def generate_confirmation_key(identity_secret, tag, timestamp):
     """Generate confirmation key for trades. Can only be used once.
@@ -542,8 +545,9 @@ def generate_confirmation_key(identity_secret, tag, timestamp):
         * ``cancel`` to cancel a trade
 
     """
-    data = struct.pack('>Q', int(timestamp)) + tag.encode('ascii') # this will NOT stop working in 2038
+    data = struct.pack('>Q', int(timestamp)) + tag.encode('ascii')  # this will NOT stop working in 2038
     return hmac_sha1(bytes(identity_secret), data)
+
 
 def get_time_offset():
     """Get time offset from steam server time via WebAPI
@@ -559,6 +563,7 @@ def get_time_offset():
     ts = int(time())
     return int(resp.get('response', {}).get('server_time', ts)) - ts
 
+
 def generate_device_id(steamid):
     """Generate Android device id
 
@@ -569,6 +574,7 @@ def generate_device_id(steamid):
     """
     h = hexlify(sha1_hash(str(steamid).encode('ascii'))).decode('ascii')
     return "android:%s-%s-%s-%s-%s" % (h[:8], h[8:12], h[12:16], h[16:20], h[20:32])
+
 
 def extract_secrets_from_android_rooted(adb_path='adb'):
     """Extract Steam Authenticator secrets from a rooted Android device
@@ -592,7 +598,7 @@ def extract_secrets_from_android_rooted(adb_path='adb'):
     data = subprocess.check_output([
         adb_path, 'shell', 'su', '-c',
         "'cat /data/data/com.valvesoftware.android.steam.community/files/Steamguard*'"
-        ])
+    ])
 
     # When adb daemon is not running, `adb` will print a couple of lines before our data.
     # The data doesn't have new lines and its always on the last line.

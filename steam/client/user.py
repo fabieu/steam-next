@@ -1,10 +1,12 @@
-from datetime import datetime
 from binascii import hexlify
+from datetime import datetime
+
 from gevent.event import Event
-from steam.steamid import SteamID
+from steam.core.msg import MsgProto
 from steam.enums import EFriendRelationship, EPersonaState, EChatEntryType
 from steam.enums.emsg import EMsg
-from steam.core.msg import MsgProto
+from steam.steamid import SteamID
+
 
 class SteamUser(object):
     """
@@ -16,7 +18,7 @@ class SteamUser(object):
     _pstate = None
     _pstate_requested = False
     steam_id = SteamID()  #: steam id
-    relationship = EFriendRelationship.NONE   #: friendship status
+    relationship = EFriendRelationship.NONE  #: friendship status
 
     def __init__(self, steam_id, steam):
         self._pstate_ready = Event()
@@ -29,7 +31,7 @@ class SteamUser(object):
             str(self.steam_id),
             self.relationship,
             self.state,
-            )
+        )
 
     def refresh(self, wait=True):
         if self._pstate_requested and self._pstate_ready.is_set():
@@ -47,7 +49,7 @@ class SteamUser(object):
     def get_ps(self, field_name, wait_pstate=True):
         """Get property from PersonaState
 
-        `See full list of available fields_names <https://github.com/ValvePython/steam/blob/fa8a5127e9bb23185483930da0b6ae85e93055a7/protobufs/steammessages_clientserver_friends.proto#L125-L153>`_
+        `See full list of available fields_names <https://github.com/fabieu/steam-next/blob/fa8a5127e9bb23185483930da0b6ae85e93055a7/protobufs/steammessages_clientserver_friends.proto#L125-L153>`_
         """
         if not self._pstate_ready.is_set() and wait_pstate:
             self.refresh()
@@ -137,14 +139,14 @@ class SteamUser(object):
                 'steamid': self.steam_id,
                 'message': message,
                 'chat_entry_type': EChatEntryType.ChatMsg,
-                })
+            })
         # old chat
         else:
             self._steam.send(MsgProto(EMsg.ClientFriendMsg), {
                 'steamid': self.steam_id,
                 'chat_entry_type': EChatEntryType.ChatMsg,
                 'message': message.encode('utf8'),
-                })
+            })
 
     def block(self):
         """Block user"""

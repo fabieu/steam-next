@@ -1,6 +1,6 @@
 .. include:: global.rst
 
-Intro - steam |version|
+Intro - steam-next |version|
 =======================
 
 |today|
@@ -9,7 +9,7 @@ Intro - steam |version|
 
 A python module for interacting with various parts of Steam_.
 
-Supports Python ``2.7+`` and ``3.4+``.
+Supports Python ``3.9+``.
 
 Features
 ========
@@ -24,9 +24,7 @@ Features
 
 Checkout the :doc:`user_guide` for examples, or the :doc:`api/steam` for details.
 
-For questions, issues, or general curiosity, visit the repo at `https://github.com/ValvePython/steam <https://github.com/ValvePython/steam>`_.
-
-Like using the command line? Try `steamctl <https://github.com/ValvePython/steamctl>`_ tool
+For questions, issues, or general curiosity, visit the repo at `https://github.com/fabieu/steam-next <https://github.com/fabieu/steam-next>`_.
 
 Quick install
 =============
@@ -35,18 +33,8 @@ For system specific details, see :doc:`install`.
 
 Install latest version from PYPI::
 
-    # with SteamClient dependecies
-    pip install -U steam[client]
+    # with SteamClient dependencies
+    pip install -U steam-next[client]
 
-    # without (only when using parts that do no rely on gevent, and protobufs)
-    pip install -U steam
-
-Install the current dev version from ``github``::
-
-    # cutting edge from master
-    pip install git+https://github.com/ValvePython/steam#egg=steam
-
-    # specific version tag (e.g. v1.0.0)
-    pip install git+https://github.com/ValvePython/steam@v1.0.0#egg=steam[client]
-    # without SteamClient extras
-    pip install git+https://github.com/ValvePython/steam@v1.0.0#egg=steam
+    # without (only when using parts that do no rely on gevent and protobuf)
+    pip install -U steam-next
