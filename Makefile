@@ -52,13 +52,13 @@ pb_fetch:
 	sed -i 's/\.steamclient\.proto/.proto/' protobufs/*.proto
 
 pb_compile:
-	for filepath in ./protobufs/*.proto; do \
-		protoc --python_out ./steam/protobufs/ --proto_path=./protobufs "$$filepath"; \
+	for filepath in protobufs/*.proto protobufs/tests/*.proto; do \
+		protoc --python_out steam/protobufs/ --proto_path=protobufs "$$filepath"; \
 	done;
 	sed -i '/^import sys/! s/^import /import steam.protobufs./' steam/protobufs/*_pb2.py
 
 pb_clear:
-	rm -f ./protobufs/*.proto ./steam/protobufs/*_pb2.py
+	rm -f protobufs/*.proto steam/protobufs/*_pb2.py
 
 pb_services:
 	grep -B 99999 MARK_SERVICE_START steam/core/msg/unified.py > steam/core/msg/unified.py.tmp
@@ -69,4 +69,4 @@ pb_services:
 pb_gen_enums:
 	python3 generate_enums_from_proto.py > steam/enums/proto.py
 
-pb_update: pb_fetch pb_compile pb_services pb_gen_enums
+pb_update: pb_clear pb_fetch pb_compile pb_services pb_gen_enums

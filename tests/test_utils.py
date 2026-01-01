@@ -5,7 +5,7 @@ import requests
 import steam.utils as ut
 import steam.utils.proto as utp
 import steam.utils.web as uweb
-from steam.protobufs.test_messages_pb2 import ComplexProtoMessage
+from steam.protobufs.tests.test_messages_pb2 import ComplexProtoMessage
 
 
 class Util_Functions(unittest.TestCase):
