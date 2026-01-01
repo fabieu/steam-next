@@ -21,7 +21,7 @@ interactions:
     uri: https://api.steampowered.com/IAuthenticationService/GetPasswordRSAPublicKey/v1
   response:
     body:
-      string: '{"response": {"publickey_mod": "c217c3cc919a200d86823cab6f15c426ef068dd5176a608fe137f55a531f20c48042388a1d32bee068759aa7614dc3ac9c2e2ae47828c345a965a7cb7eff00e29c6ee854a959ace2076aa286373c8c2d4c26345e2aa1cd912f078425df3ccbf5126102476ab79cf5e49d8902e38408b6f4d3ce839da4bc809f839aac040365e9620dc6225ca4ab891eedf937408eec4e622dba518d959bb1d39c0c4c1ac5a9abc2b47a887c67851a3dc75ca7d6d8d46d21303e7674a803578a7749eb31a802edcb55c164df75138e2a5aaa7c72e5730ed5011a3368818d90a3aeeb67a076b4349a74ede870f842f354971846a8bfeec9adfe27b2f15b03362359378829ec00f9",
+      string: '{"response": {"publickey_mod": "c565220a18425ae0da6ed8eb336a0cc9761cf23a6d01b17ca050a9cee60ffbaf28b1e97d98d27d79d2377d97fcb1900e18c47a6f0ac710138ec937cb8a4af8c1317aa46c0b0a7d82f52760bbace49885303e45b8229b7a46c37cd2d132569d2ccfe4e1b68add52eb7c9be68ece2ab93e06cb6e4d509cff5eaa6b390887474e710789f46d68e550cfaaad1e215add9d18214483c821d3b4930738f986261889f39b7ac5cd84ff9f9e25240f1a7bd5a2ac1e0dc7b84ee44e9769d33df2674dcf97281bcd2167c8c90c377ebc9a55928b195c411c044c7d733ef1818b98b4d8f55b81ae21f67b1ea8e6a7de446790facb9c305e0efa2efef3ae628b7316135dc4f9",
         "publickey_exp": "010001", "timestamp": 12345678}}'
     headers:
       Access-Control-Allow-Origin:
@@ -30,14 +30,8 @@ interactions:
       - X-eresult, X-error_message
       Connection:
       - keep-alive
-      Content-Length:
-      - '598'
       Content-Type:
       - application/json; charset=UTF-8
-      Date:
-      - Thu, 01 Jan 2026 13:32:52 GMT
-      Expires:
-      - Thu, 01 Jan 2026 13:32:52 GMT
       Server:
       - nginx
       Vary:
@@ -79,14 +73,8 @@ interactions:
       - X-eresult, X-error_message
       Connection:
       - keep-alive
-      Content-Length:
-      - '55'
       Content-Type:
       - application/json; charset=UTF-8
-      Date:
-      - Thu, 01 Jan 2026 13:32:52 GMT
-      Expires:
-      - Thu, 01 Jan 2026 13:32:52 GMT
       Server:
       - nginx
       Vary:

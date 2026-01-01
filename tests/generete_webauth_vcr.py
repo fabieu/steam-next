@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 import sys
+from typing import Iterable
 
 filepath = os.path.dirname(os.path.realpath(__file__))
 rootdir = os.path.abspath(os.path.join(filepath, '..'))
@@ -21,17 +22,37 @@ _input = input
 # -----------------------
 # The recorded vcr is anonymized and should not contain
 # any personal info. MAKE SURE TO CHECK THE VCR BEFORE COMMIT TO REPO
+def _pop_headers(headers: dict, names: Iterable[str]):
+    """Pop header(s) regardless of casing (VCR stores keys as plain dict)."""
+    targets = {name.lower() for name in names}
+
+    for key in list(headers.keys()):
+        if key.lower() in targets:
+            headers.pop(key, None)
+
 
 def request_scrubber(r):
-    r.headers.pop('Cookie', None)
+    _pop_headers(r.headers, [
+        'Cookie',
+        'Content-Length',
+        'Transfer-Encoding',
+    ])
+
     r.headers['Accept-Encoding'] = 'identity'
+
     r.body = ''
+
     return r
 
 
 def response_scrubber(r):
-    r['headers'].pop('date', None)
-    r['headers'].pop('expires', None)
+    _pop_headers(r.get('headers', {}), [
+        'Date',
+        'Expires',
+        'Cookie',
+        'Content-Length',
+        'Transfer-Encoding',
+    ])
 
     if 'set-cookie' in r['headers'] and 'steamLogin' in ''.join(r['headers']['set-cookie']):
         r['headers']['set-cookie'] = [
@@ -82,7 +103,6 @@ anon_vcr = vcr.VCR(
     serializer='yaml',
     record_mode='new_episodes',
     cassette_library_dir=os.path.join(rootdir, 'vcr'),
-    filter_headers=['authorization', 'cookie', 'content-length'],
     filter_query_parameters=['account_name'],
 )
 
