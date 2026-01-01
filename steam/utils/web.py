@@ -12,13 +12,12 @@ def make_requests_session(headers: dict = None) -> requests.Session:
     :rtype: :class:`requests.Session`
     """
     session = requests.Session()
+    session.headers.update({
+        'User-Agent': f"python-steam/{__version__} {session.headers['User-Agent']}",
+    })
 
     if headers:
         session.headers.update(headers)
-    else:
-        session.headers.update({
-            'User-Agent':  f"python-steam/{__version__} {session.headers['User-Agent']}",
-        })
 
     return session
 

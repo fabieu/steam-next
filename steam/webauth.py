@@ -67,13 +67,19 @@ from steam.enums.proto import EAuthSessionGuardType
 from steam.steamid import SteamID
 from steam.utils.web import generate_session_id, make_requests_session
 
-API_URL = 'https://api.steampowered.com/{}/{}/v{}'
-
 SUPPORTED_AUTH_TYPES = [
     EAuthSessionGuardType.EmailCode,
     EAuthSessionGuardType.DeviceCode,
     EAuthSessionGuardType.DeviceConfirmation
 ]
+
+
+def get_steam_api_url(steam_api_interface: str, steam_api_method: str, steam_api_version: int) -> str:
+    """Get URL for Steam API requests."""
+    if None in (steam_api_interface, steam_api_method, steam_api_version):
+        raise TypeError("Missing arguments to build Steam API URL")
+
+    return f'https://api.steampowered.com/{steam_api_interface}/{steam_api_method}/v{steam_api_version}'
 
 
 class WebAuth:
@@ -154,15 +160,9 @@ class WebAuth:
         self.email_auth_waits = False  # Not used yet.
         self.logged_on = False
 
-    def send_api_request(
-            self,
-            steam_api_interface: str,
-            steam_api_method: str,
-            steam_api_version: int,
-            data: Any
-    ):
+    def send_api_request(self, steam_api_interface: str, steam_api_method: str, steam_api_version: int, data: Any):
         """Send request to Steam API via requests"""
-        steam_url = API_URL.format(steam_api_interface, steam_api_method, steam_api_version)
+        steam_url = get_steam_api_url(steam_api_interface, steam_api_method, steam_api_version)
 
         try:
             response = self.session.post(steam_url, data=data, timeout=10)
@@ -175,7 +175,7 @@ class WebAuth:
 
     def _get_rsa_key(self):
         """Get rsa key to crypt password."""
-        steam_url = API_URL.format('IAuthenticationService', 'GetPasswordRSAPublicKey', 1)
+        steam_url = get_steam_api_url('IAuthenticationService', 'GetPasswordRSAPublicKey', 1)
         data = {
             'account_name': self.username
         }
@@ -208,20 +208,21 @@ class WebAuth:
     def _start_session_with_credentials(self, account_encrypted_password: str, timestamp: int):
         """Start login session via BeginAuthSessionViaCredentials"""
 
+        data = {
+            'device_friendly_name': self.user_agent,
+            'account_name': self.username,
+            'encrypted_password': account_encrypted_password,
+            'encryption_timestamp': timestamp,
+            'remember_login': '1',
+            'platform_type': '2',
+            'persistence': '1',
+            'website_id': 'Community',
+        }
         response_json = self.send_api_request(
-            'IAuthenticationService',
-            'BeginAuthSessionViaCredentials',
-            1,
-            {
-                'device_friendly_name': self.user_agent,
-                'account_name': self.username,
-                'encrypted_password': account_encrypted_password,
-                'encryption_timestamp': timestamp,
-                'remember_login': '1',
-                'platform_type': '2',
-                'persistence': '1',
-                'website_id': 'Community',
-            }
+            steam_api_interface='IAuthenticationService',
+            steam_api_method='BeginAuthSessionViaCredentials',
+            steam_api_version=1,
+            data=data
         )
 
         try:
@@ -247,14 +248,16 @@ class WebAuth:
 
         TODO: add check of interval, returned from _start_session_with_credentials actually it has no need now
         """
+        data = {
+            'client_id': str(self.client_id),
+            'request_id': str(self.request_id)
+        }
+
         response_json = self.send_api_request(
-            'IAuthenticationService',
-            'PollAuthSessionStatus',
-            1,
-            {
-                'client_id': str(self.client_id),
-                'request_id': str(self.request_id)
-            }
+            steam_api_interface='IAuthenticationService',
+            steam_api_method='PollAuthSessionStatus',
+            steam_api_version=1,
+            data=data
         )
 
         try:
@@ -291,16 +294,18 @@ class WebAuth:
         was started. To fix it, just rerun login.
 
         """
+        data = {
+            'client_id': self.client_id,
+            'steamid': self.steam_id,
+            'code': code,
+            'code_type': code_type
+        }
+
         return self.send_api_request(
-            'IAuthenticationService',
-            'UpdateAuthSessionWithSteamGuardCode',
-            1,
-            {
-                'client_id': self.client_id,
-                'steamid': self.steam_id,
-                'code': code,
-                'code_type': code_type
-            }
+            steam_api_interface='IAuthenticationService',
+            steam_api_method='UpdateAuthSessionWithSteamGuardCode',
+            steam_api_version=1,
+            data=data
         )
 
     def login(self, username: str = '', password: str = '', code: str = None) -> requests.Session:
@@ -354,13 +359,12 @@ class WebAuth:
 
         # By the times I saw session can be both of keys, so select valid.
         session_id = session_id or self.session.cookies.get('sessionId', domain='store.steampowered.com')
-        response = self.session.post(
-            'https://store.steampowered.com/twofactor/manage_action',
-            data={
-                'action': 'deauthorize',
-                'sessionid': session_id
-            }
-        )
+        data = {
+            'action': 'deauthorize',
+            'sessionid': session_id
+        }
+
+        response = self.session.post('https://store.steampowered.com/twofactor/manage_action', data=data)
 
         return response.status_code == 200
 
