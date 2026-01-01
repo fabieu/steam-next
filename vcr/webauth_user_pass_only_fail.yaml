@@ -35,17 +35,15 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 13:28:48 GMT
+      - Thu, 01 Jan 2026 13:32:52 GMT
       Expires:
-      - Thu, 01 Jan 2026 13:28:48 GMT
+      - Thu, 01 Jan 2026 13:32:52 GMT
       Server:
       - nginx
       Vary:
       - Origin
       X-eresult:
       - '1'
-      content-length:
-      - '597'
     status:
       code: 200
       message: OK
@@ -86,17 +84,15 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 13:28:49 GMT
+      - Thu, 01 Jan 2026 13:32:52 GMT
       Expires:
-      - Thu, 01 Jan 2026 13:28:49 GMT
+      - Thu, 01 Jan 2026 13:32:52 GMT
       Server:
       - nginx
       Vary:
       - Origin
       X-eresult:
       - '5'
-      content-length:
-      - '59'
     status:
       code: 200
       message: OK

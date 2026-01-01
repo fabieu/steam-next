@@ -70,7 +70,6 @@ def response_scrubber(r):
 
         body_bytes = json.dumps(data).encode("utf-8")  # <-- bytes
         r["body"]["string"] = body_bytes
-        r["headers"]["content-length"] = [str(len(body_bytes))]
 
         print(r)
 

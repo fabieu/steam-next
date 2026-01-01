@@ -35,17 +35,15 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 13:28:47 GMT
+      - Thu, 01 Jan 2026 13:32:51 GMT
       Expires:
-      - Thu, 01 Jan 2026 13:28:47 GMT
+      - Thu, 01 Jan 2026 13:32:51 GMT
       Server:
       - nginx
       Vary:
       - Origin
       X-eresult:
       - '1'
-      content-length:
-      - '597'
     status:
       code: 200
       message: OK
@@ -84,21 +82,19 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '200'
+      - '201'
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 13:28:48 GMT
+      - Thu, 01 Jan 2026 13:32:51 GMT
       Expires:
-      - Thu, 01 Jan 2026 13:28:48 GMT
+      - Thu, 01 Jan 2026 13:32:51 GMT
       Server:
       - nginx
       Vary:
       - Origin
       X-eresult:
       - '1'
-      content-length:
-      - '174'
     status:
       code: 200
       message: OK
@@ -142,9 +138,9 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 13:28:48 GMT
+      - Thu, 01 Jan 2026 13:32:52 GMT
       Expires:
-      - Thu, 01 Jan 2026 13:28:48 GMT
+      - Thu, 01 Jan 2026 13:32:52 GMT
       Server:
       - nginx
       Vary:
@@ -152,8 +148,6 @@ interactions:
       - Accept-Encoding
       X-eresult:
       - '1'
-      content-length:
-      - '151'
     status:
       code: 200
       message: OK
