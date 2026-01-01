@@ -59,7 +59,7 @@ jobs:
         run: |
           pipx install poetry==${{ env.POETRY_VERSION }}
           poetry config virtualenvs.create false --local
-          poetry install --with dev --no-interaction --no-ansi
+          poetry install --extras client --with dev --no-interaction --no-ansi
 
       - name: Run Tests (generate JUnit XML)
         run: |
