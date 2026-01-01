@@ -21,7 +21,7 @@ interactions:
     uri: https://api.steampowered.com/IAuthenticationService/GetPasswordRSAPublicKey/v1
   response:
     body:
-      string: '{"response": {"publickey_mod": "a1bda55a52256d38fcfee9c3546fb4b885cee060eb7f6a2b6dfc330d4090a325c5407aea9e62f42369f502a8433cfc0f6a34449d0c85e509e9097beaf4084f0758a1cc550dc740c51e7169f8caae577a70f4c8f6f1d2cfb37a49ac4bf40220cf52082379b0d0a75207accff212e01d4bc3a7aa1bd9cc4d91fc98ecf0f0844ccb7230b7c09e79283a70570e537584ac6dfac3fb39624679a9d108791521f497f3482f556600b9ebf40dd42167b595b12ff7e7ee537240474ccdc4f641aa8af8ac77b997322c6c6b72ef507d248ff083b6cf82eb0511fae8506b5e0ebf49e71924b3bfc3fc05cee160901e25a2ddf67c9f1bda4f67dc344a9660cdb883c55b2fdf",
+      string: '{"response": {"publickey_mod": "c217c3cc919a200d86823cab6f15c426ef068dd5176a608fe137f55a531f20c48042388a1d32bee068759aa7614dc3ac9c2e2ae47828c345a965a7cb7eff00e29c6ee854a959ace2076aa286373c8c2d4c26345e2aa1cd912f078425df3ccbf5126102476ab79cf5e49d8902e38408b6f4d3ce839da4bc809f839aac040365e9620dc6225ca4ab891eedf937408eec4e622dba518d959bb1d39c0c4c1ac5a9abc2b47a887c67851a3dc75ca7d6d8d46d21303e7674a803578a7749eb31a802edcb55c164df75138e2a5aaa7c72e5730ed5011a3368818d90a3aeeb67a076b4349a74ede870f842f354971846a8bfeec9adfe27b2f15b03362359378829ec00f9",
         "publickey_exp": "010001", "timestamp": 12345678}}'
     headers:
       Access-Control-Allow-Origin:
@@ -35,9 +35,9 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 02:26:08 GMT
+      - Thu, 01 Jan 2026 13:28:47 GMT
       Expires:
-      - Thu, 01 Jan 2026 02:26:08 GMT
+      - Thu, 01 Jan 2026 13:28:47 GMT
       Server:
       - nginx
       Vary:
@@ -60,8 +60,6 @@ interactions:
       - en-US,en;q=0.9
       Connection:
       - keep-alive
-      Content-Length:
-      - '664'
       Content-Type:
       - application/x-www-form-urlencoded
       Origin:
@@ -90,9 +88,9 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 02:26:08 GMT
+      - Thu, 01 Jan 2026 13:28:48 GMT
       Expires:
-      - Thu, 01 Jan 2026 02:26:08 GMT
+      - Thu, 01 Jan 2026 13:28:48 GMT
       Server:
       - nginx
       Vary:
@@ -115,8 +113,6 @@ interactions:
       - en-US,en;q=0.9
       Connection:
       - keep-alive
-      Content-Length:
-      - '71'
       Content-Type:
       - application/x-www-form-urlencoded
       Origin:
@@ -146,9 +142,9 @@ interactions:
       Content-Type:
       - application/json; charset=UTF-8
       Date:
-      - Thu, 01 Jan 2026 02:26:08 GMT
+      - Thu, 01 Jan 2026 13:28:48 GMT
       Expires:
-      - Thu, 01 Jan 2026 02:26:08 GMT
+      - Thu, 01 Jan 2026 13:28:48 GMT
       Server:
       - nginx
       Vary:

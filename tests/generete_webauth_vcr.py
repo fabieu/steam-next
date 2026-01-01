@@ -83,7 +83,7 @@ anon_vcr = vcr.VCR(
     serializer='yaml',
     record_mode='new_episodes',
     cassette_library_dir=os.path.join(rootdir, 'vcr'),
-    filter_headers=['authorization', 'cookie'],
+    filter_headers=['authorization', 'cookie', 'content-length'],
     filter_query_parameters=['account_name'],
 )
 
