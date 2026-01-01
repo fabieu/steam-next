@@ -24,7 +24,8 @@ help:
 	@echo "$$HELPBODY"
 
 init:
-	poetry install --with dev
+	pipx install poetry
+	poetry install --only main
 
 test:
 	pytest --cov=steam

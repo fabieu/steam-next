@@ -1,0 +1,65 @@
+name: Run tests and upload results
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '.gitignore'
+      - '.gitattributes'
+      - '*.md'
+      - '*.rst'
+      - 'LICENSE'
+      - 'protobuf_list.txt'
+      - 'docs/**'
+      - 'protobufs/**'
+      - 'recipes/**'
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - '.gitignore'
+      - '.gitattributes'
+      - '*.md'
+      - '*.rst'
+      - 'LICENSE'
+      - 'protobuf_list.txt'
+      - 'docs/**'
+      - 'protobufs/**'
+      - 'recipes/**'
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up python environment
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+
+      - name: Install dependencies
+        run: make init
+
+      - name: Run Tests (generate JUnit XML)
+        env:
+          NOCOV: true
+          PYTEST_ADDOPTS: --junitxml=reports/junit.xml
+        run: |
+          python -c "import os; os.makedirs('reports', exist_ok=True)"
+          make test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: reports/junit.xml
