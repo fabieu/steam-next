@@ -32,6 +32,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  POETRY_VERSION: 2.2.1
 
 jobs:
   test:
@@ -54,15 +56,15 @@ jobs:
         run: python -c "import sys; print(sys.version)"
 
       - name: Install dependencies
-        run: make init
+        run: |
+          pipx install poetry==${{ env.POETRY_VERSION }}
+          poetry config virtualenvs.create false --local
+          poetry install --with dev --no-interaction --no-ansi
 
       - name: Run Tests (generate JUnit XML)
-        env:
-          NOCOV: true
-          PYTEST_ADDOPTS: --junitxml=reports/junit.xml
         run: |
           python -c "import os; os.makedirs('reports', exist_ok=True)"
-          make test
+          pytest -p no:cov --junitxml=reports/junit.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
