@@ -25,7 +25,7 @@ help:
 
 init:
 	pipx install poetry
-	poetry install --only main
+	poetry install --with dev
 
 test:
 	pytest --cov=steam
