@@ -52,12 +52,15 @@ def proto_to_dict(message):
 
     for desc, field in message.ListFields():
         if desc.type == desc.TYPE_MESSAGE:
-            if desc.label == desc.LABEL_REPEATED:
-                data[desc.name] = list(map(proto_to_dict, field))
+            if desc.is_repeated:
+                data[desc.name] = [proto_to_dict(item) for item in field]
             else:
                 data[desc.name] = proto_to_dict(field)
         else:
-            data[desc.name] = list(field) if desc.label == desc.LABEL_REPEATED else field
+            if desc.is_repeated:
+                data[desc.name] = list(field)
+            else:
+                data[desc.name] = field
 
     return data
 
@@ -78,14 +81,16 @@ def proto_fill_from_dict(message, data, clear=True):
     if not isinstance(data, dict):
         raise TypeError("Expected `data` to be of type `dict`")
 
-    if clear: message.Clear()
+    if clear:
+        message.Clear()
+
     field_descs = message.DESCRIPTOR.fields_by_name
 
     for key, val in data.items():
         desc = field_descs[key]
 
         if desc.type == desc.TYPE_MESSAGE:
-            if desc.label == desc.LABEL_REPEATED:
+            if desc.is_repeated:
                 if not isinstance(val, _list_types):
                     raise TypeError("Expected %s to be of type list, got %s" % (repr(key), type(val)))
 

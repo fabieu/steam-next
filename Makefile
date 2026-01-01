@@ -42,18 +42,14 @@ webauth_gen:
 
 pb_fetch:
 	wget -nv --show-progress -N -P ./protobufs/ -i protobuf_list.txt || exit 0
-	for FN in protobufs/{steammessages_{physicalgoods,webui_friends},gc,test_messages}.proto; do \
-		mv "$${FN}" "$${FN}.notouch"; \
-	done;
+
 	for FN in protobufs/*.steamclient.proto; do \
 		mv "$${FN}" "$${FN/.steamclient.proto/.proto}"; \
 	done;
+
 	sed -i '1s/^/syntax = "proto2"\;\n/' protobufs/*.proto
 	sed -i 's/cc_generic_services/py_generic_services/' protobufs/*.proto
 	sed -i 's/\.steamclient\.proto/.proto/' protobufs/*.proto
-	for FN in protobufs/*.proto.notouch; do \
-		mv "$${FN}" "$${FN%.notouch}"; \
-	done;
 
 pb_compile:
 	for filepath in ./protobufs/*.proto; do \
