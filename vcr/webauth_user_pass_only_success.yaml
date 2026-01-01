@@ -1,87 +1,163 @@
 interactions:
 - request:
-    body: !!python/unicode ''
+    body: ''
     headers:
       Accept:
-      - '*/*'
+      - application/json
       Accept-Encoding:
       - identity
+      Accept-Language:
+      - en-US,en;q=0.9
+      Connection:
+      - keep-alive
+      Origin:
+      - https://steamcommunity.com
+      Referer:
+      - https://steamcommunity.com/
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/143.0.0.0 Safari/537.36
+    method: GET
+    uri: https://api.steampowered.com/IAuthenticationService/GetPasswordRSAPublicKey/v1
+  response:
+    body:
+      string: '{"response": {"publickey_mod": "a1bda55a52256d38fcfee9c3546fb4b885cee060eb7f6a2b6dfc330d4090a325c5407aea9e62f42369f502a8433cfc0f6a34449d0c85e509e9097beaf4084f0758a1cc550dc740c51e7169f8caae577a70f4c8f6f1d2cfb37a49ac4bf40220cf52082379b0d0a75207accff212e01d4bc3a7aa1bd9cc4d91fc98ecf0f0844ccb7230b7c09e79283a70570e537584ac6dfac3fb39624679a9d108791521f497f3482f556600b9ebf40dd42167b595b12ff7e7ee537240474ccdc4f641aa8af8ac77b997322c6c6b72ef507d248ff083b6cf82eb0511fae8506b5e0ebf49e71924b3bfc3fc05cee160901e25a2ddf67c9f1bda4f67dc344a9660cdb883c55b2fdf",
+        "publickey_exp": "010001", "timestamp": 12345678}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - https://steamcommunity.com
+      Access-Control-Expose-Headers:
+      - X-eresult, X-error_message
       Connection:
       - keep-alive
       Content-Length:
-      - '46'
+      - '598'
       Content-Type:
-      - application/x-www-form-urlencoded
-      User-Agent:
-      - python-steam/1.0.0-alpha6 python-requests/2.21.0
-    method: POST
-    uri: https://steamcommunity.com/login/getrsakey/
-  response:
-    body:
-      string: !!python/unicode '{"timestamp": 12345678, "token_gid": 0, "publickey_mod":
-        "ddb3f29bd33f38db5947d85dc2e46bf033916d9caa95948a9af1146bf246915b93e66124e025f21588c05549614fe4c1ffa2ec92ea76bf1c580422bc1fc85700cce8dd14ec232e47a03581dc670ecb3a125bc597569384e3ec2707674458c666c563b7a0972deddd855b23884ca76032c2c5a99af6e8debe47aace8d0bdb8fc42bb9758ce8db0765649f78cd4fa4b3d123ed7cbce0c05b57dbb1a8cbb82923c7c9ca8fecab923db2f3a85a05d8c8bf5a1aeed479d3f533b009cce7d9f9ca196397206bdda46fb850a4c4ea7eb3383e419121fac575629e893959175aedc936cb71527958eb308bd555cf0386939b5a3c097fa6156aeef5eb805168b7bdb511fd",
-        "publickey_exp": "010001", "success": true}'
-    headers:
-      cache-control:
-      - no-cache
-      connection:
-      - keep-alive
-      content-length:
-      - '616'
-      content-type:
-      - application/json; charset=utf-8
-      server:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 01 Jan 2026 02:26:08 GMT
+      Expires:
+      - Thu, 01 Jan 2026 02:26:08 GMT
+      Server:
       - nginx
-      vary:
-      - Accept-Encoding
-      x-frame-options:
-      - DENY
+      Vary:
+      - Origin
+      X-eresult:
+      - '1'
+      content-length:
+      - '597'
     status:
       code: 200
       message: OK
 - request:
-    body: !!python/unicode ''
+    body: ''
     headers:
       Accept:
-      - '*/*'
+      - application/json
       Accept-Encoding:
       - identity
+      Accept-Language:
+      - en-US,en;q=0.9
       Connection:
       - keep-alive
       Content-Length:
-      - '570'
+      - '664'
       Content-Type:
       - application/x-www-form-urlencoded
+      Origin:
+      - https://steamcommunity.com
+      Referer:
+      - https://steamcommunity.com/
       User-Agent:
-      - python-steam/1.0.0-alpha6 python-requests/2.21.0
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/143.0.0.0 Safari/537.36
     method: POST
-    uri: https://steamcommunity.com/login/dologin/
+    uri: https://api.steampowered.com/IAuthenticationService/BeginAuthSessionViaCredentials/v1
   response:
     body:
-      string: !!python/unicode '{"requires_twofactor": false, "login_complete": true,
-        "transfer_urls": ["https://store.steampowered.com/login/transfer", "https://help.steampowered.com/login/transfer"],
-        "transfer_parameters": {"steamid": "0", "remember_login": false, "token":
-        "AAAAAAAAAAAAAAAA", "token_secure": "BBBBBBBBBBBBBBBB", "auth": "ZZZZZZZZZZZZZZZZ"},
-        "success": true}'
+      string: '{"response": {"client_id": "<CLIENT_ID>", "request_id": "<REQUEST_ID>",
+        "interval": 0.10000000149011612, "allowed_confirmations": [{"confirmation_type":
+        1}], "steamid": "0"}}'
     headers:
-      cache-control:
-      - no-cache
-      connection:
+      Access-Control-Allow-Origin:
+      - https://steamcommunity.com
+      Access-Control-Expose-Headers:
+      - X-eresult, X-error_message
+      Connection:
       - keep-alive
-      content-length:
-      - '345'
-      content-type:
-      - application/json; charset=utf-8
-      server:
+      Content-Length:
+      - '200'
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 01 Jan 2026 02:26:08 GMT
+      Expires:
+      - Thu, 01 Jan 2026 02:26:08 GMT
+      Server:
       - nginx
-      set-cookie:
-      - steamLogin=0%7C%7CAAAAAAAAAAAAAAAA; path=/; httponly
-      - steamLoginSecure=0%7C%7CBBBBBBBBBBBBBBBB; path=/; httponly; secure
-      - steamMachineAuth0=CCCCCCCCCCCCCCCC; path=/; httponly
-      vary:
+      Vary:
+      - Origin
+      X-eresult:
+      - '1'
+      content-length:
+      - '174'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - identity
+      Accept-Language:
+      - en-US,en;q=0.9
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '71'
+      Content-Type:
+      - application/x-www-form-urlencoded
+      Origin:
+      - https://steamcommunity.com
+      Referer:
+      - https://steamcommunity.com/
+      User-Agent:
+      - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
+        Gecko) Chrome/143.0.0.0 Safari/537.36
+    method: POST
+    uri: https://api.steampowered.com/IAuthenticationService/PollAuthSessionStatus/v1
+  response:
+    body:
+      string: '{"response": {"refresh_token": "<REFRESH_TOKEN>", "access_token": "<ACCESS_TOKEN>",
+        "had_remote_interaction": false, "account_name": "<ACCOUNT_NAME>"}}'
+    headers:
+      Access-Control-Allow-Origin:
+      - https://steamcommunity.com
+      Access-Control-Expose-Headers:
+      - X-eresult, X-error_message
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Length:
+      - '667'
+      Content-Type:
+      - application/json; charset=UTF-8
+      Date:
+      - Thu, 01 Jan 2026 02:26:08 GMT
+      Expires:
+      - Thu, 01 Jan 2026 02:26:08 GMT
+      Server:
+      - nginx
+      Vary:
+      - Origin
       - Accept-Encoding
-      x-frame-options:
-      - DENY
+      X-eresult:
+      - '1'
+      content-length:
+      - '151'
     status:
       code: 200
       message: OK

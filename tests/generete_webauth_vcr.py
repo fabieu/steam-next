@@ -42,35 +42,49 @@ def response_scrubber(r):
     else:
         r['headers'].pop('set-cookie', None)
 
-    if r.get('body', ''):
-        data = json.loads(r['body']['string'])
+    if r.get("body") and r["body"].get("string") is not None:
+        raw = r["body"]["string"]
 
-        if 'token_gid' in data:
-            data['token_gid'] = 0
-        if 'timestamp' in data:
-            data['timestamp'] = 12345678
-        if 'transfer_parameters' in data:
-            data['transfer_parameters']['steamid'] = '0'
-            data['transfer_parameters']['token'] = 'A' * 16
-            data['transfer_parameters']['token_secure'] = 'B' * 16
-            data['transfer_parameters']['auth'] = 'Z' * 16
+        # vcrpy normally stores bytes here; be defensive
+        if isinstance(raw, bytes):
+            text = raw.decode("utf-8")
+        else:
+            text = raw
 
-        body = json.dumps(data)
-        r['body']['string'] = body
-        r['headers']['content-length'] = [str(len(body))]
+        data = json.loads(text)
 
-        print("--- response ---------")
+        if "response" in data:
+            replacements = {
+                "timestamp": 12345678,
+                "steamid": "0",
+                "account_name": "<ACCOUNT_NAME>",
+                "request_id": "<REQUEST_ID>",
+                "client_id": "<CLIENT_ID>",
+                "refresh_token": "<REFRESH_TOKEN>",
+                "access_token": "<ACCESS_TOKEN>",
+            }
+
+            for key, value in replacements.items():
+                if key in data["response"]:
+                    data["response"][key] = value
+
+        body_bytes = json.dumps(data).encode("utf-8")  # <-- bytes
+        r["body"]["string"] = body_bytes
+        r["headers"]["content-length"] = [str(len(body_bytes))]
+
         print(r)
 
     return r
 
 
 anon_vcr = vcr.VCR(
-    before_record=request_scrubber,
+    before_record_request=request_scrubber,
     before_record_response=response_scrubber,
     serializer='yaml',
     record_mode='new_episodes',
     cassette_library_dir=os.path.join(rootdir, 'vcr'),
+    filter_headers=['authorization', 'cookie'],
+    filter_query_parameters=['account_name'],
 )
 
 

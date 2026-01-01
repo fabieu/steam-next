@@ -65,7 +65,7 @@ import requests
 from steam.core.crypto import rsa_publickey, pkcs1v15_encrypt
 from steam.enums.proto import EAuthSessionGuardType
 from steam.steamid import SteamID
-from steam.utils.web import generate_session_id
+from steam.utils.web import generate_session_id, make_requests_session
 
 API_URL = 'https://api.steampowered.com/{}/{}/v{}'
 
@@ -134,14 +134,14 @@ class WebAuth:
             'Chrome/143.0.0.0 Safari/537.36'
         )
 
-        self.session = requests.Session()
-        self.session.headers.update({
+        headers = {
             'Origin': 'https://steamcommunity.com',
             'Referer': 'https://steamcommunity.com/',
             'Accept': 'application/json',
             'Accept-Language': 'en-US,en;q=0.9',
             'User-Agent': self.user_agent,
-        })
+        }
+        self.session = make_requests_session(headers=headers)
 
         self.username = username
         self.password = password
@@ -164,9 +164,13 @@ class WebAuth:
         """Send request to Steam API via requests"""
         steam_url = API_URL.format(steam_api_interface, steam_api_method, steam_api_version)
 
-        response = self.session.post(steam_url, data=data, timeout=10)
+        try:
+            response = self.session.post(steam_url, data=data, timeout=10)
+        except requests.exceptions.RequestException as e:
+            raise HTTPError(e)
 
         response.raise_for_status()
+
         return response.json()
 
     def _get_rsa_key(self):
@@ -176,7 +180,11 @@ class WebAuth:
             'account_name': self.username
         }
 
-        response = self.session.get(steam_url, params=data, timeout=10)
+        try:
+            response = self.session.get(steam_url, params=data, timeout=10)
+        except requests.exceptions.RequestException as e:
+            raise HTTPError(e)
+
         response.raise_for_status()
 
         return response.json()
@@ -244,8 +252,8 @@ class WebAuth:
             'PollAuthSessionStatus',
             1,
             {
-            'client_id': str(self.client_id),
-            'request_id': str(self.request_id)
+                'client_id': str(self.client_id),
+                'request_id': str(self.request_id)
             }
         )
 
@@ -295,7 +303,7 @@ class WebAuth:
             }
         )
 
-    def login(self, username: str = '', password: str = '', code: str = None, email_required=False) -> None:
+    def login(self, username: str = '', password: str = '', code: str = None) -> requests.Session:
         """Log in user by new Steam API
 
         If user has no need 2FA, this function will just log in the user.
@@ -328,34 +336,11 @@ class WebAuth:
 
         if code:
             self._update_login_token(code)
-        if email_required:
-            # We do another request, which force steam to send email code
-            # (otherwise code just not sent).
-
-            response = self.session.post(f'https://login.steampowered.com/jwt/checkdevice/{self.steam_id}', data={
-                'clientid': self.client_id,
-                'steamid': self.steam_id
-            })
-            response_body = response.json()
-
-            if response_body.get('result') == 8:
-                # This usually mean code sent now.
-                def end_login(email_code: str):
-                    self._update_login_token(email_code, EAuthSessionGuardType.EmailCode)
-                    self._poll_login_status()
-                    self._finalize_login()
-                    return self.session
-
-                return end_login
-
-            if response_body.get('result') == 29:
-                # This code 100% means some data not valid
-                # Actually this must will never be called, because
-                # Errors can be only like wrong cookies. (Theoretically)
-                raise WebAuthException('Something invalid went. Try again later.')
 
         self._poll_login_status()
         self._finalize_login()
+
+        return self.session
 
     def logout_everywhere(self):
         """Log out on every device.
@@ -379,7 +364,7 @@ class WebAuth:
 
         return response.status_code == 200
 
-    def cli_login(self, username: str = '', password: str = '', code: str = '', email_required: bool = False):
+    def cli_login(self, username: str = '', password: str = '', code: str = None) -> requests.Session:
         """Generates CLI prompts to perform the entire login process
 
         If you use email confirm, provide email_required = True,
@@ -387,7 +372,7 @@ class WebAuth:
         """
         while True:
             try:
-                self.login(username, password, code, email_required)
+                return self.login(username, password, code)
             except LoginIncorrect:
                 prompt = ('Enter password for %s: ' if not password else 'Invalid password for %s. Enter password:')
                 password = getpass(prompt % repr(self.username))
@@ -440,6 +425,8 @@ class WebAuth:
                     else:
                         print('Unauthenticated. Please try again')
                 self._finalize_login()
+
+                return self.session
 
 
 # TODO: DEPRECATED, must be rewritten, like WebAuth
