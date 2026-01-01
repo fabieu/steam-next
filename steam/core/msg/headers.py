@@ -2,7 +2,6 @@
 import struct
 
 from steam.enums.emsg import EMsg
-from steam.protobufs import gc_pb2
 from steam.protobufs import steammessages_base_pb2
 from steam.utils.proto import set_proto_bit, clear_proto_bit
 
@@ -145,7 +144,7 @@ class GCMsgHdrProto:
     headerLength = 0
 
     def __init__(self, msg, data=None):
-        self.proto = gc_pb2.CMsgProtoBufHeader()
+        self.proto = steammessages_base_pb2.CMsgProtoBufHeader()
         self.msg = clear_proto_bit(msg)
 
         if data:

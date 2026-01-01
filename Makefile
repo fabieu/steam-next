@@ -44,27 +44,23 @@ webauth_gen:
 
 pb_fetch:
 	wget -nv --show-progress -N -P ./protobufs/ -i protobuf_list.txt || exit 0
-	for FN in protobufs/{steammessages_{physicalgoods,webui_friends},gc,test_messages}.proto; do \
-		mv "$${FN}" "$${FN}.notouch"; \
-	done;
+
 	for FN in protobufs/*.steamclient.proto; do \
 		mv "$${FN}" "$${FN/.steamclient.proto/.proto}"; \
 	done;
+
 	sed -i '1s/^/syntax = "proto2"\;\n/' protobufs/*.proto
 	sed -i 's/cc_generic_services/py_generic_services/' protobufs/*.proto
 	sed -i 's/\.steamclient\.proto/.proto/' protobufs/*.proto
-	for FN in protobufs/*.proto.notouch; do \
-		mv "$${FN}" "$${FN%.notouch}"; \
-	done;
 
 pb_compile:
-	for filepath in ./protobufs/*.proto; do \
-		protoc --python_out ./steam/protobufs/ --proto_path=./protobufs "$$filepath"; \
+	for filepath in protobufs/*.proto protobufs/tests/*.proto; do \
+		protoc --python_out steam/protobufs/ --proto_path=protobufs "$$filepath"; \
 	done;
 	sed -i '/^import sys/! s/^import /import steam.protobufs./' steam/protobufs/*_pb2.py
 
 pb_clear:
-	rm -f ./protobufs/*.proto ./steam/protobufs/*_pb2.py
+	rm -f protobufs/*.proto steam/protobufs/*_pb2.py
 
 pb_services:
 	grep -B 99999 MARK_SERVICE_START steam/core/msg/unified.py > steam/core/msg/unified.py.tmp
@@ -75,4 +71,4 @@ pb_services:
 pb_gen_enums:
 	python3 generate_enums_from_proto.py > steam/enums/proto.py
 
-pb_update: pb_fetch pb_compile pb_services pb_gen_enums
+pb_update: pb_clear pb_fetch pb_compile pb_services pb_gen_enums

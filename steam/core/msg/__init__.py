@@ -18,7 +18,6 @@ from steam.protobufs import steammessages_clientserver_mms_pb2
 from steam.protobufs import steammessages_clientserver_pb2
 from steam.protobufs import steammessages_clientserver_ucm_pb2
 from steam.protobufs import steammessages_clientserver_uds_pb2
-from steam.protobufs import steammessages_clientserver_ufs_pb2
 from steam.protobufs import steammessages_clientserver_userstats_pb2
 
 cmsg_lookup_predefined = {
@@ -49,7 +48,6 @@ for proto_module in [
     steammessages_clientserver_mms_pb2,
     steammessages_clientserver_ucm_pb2,
     steammessages_clientserver_uds_pb2,
-    steammessages_clientserver_ufs_pb2,
     steammessages_clientserver_userstats_pb2,
 ]:
     cmsg_list = proto_module.__dict__
