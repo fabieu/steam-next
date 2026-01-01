@@ -13,6 +13,8 @@ Available commands:
 	make pb_clear   - removes *.proto
 	make pb_update  - pb_fetch + pb_compile
 
+	make webauth_gen - generate vcr cassettes for webauth tests
+
 endef
 
 SHELL := /bin/bash
