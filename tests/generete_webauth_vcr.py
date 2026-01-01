@@ -35,7 +35,6 @@ def request_scrubber(r):
     _pop_headers(r.headers, [
         'Cookie',
         'Content-Length',
-        'Transfer-Encoding',
     ])
 
     r.headers['Accept-Encoding'] = 'identity'
@@ -51,7 +50,7 @@ def response_scrubber(r):
         'Expires',
         'Cookie',
         'Content-Length',
-        'Transfer-Encoding',
+        'Content-Encoding',
     ])
 
     if 'set-cookie' in r['headers'] and 'steamLogin' in ''.join(r['headers']['set-cookie']):

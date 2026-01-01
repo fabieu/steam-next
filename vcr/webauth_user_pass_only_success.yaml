@@ -119,8 +119,6 @@ interactions:
       - X-eresult, X-error_message
       Connection:
       - keep-alive
-      Content-Encoding:
-      - gzip
       Content-Type:
       - application/json; charset=UTF-8
       Server:
