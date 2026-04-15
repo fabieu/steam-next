@@ -64,15 +64,19 @@ class WACase(unittest.TestCase):
         user.steam_id = mock.MagicMock()
         user.allowed_confirmations = []
 
-        # Mock _poll_login_status to succeed
-        poll_response = {
+        # Mock API responses for both POST calls (update token + poll status)
+        api_response = {
             'response': {
                 'refresh_token': 'refresh_tok',
                 'access_token': 'access_tok',
             }
         }
+        update_token_response = mock.MagicMock()
+        update_token_response.json.return_value = {'response': {}}
+        poll_status_response = mock.MagicMock()
+        poll_status_response.json.return_value = api_response
         mm.post.return_value = mock.MagicMock()
-        mm.post.return_value.json.return_value = poll_response
+        mm.post.return_value.json.side_effect = [{'response': {}}, api_response]
 
         session = user.login(code='ABC123')
 
