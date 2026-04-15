@@ -328,7 +328,8 @@ class WebAuth:
             self.username = username
             self.password = password
 
-        self._start_login_session()
+        if self.client_id is None:
+            self._start_login_session()
 
         if code:
             self._update_login_token(code)

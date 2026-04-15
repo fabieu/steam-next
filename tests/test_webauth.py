@@ -49,3 +49,100 @@ class WACase(unittest.TestCase):
         with self.assertRaises(wa.LoginIncorrect):
             wa.WebAuth('testuser', 'testpass').login()
             wa.WebAuth('testuser').login('testpass')
+
+    @mock.patch("steam.webauth.make_requests_session")
+    def test_login_with_2fa_reuses_existing_session(self, mrs_mock):
+        """Test that login() does not start a new session when 2FA code is provided
+        and a session already exists (client_id is set)."""
+        mm = mrs_mock.return_value = mock.MagicMock()
+
+        user = wa.WebAuth('testuser', 'testpass')
+
+        # Simulate that a session was already started (first login call set these)
+        user.client_id = '12345'
+        user.request_id = b'req123'
+        user.steam_id = mock.MagicMock()
+        user.allowed_confirmations = []
+
+        # Mock _poll_login_status to succeed
+        poll_response = {
+            'response': {
+                'refresh_token': 'refresh_tok',
+                'access_token': 'access_tok',
+            }
+        }
+        mm.post.return_value = mock.MagicMock()
+        mm.post.return_value.json.return_value = poll_response
+
+        session = user.login(code='ABC123')
+
+        # Verify _start_login_session was NOT called (no GET for RSA key)
+        mm.get.assert_not_called()
+
+        # Verify _update_login_token was called (POST for UpdateAuthSessionWithSteamGuardCode)
+        # and _poll_login_status was called (POST for PollAuthSessionStatus)
+        self.assertEqual(mm.post.call_count, 2)
+        self.assertTrue(user.logged_on)
+
+    @mock.patch("steam.webauth.make_requests_session")
+    def test_login_without_code_starts_new_session(self, mrs_mock):
+        """Test that login() starts a new session when client_id is None."""
+        mm = mrs_mock.return_value = mock.MagicMock()
+
+        user = wa.WebAuth('testuser', 'testpass')
+
+        # Mock _start_login_session and _poll_login_status at method level
+        with mock.patch.object(user, '_start_login_session') as mock_start, \
+             mock.patch.object(user, '_poll_login_status') as mock_poll, \
+             mock.patch.object(user, '_finalize_login') as mock_finalize:
+
+            session = user.login()
+
+            # Verify _start_login_session was called
+            mock_start.assert_called_once()
+            # Verify _poll_login_status was called
+            mock_poll.assert_called_once()
+
+    @mock.patch("steam.webauth.make_requests_session")
+    def test_login_2fa_flow_first_raises_then_succeeds_with_code(self, mrs_mock):
+        """Test the typical 2FA flow: first call raises TwoFactorAuthNotProvided,
+        second call with code succeeds without starting a new session."""
+        mm = mrs_mock.return_value = mock.MagicMock()
+
+        user = wa.WebAuth('testuser', 'testpass')
+
+        with mock.patch.object(user, '_start_login_session') as mock_start:
+            # Set up the session state that _start_login_session would set
+            def fake_start():
+                user.client_id = '67890'
+                user.request_id = b'req456'
+                user.steam_id = mock.MagicMock()
+                user.allowed_confirmations = [wa.EAuthSessionGuardType.DeviceCode]
+
+            mock_start.side_effect = fake_start
+
+            # First poll: no tokens (2FA not provided yet)
+            with mock.patch.object(user, '_poll_login_status',
+                                   side_effect=wa.TwoFactorAuthNotProvided('need 2fa')):
+                with self.assertRaises(wa.TwoFactorAuthNotProvided):
+                    user.login()
+
+            # Verify session was started
+            mock_start.assert_called_once()
+            self.assertEqual(user.client_id, '67890')
+
+            # Reset for second call
+            mock_start.reset_mock()
+
+            # Second call: poll succeeds, update_login_token is called
+            with mock.patch.object(user, '_poll_login_status') as mock_poll, \
+                 mock.patch.object(user, '_update_login_token') as mock_update:
+                session = user.login(code='ABC123')
+
+                # Verify NO new session was started
+                mock_start.assert_not_called()
+                # Verify 2FA code was submitted
+                mock_update.assert_called_once_with('ABC123')
+                # Verify poll was called
+                mock_poll.assert_called_once()
+                self.assertTrue(user.logged_on)
