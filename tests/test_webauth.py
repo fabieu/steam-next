@@ -65,20 +65,16 @@ class WACase(unittest.TestCase):
         user.allowed_confirmations = []
 
         # Mock API responses for both POST calls (update token + poll status)
-        api_response = {
+        poll_response = {
             'response': {
                 'refresh_token': 'refresh_tok',
                 'access_token': 'access_tok',
             }
         }
-        update_token_response = mock.MagicMock()
-        update_token_response.json.return_value = {'response': {}}
-        poll_status_response = mock.MagicMock()
-        poll_status_response.json.return_value = api_response
         mm.post.return_value = mock.MagicMock()
-        mm.post.return_value.json.side_effect = [{'response': {}}, api_response]
+        mm.post.return_value.json.side_effect = [{'response': {}}, poll_response]
 
-        session = user.login(code='ABC123')
+        user.login(code='ABC123')
 
         # Verify _start_login_session was NOT called (no GET for RSA key)
         mm.get.assert_not_called()
@@ -89,18 +85,16 @@ class WACase(unittest.TestCase):
         self.assertTrue(user.logged_on)
 
     @mock.patch("steam.webauth.make_requests_session")
-    def test_login_without_code_starts_new_session(self, mrs_mock):
+    def test_login_without_code_starts_new_session(self, _mrs_mock):
         """Test that login() starts a new session when client_id is None."""
-        mm = mrs_mock.return_value = mock.MagicMock()
-
         user = wa.WebAuth('testuser', 'testpass')
 
         # Mock _start_login_session and _poll_login_status at method level
         with mock.patch.object(user, '_start_login_session') as mock_start, \
              mock.patch.object(user, '_poll_login_status') as mock_poll, \
-             mock.patch.object(user, '_finalize_login') as mock_finalize:
+             mock.patch.object(user, '_finalize_login'):
 
-            session = user.login()
+            user.login()
 
             # Verify _start_login_session was called
             mock_start.assert_called_once()
@@ -108,11 +102,9 @@ class WACase(unittest.TestCase):
             mock_poll.assert_called_once()
 
     @mock.patch("steam.webauth.make_requests_session")
-    def test_login_2fa_flow_first_raises_then_succeeds_with_code(self, mrs_mock):
+    def test_login_2fa_flow_first_raises_then_succeeds_with_code(self, _mrs_mock):
         """Test the typical 2FA flow: first call raises TwoFactorAuthNotProvided,
         second call with code succeeds without starting a new session."""
-        mm = mrs_mock.return_value = mock.MagicMock()
-
         user = wa.WebAuth('testuser', 'testpass')
 
         with mock.patch.object(user, '_start_login_session') as mock_start:
@@ -141,7 +133,7 @@ class WACase(unittest.TestCase):
             # Second call: poll succeeds, update_login_token is called
             with mock.patch.object(user, '_poll_login_status') as mock_poll, \
                  mock.patch.object(user, '_update_login_token') as mock_update:
-                session = user.login(code='ABC123')
+                user.login(code='ABC123')
 
                 # Verify NO new session was started
                 mock_start.assert_not_called()
