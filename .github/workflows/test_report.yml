@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Publish Pytest results (from artifacts)
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         with:
           # Match all matrix artifacts uploaded by CI
           artifact: /test-results-(.*)/
