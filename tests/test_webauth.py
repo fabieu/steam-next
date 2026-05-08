@@ -91,9 +91,8 @@ class WACase(unittest.TestCase):
 
         # Mock _start_login_session and _poll_login_status at method level
         with mock.patch.object(user, '_start_login_session') as mock_start, \
-             mock.patch.object(user, '_poll_login_status') as mock_poll, \
-             mock.patch.object(user, '_finalize_login'):
-
+                mock.patch.object(user, '_poll_login_status') as mock_poll, \
+                mock.patch.object(user, '_finalize_login'):
             user.login()
 
             # Verify _start_login_session was called
@@ -132,7 +131,7 @@ class WACase(unittest.TestCase):
 
             # Second call: poll succeeds, update_login_token is called
             with mock.patch.object(user, '_poll_login_status') as mock_poll, \
-                 mock.patch.object(user, '_update_login_token') as mock_update:
+                    mock.patch.object(user, '_update_login_token') as mock_update:
                 user.login(code='ABC123')
 
                 # Verify NO new session was started
@@ -142,3 +141,26 @@ class WACase(unittest.TestCase):
                 # Verify poll was called
                 mock_poll.assert_called_once()
                 self.assertTrue(user.logged_on)
+
+    @mock.patch("steam.webauth.make_requests_session")
+    def test_login_clears_client_id_when_code_rejected(self, _mrs_mock):
+        """If a 2FA code is submitted but poll still raises TwoFactorAuthNotProvided,
+        client_id must be cleared so the next login() starts a fresh session
+        """
+        user = wa.WebAuth('testuser', 'testpass')
+        user.client_id = '67890'
+        user.request_id = b'req456'
+        user.steam_id = mock.MagicMock()
+        user.allowed_confirmations = [wa.EAuthSessionGuardType.DeviceCode]
+
+        with mock.patch.object(user, '_start_login_session') as mock_start, \
+                mock.patch.object(user, '_update_login_token'), \
+                mock.patch.object(user, '_poll_login_status',
+                                  side_effect=wa.TwoFactorAuthNotProvided('rejected')):
+            with self.assertRaises(wa.TwoFactorAuthNotProvided):
+                user.login(code='STALE')
+
+            mock_start.assert_not_called()
+
+        self.assertIsNone(user.client_id)
+        self.assertFalse(user.logged_on)
