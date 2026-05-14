@@ -115,6 +115,7 @@ enum EStreamControlMessage {
 	k_EStreamControlResumeControllerInput = 144;
 	k_EStreamControlVRConnectionReady = 145;
 	k_EStreamControlSetCursorScale = 146;
+	k_EStreamControlCaptureFailed = 147;
 }
 
 enum EStreamVersion {
@@ -177,6 +178,12 @@ enum EStreamHostPlayAudioPreference {
 	k_EStreamHostPlayAudioAlways = 1;
 }
 
+enum EStreamHostDisplaySetting {
+	k_EStreamHostDisplaySettingNone = 0;
+	k_EStreamHostDisplaySettingClient = 1;
+	k_EStreamHostDisplaySettingCustom = 2;
+}
+
 enum EStreamingDataType {
 	k_EStreamingAudioData = 0;
 	k_EStreamingVideoData = 1;
@@ -216,6 +223,14 @@ enum EStreamActivity {
 	k_EStreamActivityDesktop = 3;
 	k_EStreamActivitySecureDesktop = 4;
 	k_EStreamActivityMusic = 5;
+}
+
+enum ECaptureFailedReason {
+	k_ECaptureFailedReasonNone = 0;
+	k_ECaptureFailedReasonUnknown = 1;
+	k_ECaptureFailedReasonPipewireRequired = 2;
+	k_ECaptureFailedReasonPipewirePermissions = 3;
+	k_ECaptureFailedReasonMacOSPermissions = 4;
 }
 
 enum EStreamDataMessage {
@@ -397,6 +412,7 @@ message CStreamingClientCaps {
 	repeated .EStreamColorspace supported_colorspaces = 13;
 	repeated .EStreamAudioCodec supported_audio_codecs = 14;
 	repeated .EStreamVideoCodec supported_video_codecs = 15;
+	optional bool can_toggle_fullscreen = 16;
 }
 
 message CStreamingClientConfig {
@@ -425,19 +441,30 @@ message CStreamingClientConfig {
 	repeated .CStreamVideoLimit decoder_limit = 24;
 	optional bool enable_unreliable_fec = 25 [default = false];
 	optional bool enable_video_av1 = 26 [default = false];
+	optional bool windowed = 27;
+	optional float window_pixel_density = 28;
+	optional int32 window_width = 29;
+	optional int32 window_height = 30;
+	optional int32 window_position_x = 31;
+	optional int32 window_position_y = 32;
+	optional int32 window_frame_offset_x = 33;
+	optional int32 window_frame_offset_y = 34;
 }
 
 message CStreamingServerConfig {
-	optional bool change_desktop_resolution = 1;
-	optional bool dynamically_adjust_resolution_OBSOLETE = 2;
-	optional bool enable_capture_nvfbc = 3;
-	optional bool enable_hardware_encoding_nvidia_OBSOLETE = 4;
-	optional bool enable_hardware_encoding_amd_OBSOLETE = 5;
-	optional bool enable_hardware_encoding_intel_OBSOLETE = 6;
-	optional int32 software_encoding_threads = 7;
-	optional bool enable_traffic_priority = 8;
-	optional .EStreamHostPlayAudioPreference host_play_audio = 9 [default = k_EStreamHostPlayAudioDefault];
-	optional bool enable_hardware_encoding = 10;
+	optional .EStreamHostPlayAudioPreference host_play_audio = 1 [default = k_EStreamHostPlayAudioDefault];
+	optional string custom_display_device = 2;
+	optional .EStreamHostDisplaySetting display_resolution_setting = 3 [default = k_EStreamHostDisplaySettingNone];
+	optional int32 custom_display_resolution_x = 4;
+	optional int32 custom_display_resolution_y = 5;
+	optional .EStreamHostDisplaySetting display_refresh_rate_setting = 6 [default = k_EStreamHostDisplaySettingNone];
+	optional string custom_display_refresh_rate = 7;
+	optional .EStreamHostDisplaySetting display_hdr_setting = 8 [default = k_EStreamHostDisplaySettingNone];
+	optional bool custom_display_hdr = 9;
+	optional bool enable_capture_nvfbc = 10;
+	optional bool enable_hardware_encoding = 11;
+	optional int32 software_encoding_threads = 12;
+	optional bool enable_traffic_priority = 13;
 }
 
 message CNegotiatedConfig {
@@ -848,6 +875,10 @@ message CControllerPersonalizationUpdateMsg {
 
 message CVRConnectionReady {
 	optional string connect_params = 1;
+}
+
+message CCaptureFailedMsg {
+	optional .ECaptureFailedReason reason = 1 [default = k_ECaptureFailedReasonNone];
 }
 
 message CStreamDataLostMsg {

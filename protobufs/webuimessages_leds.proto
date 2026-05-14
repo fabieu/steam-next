@@ -6,6 +6,15 @@ import "webuimessages_base.proto";
 option optimize_for = SPEED;
 option py_generic_services = true;
 
+enum ELEDManagerMode {
+	k_ELEDManagerModeInvalid = 0;
+	k_ELEDManagerModeLogon = 1;
+	k_ELEDManagerModeIdle = 2;
+	k_ELEDManagerModeDownload = 3;
+	k_ELEDManagerModeCustomize = 4;
+	k_ELEDManagerModeCustomizeStartup = 5;
+}
+
 message CMsgLEDColor {
 	optional float r = 1;
 	optional float g = 2;
@@ -24,6 +33,8 @@ message CMsgLEDManagerDevice {
 	optional float speed = 12;
 	optional bool supports_brightness = 13;
 	optional float brightness = 14;
+	optional bool supports_startup_brightness = 15;
+	optional float startup_brightness = 16;
 }
 
 message CMsgLEDManagerState {
@@ -82,6 +93,21 @@ message CLEDManager_SetBrightness_Request {
 message CLEDManager_SetBrightness_Response {
 }
 
+message CLEDManager_SetStartupBrightness_Request {
+	optional int32 device_id = 1;
+	optional float brightness = 2;
+}
+
+message CLEDManager_SetStartupBrightness_Response {
+}
+
+message CLEDManager_SetManagerMode_Request {
+	optional .ELEDManagerMode mode = 1 [default = k_ELEDManagerModeInvalid];
+}
+
+message CLEDManager_SetManagerMode_Response {
+}
+
 service LEDManager {
 	option (webui_service_execution_site) = k_EClientExecutionSiteSteamUI;
 
@@ -92,4 +118,6 @@ service LEDManager {
 	rpc SetEffect (.CLEDManager_SetEffect_Request) returns (.CLEDManager_SetEffect_Response);
 	rpc SetSpeed (.CLEDManager_SetSpeed_Request) returns (.CLEDManager_SetSpeed_Response);
 	rpc SetBrightness (.CLEDManager_SetBrightness_Request) returns (.CLEDManager_SetBrightness_Response);
+	rpc SetStartupBrightness (.CLEDManager_SetStartupBrightness_Request) returns (.CLEDManager_SetStartupBrightness_Response);
+	rpc SetManagerMode (.CLEDManager_SetManagerMode_Request) returns (.CLEDManager_SetManagerMode_Response);
 }

@@ -99,6 +99,7 @@ enum EMsg {
 	k_EMsgGMStatsForwardToAdminConnections = 338;
 	k_EMsgGMGetModifiedConVars = 339;
 	k_EMsgGMGetModifiedConVarsResponse = 340;
+	k_EMsgGMNeedShellAndServerAddresses = 341;
 	k_EMsgBaseAIS = 400;
 	k_EMsgAISRequestContentDescription = 402;
 	k_EMsgAISGetPackageChangeNumber = 405;
@@ -107,8 +108,6 @@ enum EMsg {
 	k_EMsgAIGetAppGCFlagsResponse = 424;
 	k_EMsgAIGetAppList = 425;
 	k_EMsgAIGetAppListResponse = 426;
-	k_EMsgAISGetCouponDefinition = 429;
-	k_EMsgAISGetCouponDefinitionResponse = 430;
 	k_EMsgAISUpdateSubordinateContentDescription = 431;
 	k_EMsgAISUpdateSubordinateContentDescriptionResponse = 432;
 	k_EMsgAISBroadcastSubordinateContentDescription = 434;
@@ -229,18 +228,14 @@ enum EMsg {
 	k_EMsgClientRemoveFriend = 714;
 	k_EMsgClientGamesPlayedNoDataBlob = 715;
 	k_EMsgClientChangeStatus = 716;
-	k_EMsgClientVacStatusResponse = 717;
 	k_EMsgClientFriendMsg = 718;
 	k_EMsgClientGameConnect_obsolete = 719;
 	k_EMsgClientGamesPlayed2_obsolete = 720;
 	k_EMsgClientGameEnded_obsolete = 721;
 	k_EMsgClientSystemIM = 726;
 	k_EMsgClientSystemIMAck = 727;
-	k_EMsgClientGetLicenses = 728;
 	k_EMsgClientGetLegacyGameKey = 730;
 	k_EMsgClientContentServerLogOn_Deprecated = 731;
-	k_EMsgClientAckVACBan2 = 732;
-	k_EMsgClientGetPurchaseReceipts = 736;
 	k_EMsgClientGamesPlayed3_obsolete = 738;
 	k_EMsgClientAckGuestPass = 740;
 	k_EMsgClientRedeemGuestPass = 741;
@@ -248,7 +243,6 @@ enum EMsg {
 	k_EMsgClientRegisterKey = 743;
 	k_EMsgClientInviteUserToClan = 744;
 	k_EMsgClientAcknowledgeClanInvite = 745;
-	k_EMsgClientPurchaseWithMachineID = 746;
 	k_EMsgClientAppUsageEvent = 747;
 	k_EMsgClientLogOnResponse = 751;
 	k_EMsgClientSetHeartbeatRate = 755;
@@ -269,7 +263,6 @@ enum EMsg {
 	k_EMsgClientGameConnectTokens = 779;
 	k_EMsgClientLicenseList = 780;
 	k_EMsgClientVACBanStatus = 782;
-	k_EMsgClientEncryptPct = 784;
 	k_EMsgClientGetLegacyGameKeyResponse = 785;
 	k_EMsgClientAddFriend = 791;
 	k_EMsgClientAddFriendResponse = 792;
@@ -321,8 +314,6 @@ enum EMsg {
 	k_EMsgGSStatusUpdate_Unused = 907;
 	k_EMsgGSServerType = 908;
 	k_EMsgGSPlayerList = 909;
-	k_EMsgGSGetUserAchievementStatus = 910;
-	k_EMsgGSGetUserAchievementStatusResponse = 911;
 	k_EMsgGSGetPlayStats = 918;
 	k_EMsgGSGetPlayStatsResponse = 919;
 	k_EMsgGSGetUserGroupStatus = 920;
@@ -509,6 +500,7 @@ enum EMsg {
 	k_EMsgCMSetSecrets = 1704;
 	k_EMsgCMGetSecrets = 1705;
 	k_EMsgCMRemotePlayReplyPacket = 1706;
+	k_EMsgCMRemotePlayOffline = 1707;
 	k_EMsgBaseGC = 2200;
 	k_EMsgGCCmdRevive = 2203;
 	k_EMsgGCCmdDown = 2206;
@@ -672,7 +664,6 @@ enum EMsg {
 	k_EMsgAMGetCommunityPrivacyState = 4116;
 	k_EMsgAMGetCommunityPrivacyStateResponse = 4117;
 	k_EMsgAMCheckClanInviteRateLimiting = 4118;
-	k_EMsgUGSGetUserAchievementStatus = 4119;
 	k_EMsgAMGetIgnored = 4120;
 	k_EMsgAMGetIgnoredResponse = 4121;
 	k_EMsgAMSetIgnoredResponse = 4122;
@@ -697,7 +688,6 @@ enum EMsg {
 	k_EMsgAMCheckClanMembershipResponse = 4161;
 	k_EMsgAMProbeClanMembershipList = 4162;
 	k_EMsgAMProbeClanMembershipListResponse = 4163;
-	k_EMsgUGSGetUserAchievementStatusResponse = 4164;
 	k_EMsgAMGetFriendsLobbies = 4165;
 	k_EMsgAMGetFriendsLobbiesResponse = 4166;
 	k_EMsgAMGetUserFriendNewsResponse = 4172;
@@ -1391,6 +1381,19 @@ enum EMsg {
 	k_EMsgRemoteClientWifiAPStatus = 9523;
 	k_EMsgRemoteClientPairWifiAP = 9524;
 	k_EMsgRemoteClientPairWifiAPResponse = 9525;
+	k_EMsgRemoteClientDownloadScheduleChanged = 9526;
+	k_EMsgRemoteClientDownloadItemScheduleChanged = 9527;
+	k_EMsgRemoteClientAppUpdateStopped = 9528;
+	k_EMsgRemoteClientAppDownloadStats = 9529;
+	k_EMsgRemoteClientAppUploadStats = 9530;
+	k_EMsgRemoteClientAppInfoUpdateComplete = 9531;
+	k_eMsgRemoteClientDownloadsManagement = 9532;
+	k_eMsgRemoteClientDownloadingAppID = 9533;
+	k_eMsgRemoteClientPeerContentServerChanged = 9534;
+	k_eMsgRemoteClientRestrictAutoUpdatesChanged = 9535;
+	k_eMsgRemoteClientSuspendLanPeerContent = 9536;
+	k_eMsgRemoteClientUpdateDownloadsController = 9537;
+	k_EMsgRemoteClientAcceptAllEULAs = 9538;
 	k_EMsgClientConcurrentSessionsBase = 9600;
 	k_EMsgClientPlayingSessionState = 9600;
 	k_EMsgClientKickPlayingSession = 9601;

@@ -248,6 +248,13 @@ class EBrowserGPUStatus(SteamIntEnum):
     DisabledChildCommandLine = 9
     DisabledCompositingCommandLine = 10
 
+class ECaptureFailedReason(SteamIntEnum):
+    ECaptureFailedReasonNone = 0
+    ECaptureFailedReasonUnknown = 1
+    ECaptureFailedReasonPipewireRequired = 2
+    ECaptureFailedReasonPipewirePermissions = 3
+    ECaptureFailedReasonMacOSPermissions = 4
+
 class EChatRoomGroupRank(SteamIntEnum):
     Default = 0
     Viewer = 10
@@ -300,6 +307,9 @@ class EChatRoomServerMessage(SteamIntEnum):
     EChatRoomServerMsg_ChatRoomTaglineChanged = 9
     EChatRoomServerMsg_ChatRoomAvatarChanged = 10
     EChatRoomServerMsg_AppCustom = 11
+    EChatRoomServerMsg_JoinedMany = 12
+    EChatRoomServerMsg_PartedMany = 13
+    EChatRoomServerMsg_InvitedMany = 14
 
 class EChatSessionNotice(SteamIntEnum):
     Invalid = 0
@@ -404,6 +414,9 @@ class EClientNotificationType(SteamIntEnum):
     PlaytestInvite = 59
     TradeReversal = 60
     HardwareUpdateAvailable = 61
+    ControllerLowBattery = 62
+    ControllerConnected = 63
+    ControllerDisconnected = 64
 
 class EClientSettingStore(SteamIntEnum):
     Invalid = 0
@@ -560,6 +573,20 @@ EContentHubDiscountFilterType = SteamIntEnum('EContentHubDiscountFilterType', {
     'PrioritizeDiscounts': 2,
     })
 
+class EContentModerationSanction(SteamIntEnum):
+    Invalid = 0
+    Deleted = 1
+    CommunityBanned = 2
+    HubBanned = 3
+    TradeBanned = 4
+    CommentHistoryDeleted = 5
+    Relabelled = 6
+    MarkAsSuspicious = 7
+    Warned = 8
+    KickedFromGroup = 9
+    HarassmentBanned = 10
+    MAX = 11
+
 class EContentModeratorLevel(SteamIntEnum):
     Any = 0
     Supervisor = 1
@@ -649,7 +676,10 @@ class EContentReportResolution(SteamIntEnum):
     RemoveAndWarn = 11
     RemoveAndBan = 12
     RemoveAndKick = 13
-    MAX = 14
+    Sanctioned = 14
+    Sustained = 15
+    Broken = 16
+    MAX = 17
 
 class EContentReportSubjectAction(SteamIntEnum):
     Invalid = 0
@@ -675,6 +705,7 @@ class EContentReportSubjectAction(SteamIntEnum):
     Claimed = 20
     Released = 21
     PrivateMessaged = 22
+    OwnerDisputed = 23
 
 class EContentReportSubjectType(SteamIntEnum):
     Invalid = 0
@@ -884,6 +915,12 @@ class EFrameRateReportEnabled(SteamIntEnum):
     Enabled = 1
     Disabled = 2
 
+class EGameFrameRateReportingPreference(SteamIntEnum):
+    Unset = 0
+    No = 1
+    Yes_Anonymous = 2
+    Yes_NonAnonymous = 3
+
 class EGameRecordingErrorType(SteamIntEnum):
     EGameRecordingErrorGeneral = 1
     EGameRecordingErrorLowDiskSpace = 2
@@ -980,6 +1017,14 @@ class EGRMode(SteamIntEnum):
     Always = 1
     Manual = 2
 
+class EHardwareCompatibilityFeedbackDetails(SteamIntEnum):
+    Unset = 0
+    Performance = 1
+    Stability = 2
+    Legibility = 4
+    Input = 8
+    Other = 16
+
 class EHDRToneMapOperator(SteamIntEnum):
     Invalid = 0
     Uncharted = 1
@@ -1018,6 +1063,14 @@ class EJSRegisterMethodType(SteamIntEnum):
 
 class EKeyEscrowUsage(SteamIntEnum):
     EKeyEscrowUsageStreamingDevice = 0
+
+class ELEDManagerMode(SteamIntEnum):
+    ELEDManagerModeInvalid = 0
+    ELEDManagerModeLogon = 1
+    ELEDManagerModeIdle = 2
+    ELEDManagerModeDownload = 3
+    ELEDManagerModeCustomize = 4
+    ELEDManagerModeCustomizeStartup = 5
 
 class ELobbyStatus(SteamIntEnum):
     ELobbyStatusInvalid = 0
@@ -1203,6 +1256,7 @@ class EMsg(SteamIntEnum):
     EMsgGMStatsForwardToAdminConnections = 338
     EMsgGMGetModifiedConVars = 339
     EMsgGMGetModifiedConVarsResponse = 340
+    EMsgGMNeedShellAndServerAddresses = 341
     EMsgBaseAIS = 400
     EMsgAISRequestContentDescription = 402
     EMsgAISGetPackageChangeNumber = 405
@@ -1211,8 +1265,6 @@ class EMsg(SteamIntEnum):
     EMsgAIGetAppGCFlagsResponse = 424
     EMsgAIGetAppList = 425
     EMsgAIGetAppListResponse = 426
-    EMsgAISGetCouponDefinition = 429
-    EMsgAISGetCouponDefinitionResponse = 430
     EMsgAISUpdateSubordinateContentDescription = 431
     EMsgAISUpdateSubordinateContentDescriptionResponse = 432
     EMsgAISBroadcastSubordinateContentDescription = 434
@@ -1333,18 +1385,14 @@ class EMsg(SteamIntEnum):
     EMsgClientRemoveFriend = 714
     EMsgClientGamesPlayedNoDataBlob = 715
     EMsgClientChangeStatus = 716
-    EMsgClientVacStatusResponse = 717
     EMsgClientFriendMsg = 718
     EMsgClientGameConnect_obsolete = 719
     EMsgClientGamesPlayed2_obsolete = 720
     EMsgClientGameEnded_obsolete = 721
     EMsgClientSystemIM = 726
     EMsgClientSystemIMAck = 727
-    EMsgClientGetLicenses = 728
     EMsgClientGetLegacyGameKey = 730
     EMsgClientContentServerLogOn_Deprecated = 731
-    EMsgClientAckVACBan2 = 732
-    EMsgClientGetPurchaseReceipts = 736
     EMsgClientGamesPlayed3_obsolete = 738
     EMsgClientAckGuestPass = 740
     EMsgClientRedeemGuestPass = 741
@@ -1352,7 +1400,6 @@ class EMsg(SteamIntEnum):
     EMsgClientRegisterKey = 743
     EMsgClientInviteUserToClan = 744
     EMsgClientAcknowledgeClanInvite = 745
-    EMsgClientPurchaseWithMachineID = 746
     EMsgClientAppUsageEvent = 747
     EMsgClientLogOnResponse = 751
     EMsgClientSetHeartbeatRate = 755
@@ -1373,7 +1420,6 @@ class EMsg(SteamIntEnum):
     EMsgClientGameConnectTokens = 779
     EMsgClientLicenseList = 780
     EMsgClientVACBanStatus = 782
-    EMsgClientEncryptPct = 784
     EMsgClientGetLegacyGameKeyResponse = 785
     EMsgClientAddFriend = 791
     EMsgClientAddFriendResponse = 792
@@ -1425,8 +1471,6 @@ class EMsg(SteamIntEnum):
     EMsgGSStatusUpdate_Unused = 907
     EMsgGSServerType = 908
     EMsgGSPlayerList = 909
-    EMsgGSGetUserAchievementStatus = 910
-    EMsgGSGetUserAchievementStatusResponse = 911
     EMsgGSGetPlayStats = 918
     EMsgGSGetPlayStatsResponse = 919
     EMsgGSGetUserGroupStatus = 920
@@ -1613,6 +1657,7 @@ class EMsg(SteamIntEnum):
     EMsgCMSetSecrets = 1704
     EMsgCMGetSecrets = 1705
     EMsgCMRemotePlayReplyPacket = 1706
+    EMsgCMRemotePlayOffline = 1707
     EMsgBaseGC = 2200
     EMsgGCCmdRevive = 2203
     EMsgGCCmdDown = 2206
@@ -1776,7 +1821,6 @@ class EMsg(SteamIntEnum):
     EMsgAMGetCommunityPrivacyState = 4116
     EMsgAMGetCommunityPrivacyStateResponse = 4117
     EMsgAMCheckClanInviteRateLimiting = 4118
-    EMsgUGSGetUserAchievementStatus = 4119
     EMsgAMGetIgnored = 4120
     EMsgAMGetIgnoredResponse = 4121
     EMsgAMSetIgnoredResponse = 4122
@@ -1801,7 +1845,6 @@ class EMsg(SteamIntEnum):
     EMsgAMCheckClanMembershipResponse = 4161
     EMsgAMProbeClanMembershipList = 4162
     EMsgAMProbeClanMembershipListResponse = 4163
-    EMsgUGSGetUserAchievementStatusResponse = 4164
     EMsgAMGetFriendsLobbies = 4165
     EMsgAMGetFriendsLobbiesResponse = 4166
     EMsgAMGetUserFriendNewsResponse = 4172
@@ -2495,6 +2538,19 @@ class EMsg(SteamIntEnum):
     EMsgRemoteClientWifiAPStatus = 9523
     EMsgRemoteClientPairWifiAP = 9524
     EMsgRemoteClientPairWifiAPResponse = 9525
+    EMsgRemoteClientDownloadScheduleChanged = 9526
+    EMsgRemoteClientDownloadItemScheduleChanged = 9527
+    EMsgRemoteClientAppUpdateStopped = 9528
+    EMsgRemoteClientAppDownloadStats = 9529
+    EMsgRemoteClientAppUploadStats = 9530
+    EMsgRemoteClientAppInfoUpdateComplete = 9531
+    eMsgRemoteClientDownloadsManagement = 9532
+    eMsgRemoteClientDownloadingAppID = 9533
+    eMsgRemoteClientPeerContentServerChanged = 9534
+    eMsgRemoteClientRestrictAutoUpdatesChanged = 9535
+    eMsgRemoteClientSuspendLanPeerContent = 9536
+    eMsgRemoteClientUpdateDownloadsController = 9537
+    EMsgRemoteClientAcceptAllEULAs = 9538
     EMsgClientConcurrentSessionsBase = 9600
     EMsgClientPlayingSessionState = 9600
     EMsgClientKickPlayingSession = 9601
@@ -2618,7 +2674,19 @@ class EPressOutletAction(SteamIntEnum):
     Updated = 4
     Deleted = 5
     Undeleted = 6
-    MAX = 7
+    StagedAdd = 7
+    StagedDelete = 8
+    EnterStaging = 9
+    ExitStaging = 10
+    ReverseStagedAdd = 11
+    ReverseStagedDelete = 12
+    MAX = 13
+
+class EPressOutletMemberPendingState(SteamIntEnum):
+    Member = 0
+    StagedDelete = 1
+    StagedAdd = 2
+    MAX = 3
 
 class EProfileCustomizationStyle(SteamIntEnum):
     EProfileCustomizationStyleDefault = 0
@@ -2738,6 +2806,22 @@ EPurchaseRequestAction = SteamIntEnum('EPurchaseRequestAction', {
     'MAX': 5,
     })
 
+class EQueryFilesSearchTextTarget(SteamIntEnum):
+    AllText = 0
+    Title = 1
+    Description = 2
+
+EQueryFilesSpecialFilter = SteamIntEnum('EQueryFilesSpecialFilter', {
+    'None': 0,
+    'AcceptedForUse': 1,
+    'FavoritedByFriends': 2,
+    'CreateByFriends': 3,
+    'CreatedByFollowed': 4,
+    'Reported': 5,
+    'ParentItems': 6,
+    'ParentCollections': 7,
+    })
+
 class ERecordingSessionChangeNotificationType(SteamIntEnum):
     Started = 1
     Stopped = 2
@@ -2760,6 +2844,8 @@ class ERemoteClientBroadcastMsg(SteamIntEnum):
     ERemoteDeviceStreamTransportSignal = 12
     ERemoteDeviceStreamingProgress = 13
     ERemoteDeviceAuthorizationConfirmed = 14
+    ERemoteClientBroadcastMsgPairingState = 15
+    ERemoteClientBroadcastMsgPairingExclusivity = 16
 
 class ERemoteClientPairWifiAPResult(SteamIntEnum):
     ERemoteClientPairWifiAPOK = 1
@@ -2777,6 +2863,7 @@ class ERemoteClientService(SteamIntEnum):
     ERemoteClientServiceSiteLicense = 4
     ERemoteClientServiceContentCache = 8
     ERemoteClientServiceContentServer = 16
+    ERemoteClientServiceManageDownloads = 32
 
 class ERemoteDeviceAuthorizationResult(SteamIntEnum):
     ERemoteDeviceAuthorizationSuccess = 0
@@ -2873,6 +2960,13 @@ class ESLSHelper(SteamIntEnum):
     SystemInfo = 5
     Devcoredump = 6
 
+ESpeakerConfiguration = SteamIntEnum('ESpeakerConfiguration', {
+    'Other': 0,
+    'Stereo': 1,
+    '51': 2,
+    '71': 3,
+    })
+
 class ESplitScalingFilter(SteamIntEnum):
     Invalid = 0
     Linear = 1
@@ -2887,13 +2981,6 @@ class ESplitScalingScaler(SteamIntEnum):
     Fit = 3
     Fill = 4
     Stretch = 5
-
-class EStartupMovieVariant(SteamIntEnum):
-    Invalid = 0
-    Generic = 1
-    DeckBlue = 2
-    DeckOrange = 3
-    Machine = 4
 
 class ESteamDatagramMsgID(SteamIntEnum):
     ESteamDatagramMsg_Invalid = 0
@@ -3039,6 +3126,7 @@ ESteamNotificationType = SteamIntEnum('ESteamNotificationType', {
     'PartnerEvent': 27,
     'PlaytestInvite': 28,
     'TradeReversal': 29,
+    'ReportedContentAction': 30,
     })
 
 class ESteamOSCompatibilityCategory(SteamIntEnum):
@@ -3347,6 +3435,7 @@ class EStreamControlMessage(SteamIntEnum):
     EStreamControlResumeControllerInput = 144
     EStreamControlVRConnectionReady = 145
     EStreamControlSetCursorScale = 146
+    EStreamControlCaptureFailed = 147
 
 class EStreamDataMessage(SteamIntEnum):
     EStreamDataPacket = 1
@@ -3404,6 +3493,11 @@ class EStreamFrameResult(SteamIntEnum):
     EStreamFrameResultDroppedLate = 6
     EStreamFrameResultDroppedReset = 7
 
+class EStreamHostDisplaySetting(SteamIntEnum):
+    EStreamHostDisplaySettingNone = 0
+    EStreamHostDisplaySettingClient = 1
+    EStreamHostDisplaySettingCustom = 2
+
 class EStreamHostPlayAudioPreference(SteamIntEnum):
     EStreamHostPlayAudioDefault = 0
     EStreamHostPlayAudioAlways = 1
@@ -3459,11 +3553,11 @@ class EStreamStatsMessage(SteamIntEnum):
 class EStreamTransport(SteamIntEnum):
     EStreamTransportNone = 0
     EStreamTransportUDP = 1
-    EStreamTransportUDPRelay = 2
+    EStreamTransportUDPRelay_OBSOLETE = 2
     EStreamTransportWebRTC_OBSOLETE = 3
     EStreamTransportSDR = 4
     EStreamTransportUDP_SNS = 5
-    EStreamTransportUDPRelay_SNS = 6
+    EStreamTransportUDPRelay_SNS_OBSOLETE = 6
 
 class EStreamVersion(SteamIntEnum):
     EStreamVersionNone = 0
@@ -3600,6 +3694,13 @@ class ETrailerCategory(SteamIntEnum):
     Accolades = 5
     Interview = 6
 
+class ETritonConnectionType(SteamIntEnum):
+    Unknown = 0
+    Puck = 1
+    Machine = 2
+    USB = 3
+    BT = 4
+
 ETritonPairType = SteamIntEnum('ETritonPairType', {
     'Unknown': 0,
     'None': 1,
@@ -3735,6 +3836,7 @@ __all__ = [
     'EBroadcastWatchLocation',
     'EBrowserFeatureStatus',
     'EBrowserGPUStatus',
+    'ECaptureFailedReason',
     'EChatRoomGroupRank',
     'EChatRoomJoinState',
     'EChatRoomMemberStateChange',
@@ -3766,6 +3868,7 @@ __all__ = [
     'EContentDeltaChunkDataLocation',
     'EContentDescriptorID',
     'EContentHubDiscountFilterType',
+    'EContentModerationSanction',
     'EContentModeratorLevel',
     'EContentReportReason',
     'EContentReportResolution',
@@ -3786,6 +3889,7 @@ __all__ = [
     'EForumType',
     'EFrameAccumulatedStat',
     'EFrameRateReportEnabled',
+    'EGameFrameRateReportingPreference',
     'EGameRecordingErrorType',
     'EGameRecordingType',
     'EGamescopeBlurMode',
@@ -3799,6 +3903,7 @@ __all__ = [
     'EGRAudio',
     'EGRExportLimitType',
     'EGRMode',
+    'EHardwareCompatibilityFeedbackDetails',
     'EHDRToneMapOperator',
     'EHDRVisualization',
     'EHIDDeviceDisconnectMethod',
@@ -3806,6 +3911,7 @@ __all__ = [
     'EInputMode',
     'EJSRegisterMethodType',
     'EKeyEscrowUsage',
+    'ELEDManagerMode',
     'ELobbyStatus',
     'ELogFileType',
     'EMarketingMessageAssociationType',
@@ -3828,6 +3934,7 @@ __all__ = [
     'EPhaseResultType',
     'EPlaytestStatus',
     'EPressOutletAction',
+    'EPressOutletMemberPendingState',
     'EProfileCustomizationStyle',
     'EProfileCustomizationType',
     'EProtoClanEventType',
@@ -3838,6 +3945,8 @@ __all__ = [
     'EPublishedFileRevision',
     'EPublishedFileStorageSystem',
     'EPurchaseRequestAction',
+    'EQueryFilesSearchTextTarget',
+    'EQueryFilesSpecialFilter',
     'ERecordingSessionChangeNotificationType',
     'ERemoteClientBroadcastMsg',
     'ERemoteClientPairWifiAPResult',
@@ -3850,9 +3959,9 @@ __all__ = [
     'ESettingProfileMode',
     'ESharedLibraryExcludeReason',
     'ESLSHelper',
+    'ESpeakerConfiguration',
     'ESplitScalingFilter',
     'ESplitScalingScaler',
-    'EStartupMovieVariant',
     'ESteamDatagramMsgID',
     'ESteamDeckCompatibilityCategory',
     'ESteamDeckCompatibilityFeedback',
@@ -3891,6 +4000,7 @@ __all__ = [
     'EStreamFrameEvent',
     'EStreamFramerateLimiter',
     'EStreamFrameResult',
+    'EStreamHostDisplaySetting',
     'EStreamHostPlayAudioPreference',
     'EStreamingDataType',
     'EStreamInterface',
@@ -3919,6 +4029,7 @@ __all__ = [
     'ETokenRenewalType',
     'ETouchGesture',
     'ETrailerCategory',
+    'ETritonConnectionType',
     'ETritonPairType',
     'ETwoFactorStatusFieldFlag',
     'ETwoFactorUsageType',

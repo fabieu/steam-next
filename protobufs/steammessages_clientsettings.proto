@@ -135,6 +135,12 @@ message CMsgClientSettings {
 	optional bool overlay_fps_counter_fps_graph = 4030 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\InGameOverlayShowFPSGraphFPS", (setting_default_bool) = true];
 	optional bool overlay_fps_counter_cpu_graph = 4031 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\InGameOverlayShowFPSGraphCPU", (setting_default_bool) = true];
 	optional bool overlay_fps_counter_allow_km_driver = 4032 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\InGameOverlayAllowKMDriveOnWindows", (setting_default_bool) = true];
+	optional bool achievement_notification_toast = 4033 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\AchievementNotificationToast", (setting_default_bool) = true];
+	optional bool achievement_notification_sound = 4034 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\AchievementNotificationSound", (setting_default_bool) = true];
+	optional bool controllerconnect_notification_toast = 4035 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\ControllerConnectNotificationToast", (setting_default_bool) = true];
+	optional bool controllerconnect_notification_sound = 4036 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\ControllerConnectNotificationSound", (setting_default_bool) = false];
+	optional bool controller_low_battery_notification_toast = 4037 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\ControllerLowBatteryNotificationToast", (setting_default_bool) = true];
+	optional bool controller_low_battery_notification_sound = 4038 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\ControllerLowBatteryNotificationSound", (setting_default_bool) = false];
 	optional bool smooth_scroll_webviews = 5000 [(setting_store) = k_EClientSettingStore_CustomFunc];
 	optional bool enable_gpu_accelerated_webviews = 5001 [(setting_store) = k_EClientSettingStore_CustomFunc];
 	optional bool enable_hardware_video_decoding = 5003 [(setting_store) = k_EClientSettingStore_CustomFunc];
@@ -146,6 +152,8 @@ message CMsgClientSettings {
 	optional bool enable_ui_sounds = 5009 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "system\\EnableUISounds", (setting_default_bool) = true];
 	optional bool enable_gamescope_composer = 5010 [(setting_store) = k_EClientSettingStore_Registry, (setting_name) = "HKEY_CURRENT_USER\\Software\\Valve\\Steam\\EnableGamescopeComposer", (setting_default_bool) = false];
 	optional bool enable_gamescope_composer_vr = 5011 [(setting_store) = k_EClientSettingStore_Registry, (setting_name) = "HKEY_CURRENT_USER\\Software\\Valve\\Steam\\EnableGamescopeComposerVR", (setting_default_bool) = true];
+	optional bool show_switch_to_desktop_at_login = 5012 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "system\\ShowSwitchToDesktopAtLogin", (setting_pre_login) = true];
+	optional bool enable_steamrt64_client = 5013 [(setting_store) = k_EClientSettingStore_CustomFunc];
 	optional bool disable_all_toasts = 6000 [(setting_store) = k_EClientSettingStore_ConfigStore_UserRoaming, (setting_name) = "DisableAllToasts"];
 	optional bool disable_toasts_in_game = 6001 [(setting_store) = k_EClientSettingStore_ConfigStore_UserRoaming, (setting_name) = "DisableToastsInGame"];
 	optional bool play_sound_on_toast = 6002 [(setting_store) = k_EClientSettingStore_ConfigStore_UserRoaming, (setting_name) = "PlaySoundOnToast", (setting_default_bool) = true];
@@ -205,6 +213,15 @@ message CMsgClientSettings {
 	optional bool controller_enable_chord = 140011 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamController_Enable_Chord", (setting_default_bool) = true];
 	optional bool controller_poll_rate = 140012 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamController_Poll_Rate", (setting_default_int) = 2];
 	optional bool controller_siapi_config_author_mode = 140013 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/Configurator/SIAPIAuhtorMode", (setting_default_bool) = false];
+	optional bool controller_show_ibex_tour = 140014 [(setting_store) = k_EClientSettingStore_ConfigStore_UserRoaming, (setting_name) = "ShowIbexWelcomeTour", (setting_default_bool) = true];
+	optional string controller_chat_radial_menu_option_0 = 140030 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/0"];
+	optional string controller_chat_radial_menu_option_1 = 140031 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/1"];
+	optional string controller_chat_radial_menu_option_2 = 140032 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/2"];
+	optional string controller_chat_radial_menu_option_3 = 140033 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/3"];
+	optional string controller_chat_radial_menu_option_4 = 140034 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/4"];
+	optional string controller_chat_radial_menu_option_5 = 140035 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/5"];
+	optional string controller_chat_radial_menu_option_6 = 140036 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/6"];
+	optional string controller_chat_radial_menu_option_7 = 140037 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamInput/ChatRadialMenu/7"];
 	optional uint64 startup_movie_id = 16000 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Customization/StartupMovie/MovieID", (setting_pre_login) = true];
 	optional string startup_movie_local_path = 16001 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Customization/StartupMovie/LocalPath", (setting_pre_login) = true];
 	optional bool startup_movie_shuffle = 16002 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Customization/StartupMovie/Shuffle", (setting_pre_login) = true];
@@ -242,6 +259,7 @@ message CMsgClientSettings {
 	optional bool hdr_compat_testing = 20006 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Developer/HDRCompatTesting"];
 	optional bool developer_mode_enabled = 20007 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Developer/DevModeEnabled"];
 	optional bool show_advanced_update_channels = 20008 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Developer/ShowAdvancedUpdateChannels"];
+	optional bool browserview_underlays_allowed = 20009 [(setting_store) = k_EClientSettingStore_CustomFunc];
 	optional .EHDRVisualization gamescope_hdr_visualization = 21001 [default = k_EHDRVisualization_None, (setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "Gamescope/HDRVisualization2"];
 	optional int32 gamescope_app_target_framerate = 21002 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "Gamescope/AppTargetFrameRate", (setting_default_int) = 0, (setting_profile_mode) = k_ESettingProfileMode_PerGamePerDisplay];
 	optional bool gamescope_enable_app_target_framerate = 21003 [(setting_store) = k_EClientSettingStore_Registry, (setting_name) = "HKEY_CURRENT_USER\\Software\\Valve\\Steam\\GamescopeEnableAppTargetRefreshRate2", (setting_default_bool) = true];
@@ -276,6 +294,7 @@ message CMsgClientSettings {
 	optional bool steamos_vrs_enabled = 22015 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamOS/VRSEnabled", (setting_default_bool) = false, (setting_profile_mode) = k_ESettingProfileMode_PerGame];
 	optional bool steamos_separate_led_colors = 22016 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "SteamOS/SeparaeLEDColors", (setting_default_bool) = false];
 	optional bool steamos_wifi_reload_wifi_driver_on_sleep = 22017 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "SteamOS/WifiReloadDriverOnSleep", (setting_default_bool) = false];
+	optional bool steamos_wifi_power_management_enabled = 220018 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "SteamOS/WifiPowerManagement", (setting_default_bool) = false];
 	optional bool setting_validation_bool = 23001 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "SettingValidation/DummyBool"];
 	optional .EHDRVisualization setting_validation_enum = 23002 [default = k_EHDRVisualization_None, (setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "SettingValidation/DummyEnum"];
 	optional int32 setting_validation_int32 = 23003 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "SettingValidation/DummyInt32"];
@@ -290,8 +309,11 @@ message CMsgClientSettings {
 	optional int32 system_idle_suspend_ac_sec = 24004 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Software\\Valve\\Steam\\System\\IdleSuspendACSeconds", (setting_default_int) = 3600];
 	optional bool system_enable_low_power_downloads = 24005 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Software\\Valve\\Steam\\System\\EnableLowPowerDownloads", (setting_default_bool) = true];
 	optional bool system_allow_battery_low_power_downloads = 24006 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Software\\Valve\\Steam\\System\\AllowBatteryLowPowerDownloads", (setting_default_bool) = false];
-	optional .EFrameRateReportEnabled game_framerate_report_enabled = 24007 [default = k_EFrameRateReportEnabled_Unset, (setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "System/GameFrameRateReportEnabled", (setting_default_int) = 0];
+	optional int32 system_idle_screensaver_battery_sec = 24008 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Software\\Valve\\Steam\\System\\IdleScreensaverBatterySeconds", (setting_default_int) = 0];
+	optional int32 system_idle_screensaver_ac_sec = 24009 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Software\\Valve\\Steam\\System\\IdleScreensaverACSeconds", (setting_default_int) = 300];
 	optional bool vr_show_perf_graph_in_hmd = 25000 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "VR/ShowPerfGraphInHMD", (setting_default_bool) = false];
+	optional bool vr_audio_spatialize = 25001 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Audio/Spatialize", (setting_default_bool) = false];
+	optional bool vr_audio_spatialize_surround = 25002 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Audio/SpatializeSurround", (setting_default_bool) = false];
 	optional bool accessibility_debug_visualizer = 26000 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "Accessibility/DebugVisualizer", (setting_default_bool) = false];
 	optional bool accessibility_screen_reader_enabled = 26001 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Accessibility/ScreenReaderEnabled", (setting_default_bool) = false];
 	optional float accessibility_screen_reader_rate = 26002 [(setting_store) = k_EClientSettingStore_ConfigStore_UserLocal, (setting_name) = "Accessibility/ScreenReaderPitch", (setting_default_float) = 0.5];
@@ -303,6 +325,7 @@ message CMsgClientSettings {
 	optional string accessibility_color_filter_name = 26009 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Accessibility/ColorFilterName", (setting_default_string) = ""];
 	optional float accessibility_desktop_ui_scale = 26010 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Accessibility/DesktopUIScale", (setting_default_float) = 1];
 	optional string accessibility_screen_reader_locale = 26011 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Accessibility/ScreenReaderLocale", (setting_default_string) = "auto"];
+	optional bool accessibility_mono_audio = 26012 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "Accessibility/MonoAudio", (setting_default_bool) = false];
 	optional bool remote_play_wifi_ap_enabled = 27000 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "streaming_v2\\WifiAPEnabled", (setting_default_bool) = true];
 	optional int32 remote_play_wifi_ap_channel_5ghz = 27001 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "streaming_v2\\WifiAPChannel5GHz", (setting_default_int) = 0];
 	optional int32 remote_play_wifi_ap_channel_6ghz = 27002 [(setting_store) = k_EClientSettingStore_ConfigStore_Install, (setting_name) = "streaming_v2\\WifiAPChannel6GHz", (setting_default_int) = 0];

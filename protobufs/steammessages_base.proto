@@ -302,6 +302,7 @@ message CClanEventData {
 	optional uint32 build_id = 29;
 	optional string build_branch = 30;
 	optional bool unlisted = 31;
+	optional uint32 rtime_created = 32;
 }
 
 message CBilling_Address {
@@ -348,4 +349,41 @@ message UserContentDescriptorPreferences {
 	}
 
 	repeated .UserContentDescriptorPreferences.ContentDescriptor content_descriptors_to_exclude = 1;
+}
+
+message UserSystemInformation {
+	optional string manufacturer = 1;
+	optional string model = 2;
+	optional string dx_video_card = 3;
+	optional int32 dx_vendorid = 4;
+	optional int32 dx_deviceid = 5;
+	optional uint32 num_gpu = 6;
+	optional uint64 system_ram = 7;
+	optional string os = 8;
+	optional string cpu_vendor = 9;
+	optional string cpu_name = 10;
+	optional uint32 gaming_device_type = 11;
+	optional string dx_driver_version = 12;
+	optional string adapter_description = 14;
+	optional string driver_version = 15;
+	optional string driver_date = 16;
+	optional uint32 vram_size = 17;
+	optional uint32 screen_width = 18;
+	optional uint32 screen_height = 19;
+	optional bool precise_frame_rate = 20;
+}
+
+message GamePerformanceSettings {
+	enum EGamePerformanceSetting {
+		k_EGamePerformanceSetting_NotSet = 0;
+		k_EGamePerformanceSetting_Low = 1;
+		k_EGamePerformanceSetting_Medium = 2;
+		k_EGamePerformanceSetting_High = 3;
+		k_EGamePerformanceSetting_Ultra = 4;
+		k_EGamePerformanceSetting_Custom = 5;
+	}
+
+	optional .GamePerformanceSettings.EGamePerformanceSetting setting = 1 [default = k_EGamePerformanceSetting_NotSet];
+	optional uint32 game_resolution_width = 2;
+	optional uint32 game_resolution_height = 3;
 }

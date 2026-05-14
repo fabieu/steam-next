@@ -119,7 +119,6 @@ message StoreBrowseContext {
 	optional string language = 1;
 	optional int32 elanguage = 2;
 	optional string country_code = 3;
-	optional int32 steam_realm = 4;
 }
 
 message StoreBrowseItemDataRequest {
@@ -149,15 +148,30 @@ message CStoreBrowse_GetItems_Request {
 }
 
 message StoreItem {
+	message Demo {
+		optional uint32 appid = 1;
+		optional string label = 2;
+		optional bool show_above_purchase = 3;
+	}
+
+	message Playtest {
+		optional uint32 appid = 1;
+		optional bool is_open = 2;
+	}
+
 	message RelatedItems {
 		optional uint32 parent_appid = 1;
 		repeated uint32 demo_appid = 2;
 		repeated uint32 standalone_demo_appid = 3;
+		repeated .StoreItem.Demo demos = 4;
+		repeated .StoreItem.Demo standalone_demos = 5;
+		repeated .StoreItem.Playtest playtests = 6;
 	}
 
 	message IncludedItems {
 		repeated .StoreItem included_apps = 1;
 		repeated .StoreItem included_packages = 2;
+		repeated .StoreItem included_bundles = 3;
 	}
 
 	message Categories {
@@ -200,8 +214,11 @@ message StoreItem {
 	message Assets {
 		optional string asset_url_format = 1;
 		optional string main_capsule = 2;
+		optional string main_capsule_2x = 18;
 		optional string small_capsule = 3;
+		optional string small_capsule_2x = 19;
 		optional string header = 4;
+		optional string header_2x = 20;
 		optional string package_header = 5;
 		optional string page_background = 6;
 		optional string hero_capsule = 7;
@@ -214,12 +231,15 @@ message StoreItem {
 		optional string clan_avatar = 14;
 		optional string page_background_path = 15;
 		optional string raw_page_background = 16;
+		optional string edition_comparison = 17;
 	}
 
 	message ReleaseInfo {
 		optional uint32 steam_release_date = 1;
 		optional uint32 original_release_date = 2;
 		optional uint32 original_steam_release_date = 3;
+		optional uint32 release_from_early_access_date = 11;
+		optional uint32 release_from_early_access_style = 12;
 		optional bool is_coming_soon = 4;
 		optional bool is_preload = 5;
 		optional string custom_release_date_message = 6;
@@ -288,6 +308,12 @@ message StoreItem {
 		optional .StoreItem.PurchaseOption.RecurrenceInfo recurrence_info = 46;
 		optional uint32 free_to_keep_ends = 47;
 		optional bool must_purchase_as_set = 48 [default = false];
+		optional string package_group = 49 [default = "default"];
+		optional bool is_edition = 50;
+		optional uint32 free_to_keep_base_package = 51;
+		optional bool price_cannot_be_displayed_as_discount = 52 [default = false];
+		optional int64 price_to_base_discount_on = 53;
+		optional uint32 free_with_master_sub_appid = 54;
 	}
 
 	message Screenshots {
@@ -315,10 +341,9 @@ message StoreItem {
 			optional string trailer_name = 1;
 			optional string trailer_url_format = 2;
 			optional .ETrailerCategory trailer_category = 13 [default = k_ETrailerCategory_Invalid];
-			repeated .StoreItem.Trailers.VideoSource trailer_480p = 3;
-			repeated .StoreItem.Trailers.VideoSource trailer_max = 4;
 			repeated .StoreItem.Trailers.VideoSource microtrailer = 5;
 			repeated .StoreItem.Trailers.AdaptiveTrailer adaptive_trailers = 6;
+			optional string captions_manifest = 7;
 			optional string screenshot_medium = 10;
 			optional string screenshot_full = 11;
 			optional int32 trailer_base_id = 12;
@@ -349,6 +374,19 @@ message StoreItem {
 		optional string text = 3;
 	}
 
+	message PackageGroup {
+		enum EPackageGroupDisplayType {
+			k_EPackageGroupDisplayType_Default = 0;
+			k_EPackageGroupDisplayType_Dropdown = 1;
+		}
+
+		optional string name = 1;
+		optional string heading = 2;
+		optional .StoreItem.PackageGroup.EPackageGroupDisplayType display_type = 3 [default = k_EPackageGroupDisplayType_Default];
+		optional string dropdown_title = 4;
+		optional string dropdown_description_bbcode = 5;
+	}
+
 	optional .EStoreItemType item_type = 1 [default = k_EStoreItemType_Invalid];
 	optional uint32 id = 2;
 	optional uint32 success = 3;
@@ -377,9 +415,7 @@ message StoreItem {
 	optional bool is_coming_soon = 34;
 	optional .StoreItem.PurchaseOption best_purchase_option = 40;
 	repeated .StoreItem.PurchaseOption purchase_options = 41;
-	repeated .StoreItem.PurchaseOption accessories = 42;
 	optional .StoreItem.PurchaseOption self_purchase_option = 43;
-	repeated .StoreItem.PurchaseOption invalid_purchase_options = 44;
 	optional .StoreItem.Screenshots screenshots = 50;
 	optional .StoreItem.Trailers trailers = 51;
 	repeated .StoreItem.SupportedLanguage supported_languages = 52;
@@ -388,11 +424,13 @@ message StoreItem {
 	optional bool unlisted = 55;
 	optional uint32 game_count = 56;
 	optional string internal_name = 57;
-	optional string full_description = 58;
+	optional string full_description_bbcode = 58;
 	optional bool is_free_temporarily = 59;
 	optional .StoreItem.Assets assets_without_overrides = 60;
 	optional .StoreBrowseFilterFailure user_filter_failure = 70;
 	repeated .StoreItem.Link links = 71;
+	optional string purchase_description_bbcode = 72;
+	repeated .StoreItem.PackageGroup package_groups = 74;
 }
 
 message StoreGameRating {
@@ -461,6 +499,7 @@ message CStoreBrowse_GetContentHubConfig_Response {
 		repeated uint32 must_have_tags = 7;
 		repeated uint32 any_one_of_tags = 8;
 		repeated uint32 must_not_have_tags = 9;
+		optional string hub_description = 10;
 	}
 
 	repeated .CStoreBrowse_GetContentHubConfig_Response.ContentHubConfig hubconfigs = 1;
@@ -548,6 +587,9 @@ message CHardwarePackageDetails {
 	optional bool allow_purchase_in_country = 15;
 	optional uint32 estimated_delivery_soonest_business_days = 17;
 	optional uint32 estimated_delivery_latest_business_days = 18;
+	optional bool not_allowed_to_reserved_because_already_owned = 19;
+	optional uint32 appid_ownership_not_allowed_to_reserve = 20;
+	optional uint32 account_first_date_purchase_requirement = 21;
 }
 
 message CStoreBrowse_GetHardwareItems_Response {

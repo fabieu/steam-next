@@ -15,7 +15,7 @@ import steam.protobufs.steammessages_base_pb2 as steammessages__base__pb2
 import steam.protobufs.steammessages_remoteclient_discovery_pb2 as steammessages__remoteclient__discovery__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n steammessages_remoteclient.proto\x1a\x18steammessages_base.proto\x1a*steammessages_remoteclient_discovery.proto\"r\n\x16\x43MsgRemoteClientStatus\x12\x11\n\tclient_id\x18\x01 \x01(\x04\x12\x13\n\x0binstance_id\x18\x02 \x01(\x04\x12\x30\n\x06status\x18\x03 \x01(\x0b\x32 .CMsgRemoteClientBroadcastStatus\"\xe4\x04\n\x19\x43MsgRemoteClientAppStatus\x12<\n\x0estatus_updates\x18\x01 \x03(\x0b\x32$.CMsgRemoteClientAppStatus.AppStatus\x1a\xe8\x01\n\rAppUpdateInfo\x12\x19\n\x11time_update_start\x18\x01 \x01(\x07\x12\x19\n\x11\x62ytes_to_download\x18\x02 \x01(\x04\x12\x18\n\x10\x62ytes_downloaded\x18\x03 \x01(\x04\x12\x18\n\x10\x62ytes_to_process\x18\x04 \x01(\x04\x12\x17\n\x0f\x62ytes_processed\x18\x05 \x01(\x04\x12\'\n\x1b\x65stimated_seconds_remaining\x18\x06 \x01(\x05:\x02-1\x12\x15\n\rupdate_result\x18\x07 \x01(\x05\x12\x14\n\x0cupdate_state\x18\x08 \x01(\r\x1aO\n\x0cShortcutInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04icon\x18\x02 \x01(\t\x12\x12\n\ncategories\x18\x03 \x03(\t\x12\x0f\n\x07\x65xepath\x18\x04 \x01(\t\x1a\xcc\x01\n\tAppStatus\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x11\n\tapp_state\x18\x02 \x01(\r\x12=\n\x0bupdate_info\x18\x03 \x01(\x0b\x32(.CMsgRemoteClientAppStatus.AppUpdateInfo\x12>\n\rshortcut_info\x18\x04 \x01(\x0b\x32\'.CMsgRemoteClientAppStatus.ShortcutInfo\x12\x1d\n\x0fvr_not_required\x18\x05 \x01(\x08:\x04true\"\xc9\x03\n\x1b\x43MsgRemoteClientStartStream\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x13\n\x0b\x65nvironment\x18\x02 \x01(\x05\x12\x15\n\rgamepad_count\x18\x03 \x01(\x05\x12\x19\n\rlaunch_option\x18\x04 \x01(\x05:\x02-1\x12!\n\x12lock_parental_lock\x18\x05 \x01(\x08:\x05\x66\x61lse\x12\x1c\n\x14unlock_parental_lock\x18\x06 \x01(\t\x12\x1c\n\x14maximum_resolution_x\x18\x07 \x01(\x05\x12\x1c\n\x14maximum_resolution_y\x18\x08 \x01(\x05\x12>\n\x08gamepads\x18\t \x03(\x0b\x32,.CMsgRemoteClientStartStream.ReservedGamepad\x12\x1e\n\x13\x61udio_channel_count\x18\n \x01(\x05:\x01\x32\x12.\n\x13supported_transport\x18\x0b \x03(\x0e\x32\x11.EStreamTransport\x1a\x46\n\x0fReservedGamepad\x12\x17\n\x0f\x63ontroller_type\x18\x01 \x01(\r\x12\x1a\n\x12\x63ontroller_subtype\x18\x02 \x01(\r\"\xdb\x02\n#CMsgRemoteClientStartStreamResponse\x12\x1a\n\x0f\x65_launch_result\x18\x01 \x01(\x05:\x01\x32\x12\x13\n\x0bstream_port\x18\x02 \x01(\r\x12\x16\n\x0elaunch_options\x18\x03 \x03(\x05\x12\x12\n\nauth_token\x18\x04 \x01(\x0c\x12;\n\ttransport\x18\x05 \x01(\x0e\x32\x11.EStreamTransport:\x15k_EStreamTransportUDP\x12\x14\n\x0crelay_server\x18\x06 \x01(\t\x12\x13\n\x0blaunch_task\x18\x07 \x01(\t\x12\x1a\n\x12launch_task_detail\x18\x08 \x01(\t\x12\x19\n\x11launch_tasks_done\x18\t \x01(\x05\x12\x1a\n\x12launch_tasks_total\x18\n \x01(\x05\x12\x1c\n\x14vr_connection_params\x18\x0b \x01(\t\"\x16\n\x14\x43MsgRemoteClientPing\"\x1e\n\x1c\x43MsgRemoteClientPingResponse\"S\n\x1a\x43MsgRemoteClientAcceptEULA\x12\x0e\n\x06\x61pp_id\x18\x01 \x03(\r\x12\x0f\n\x07\x65ula_id\x18\x02 \x03(\t\x12\x14\n\x0c\x65ula_version\x18\x03 \x03(\r\"O\n#CMsgRemoteClientGetControllerConfig\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x18\n\x10\x63ontroller_index\x18\x03 \x01(\r\"U\n+CMsgRemoteClientGetControllerConfigResponse\x12\x12\n\x07\x65result\x18\x01 \x01(\x05:\x01\x32\x12\x12\n\nconfig_vdf\x18\x02 \x01(\x0c\"3\n CMsgRemoteClientStreamingEnabled\x12\x0f\n\x07\x65nabled\x18\x01 \x02(\x08\"\x90\x01\n\x1c\x43MsgRemoteClientWifiAPStatus\x12\x0c\n\x04ssid\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x17\n\x0fwpa2_deprecated\x18\x03 \x01(\x08\x12\x1a\n\x12is_pairing_capable\x18\x04 \x01(\x08\x12\x1b\n\x13paired_network_hash\x18\x05 \x01(\x06\"<\n\x1a\x43MsgRemoteClientPairWifiAP\x12\x0c\n\x04ssid\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"^\n\"CMsgRemoteClientPairWifiAPResponse\x12\x18\n\re_pair_result\x18\x01 \x01(\x05:\x01\x32\x12\x0c\n\x04ssid\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t*\xb4\x02\n\x1d\x45RemoteClientPairWifiAPResult\x12\x1f\n\x1bk_ERemoteClientPairWifiAPOK\x10\x01\x12!\n\x1dk_ERemoteClientPairWifiAPFail\x10\x02\x12)\n%k_ERemoteClientPairWifiAPNetworkError\x10\x03\x12)\n%k_ERemoteClientPairWifiAPUnauthorized\x10\x04\x12,\n(k_ERemoteClientPairWifiAPNoDonglePresent\x10\x05\x12$\n k_ERemoteClientPairWifiAPTimeout\x10\x06\x12%\n!k_ERemoteClientPairWifiAPCanceled\x10\x07\x42\x05H\x01\x90\x01\x00')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n steammessages_remoteclient.proto\x1a\x18steammessages_base.proto\x1a*steammessages_remoteclient_discovery.proto\"r\n\x16\x43MsgRemoteClientStatus\x12\x11\n\tclient_id\x18\x01 \x01(\x04\x12\x13\n\x0binstance_id\x18\x02 \x01(\x04\x12\x30\n\x06status\x18\x03 \x01(\x0b\x32 .CMsgRemoteClientBroadcastStatus\"\xdc\x01\n\x1e\x43MsgRemoteClientDownloadStatus\x12\x1b\n\x13\x63urrent_connections\x18\x01 \x01(\r\x12\x13\n\x0b\x63urrent_bps\x18\x02 \x01(\r\x12\x1e\n\x16total_bytes_downloaded\x18\x03 \x01(\x04\x12\x12\n\nrecent_bps\x18\x04 \x01(\r\x12\x18\n\x10remote_client_id\x18\x05 \x01(\x04\x12\x1e\n\x16\x64ownload_throttle_rate\x18\x06 \x01(\x05\x12\x1a\n\x12remote_client_name\x18\x07 \x01(\t\"\xec\x01\n\x1c\x43MsgRemoteClientUploadStatus\x12\x15\n\rserved_app_id\x18\x01 \x01(\r\x12\x13\n\x0bnum_clients\x18\x02 \x01(\r\x12\x1a\n\x12send_bytes_per_sec\x18\x03 \x01(\r\x12\x1a\n\x12read_bytes_per_sec\x18\x04 \x01(\r\x12\x18\n\x10send_bytes_total\x18\x05 \x01(\x04\x12\x18\n\x10read_bytes_total\x18\x06 \x01(\x04\x12\x18\n\x10remote_client_id\x18\x07 \x01(\x04\x12\x1a\n\x12remote_client_name\x18\x08 \x01(\t\"\x8c\x01\n#CMsgRemoteClientRestrictAutoUpdates\x12\x1d\n\x15restrict_auto_updates\x18\x01 \x01(\x08\x12#\n\x1brestrict_auto_updates_start\x18\x02 \x01(\x05\x12!\n\x19restrict_auto_updates_end\x18\x03 \x01(\x05\"m\n\x10\x41ppStageProgress\x12\x13\n\x0bin_progress\x18\x01 \x01(\x04\x12\r\n\x05total\x18\x02 \x01(\x04\x12%\n\x1d\x65stimated_time_remaining_secs\x18\x03 \x01(\x05\x12\x0e\n\x06weight\x18\x04 \x01(\x02\"\xdb\x03\n\rAppUpdateInfo\x12\x19\n\x11time_update_start\x18\x01 \x01(\x07\x12\x19\n\x11\x62ytes_to_download\x18\x02 \x01(\x04\x12\x18\n\x10\x62ytes_downloaded\x18\x03 \x01(\x04\x12\x18\n\x10\x62ytes_to_process\x18\x04 \x01(\x04\x12\x17\n\x0f\x62ytes_processed\x18\x05 \x01(\x04\x12\'\n\x1b\x65stimated_seconds_remaining\x18\x06 \x01(\x05:\x02-1\x12\x15\n\rupdate_result\x18\x07 \x01(\x05\x12\x14\n\x0cupdate_state\x18\x08 \x01(\r\x12\x15\n\rdownload_type\x18\t \x01(\r\x12\x1c\n\x14staging_bytes_staged\x18\n \x01(\x04\x12\x1e\n\x16staging_bytes_to_stage\x18\x0b \x01(\x04\x12 \n\x18\x62ytes_to_disc_per_second\x18\x0c \x01(\r\x12+\n\x10progress_weights\x18\r \x03(\x0b\x32\x11.AppStageProgress\x12\x1b\n\x13time_deferred_until\x18\x0e \x01(\r\x12\x17\n\x0fsource_build_id\x18\x0f \x01(\r\x12\x17\n\x0ftarget_build_id\x18\x10 \x01(\r\"Q\n\x0e\x41ppCloudStatus\x12\x0e\n\x06status\x18\x01 \x01(\r\x12\x12\n\nsync_state\x18\x02 \x01(\r\x12\x1b\n\x13transfer_percentage\x18\x03 \x01(\x01\"\xec\x03\n\x19\x43MsgRemoteClientAppStatus\x12<\n\x0estatus_updates\x18\x01 \x03(\x0b\x32$.CMsgRemoteClientAppStatus.AppStatus\x1a\xbf\x02\n\tAppStatus\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x19\n\x11\x61pp_install_state\x18\x02 \x01(\r\x12#\n\x0bupdate_info\x18\x03 \x01(\x0b\x32\x0e.AppUpdateInfo\x12>\n\rshortcut_info\x18\x04 \x01(\x0b\x32\'.CMsgRemoteClientAppStatus.ShortcutInfo\x12\x1d\n\x0fvr_not_required\x18\x05 \x01(\x08:\x04true\x12\x1f\n\x17shader_update_available\x18\x06 \x01(\x08\x12 \n\x18workshop_update_avilable\x18\x07 \x01(\x08\x12\x19\n\x11\x64ownload_complete\x18\x08 \x01(\x08\x12%\n\x0c\x63loud_status\x18\t \x01(\x0b\x32\x0f.AppCloudStatus\x1aO\n\x0cShortcutInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04icon\x18\x02 \x01(\t\x12\x12\n\ncategories\x18\x03 \x03(\t\x12\x0f\n\x07\x65xepath\x18\x04 \x01(\t\"\xcc\x03\n#CMsgRemoteClientDownloadsManagement\x12\\\n\x16\x63hange_queue_placement\x18\x01 \x01(\x0b\x32<.CMsgRemoteClientDownloadsManagement.ChangeAppQueuePlacement\x12W\n\x15\x63hange_download_index\x18\x02 \x01(\x0b\x32\x38.CMsgRemoteClientDownloadsManagement.ChangeDownloadIndex\x12\x1c\n\x14\x65nable_all_downloads\x18\x03 \x01(\x08\x12(\n remove_from_download_list_app_id\x18\x04 \x01(\r\x12#\n\x1bsuspend_download_throttling\x18\x05 \x01(\x08\x1a\x42\n\x17\x43hangeAppQueuePlacement\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x17\n\x0fqueue_placement\x18\x02 \x01(\r\x1a=\n\x13\x43hangeDownloadIndex\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x16\n\x0e\x64ownload_index\x18\x03 \x01(\r\"l\n)CMsgRemoteClientUpdateDownloadsController\x12\x1d\n\x15update_download_items\x18\x01 \x01(\x08\x12 \n\x18update_download_overview\x18\x02 \x01(\x08\"m\n(CMsgRemoteClientPeerContentServerChanged\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x17\n\x0fnum_connections\x18\x02 \x01(\r\x12\x18\n\x10remote_client_id\x18\x03 \x01(\x04\"C\n%CMsgRemoteClientDownloadingAppChanged\x12\x1a\n\x12\x64ownloading_app_id\x18\x01 \x01(\r\"8\n%CMsgRemoteClientSuspendLanPeerContent\x12\x0f\n\x07suspend\x18\x01 \x01(\x08\"\xa3\x01\n\'CMsgRemoteClientDownloadScheduleChanged\x12\x18\n\x10\x64ownload_enabled\x18\x01 \x01(\x08\x12\x13\n\x0bstart_index\x18\x02 \x01(\r\x12\x15\n\rfinal_message\x18\x03 \x01(\x08\x12\x1a\n\x12num_apps_scheduled\x18\x04 \x01(\r\x12\x16\n\x0e\x61pps_scheduled\x18\x05 \x03(\r\"=\n+CMsgRemoteClientDownloadScheduleItemChanged\x12\x0e\n\x06\x61pp_id\x18\x02 \x01(\r\"\xa6\x01\n CMsgRemoteClientAppUpdateStopped\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12#\n\x0bupdate_info\x18\x02 \x01(\x0b\x32\x0e.AppUpdateInfo\x12\x14\n\x0c\x65rror_detail\x18\x03 \x01(\t\x12\x1c\n\x14install_folder_index\x18\x04 \x01(\x05\x12\x19\n\x11\x61pp_install_state\x18\x05 \x01(\r\"7\n%CMsgRemoteClientAppUpdateInfoComplete\x12\x0e\n\x06result\x18\x01 \x01(\r\"c\n CMsgRemoteClientDownloadingAppID\x12\x1a\n\x12\x64ownloading_app_id\x18\x01 \x01(\r\x12#\n\x0bupdate_info\x18\x02 \x01(\x0b\x32\x0e.AppUpdateInfo\"\xaa\x04\n\x1b\x43MsgRemoteClientStartStream\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x13\n\x0b\x65nvironment\x18\x02 \x01(\x05\x12\x15\n\rgamepad_count\x18\x03 \x01(\x05\x12\x19\n\rlaunch_option\x18\x04 \x01(\x05:\x02-1\x12!\n\x12lock_parental_lock\x18\x05 \x01(\x08:\x05\x66\x61lse\x12\x1c\n\x14unlock_parental_lock\x18\x06 \x01(\t\x12\x1c\n\x14maximum_resolution_x\x18\x07 \x01(\x05\x12\x1c\n\x14maximum_resolution_y\x18\x08 \x01(\x05\x12>\n\x08gamepads\x18\t \x03(\x0b\x32,.CMsgRemoteClientStartStream.ReservedGamepad\x12\x1e\n\x13\x61udio_channel_count\x18\n \x01(\x05:\x01\x32\x12.\n\x13supported_transport\x18\x0b \x03(\x0e\x32\x11.EStreamTransport\x12#\n\x1bmaximum_framerate_numerator\x18\x0c \x01(\x05\x12%\n\x1dmaximum_framerate_denominator\x18\r \x01(\x05\x12\x13\n\x0b\x64isplay_hdr\x18\x0e \x01(\x08\x1a\x46\n\x0fReservedGamepad\x12\x17\n\x0f\x63ontroller_type\x18\x01 \x01(\r\x12\x1a\n\x12\x63ontroller_subtype\x18\x02 \x01(\r\"\xdb\x02\n#CMsgRemoteClientStartStreamResponse\x12\x1a\n\x0f\x65_launch_result\x18\x01 \x01(\x05:\x01\x32\x12\x13\n\x0bstream_port\x18\x02 \x01(\r\x12\x16\n\x0elaunch_options\x18\x03 \x03(\x05\x12\x12\n\nauth_token\x18\x04 \x01(\x0c\x12;\n\ttransport\x18\x05 \x01(\x0e\x32\x11.EStreamTransport:\x15k_EStreamTransportUDP\x12\x14\n\x0crelay_server\x18\x06 \x01(\t\x12\x13\n\x0blaunch_task\x18\x07 \x01(\t\x12\x1a\n\x12launch_task_detail\x18\x08 \x01(\t\x12\x19\n\x11launch_tasks_done\x18\t \x01(\x05\x12\x1a\n\x12launch_tasks_total\x18\n \x01(\x05\x12\x1c\n\x14vr_connection_params\x18\x0b \x01(\t\"\x16\n\x14\x43MsgRemoteClientPing\"\x1e\n\x1c\x43MsgRemoteClientPingResponse\"S\n\x1a\x43MsgRemoteClientAcceptEULA\x12\x0e\n\x06\x61pp_id\x18\x01 \x03(\r\x12\x0f\n\x07\x65ula_id\x18\x02 \x03(\t\x12\x14\n\x0c\x65ula_version\x18\x03 \x03(\r\"0\n\x1e\x43MsgRemoteClientAcceptAllEULAs\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\"O\n#CMsgRemoteClientGetControllerConfig\x12\x0e\n\x06\x61pp_id\x18\x01 \x01(\r\x12\x18\n\x10\x63ontroller_index\x18\x03 \x01(\r\"U\n+CMsgRemoteClientGetControllerConfigResponse\x12\x12\n\x07\x65result\x18\x01 \x01(\x05:\x01\x32\x12\x12\n\nconfig_vdf\x18\x02 \x01(\x0c\"3\n CMsgRemoteClientStreamingEnabled\x12\x0f\n\x07\x65nabled\x18\x01 \x02(\x08\"\x90\x01\n\x1c\x43MsgRemoteClientWifiAPStatus\x12\x0c\n\x04ssid\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x17\n\x0fwpa2_deprecated\x18\x03 \x01(\x08\x12\x1a\n\x12is_pairing_capable\x18\x04 \x01(\x08\x12\x1b\n\x13paired_network_hash\x18\x05 \x01(\x06\"<\n\x1a\x43MsgRemoteClientPairWifiAP\x12\x0c\n\x04ssid\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"^\n\"CMsgRemoteClientPairWifiAPResponse\x12\x18\n\re_pair_result\x18\x01 \x01(\x05:\x01\x32\x12\x0c\n\x04ssid\x18\x02 \x01(\t\x12\x10\n\x08password\x18\x03 \x01(\t*\xb4\x02\n\x1d\x45RemoteClientPairWifiAPResult\x12\x1f\n\x1bk_ERemoteClientPairWifiAPOK\x10\x01\x12!\n\x1dk_ERemoteClientPairWifiAPFail\x10\x02\x12)\n%k_ERemoteClientPairWifiAPNetworkError\x10\x03\x12)\n%k_ERemoteClientPairWifiAPUnauthorized\x10\x04\x12,\n(k_ERemoteClientPairWifiAPNoDonglePresent\x10\x05\x12$\n k_ERemoteClientPairWifiAPTimeout\x10\x06\x12%\n!k_ERemoteClientPairWifiAPCanceled\x10\x07\x42\x05H\x01\x90\x01\x00')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'steammessages_remoteclient_pb2', globals())
@@ -23,40 +23,76 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'H\001\220\001\000'
-  _EREMOTECLIENTPAIRWIFIAPRESULT._serialized_start=2315
-  _EREMOTECLIENTPAIRWIFIAPRESULT._serialized_end=2623
+  _EREMOTECLIENTPAIRWIFIAPRESULT._serialized_start=4986
+  _EREMOTECLIENTPAIRWIFIAPRESULT._serialized_end=5294
   _CMSGREMOTECLIENTSTATUS._serialized_start=106
   _CMSGREMOTECLIENTSTATUS._serialized_end=220
-  _CMSGREMOTECLIENTAPPSTATUS._serialized_start=223
-  _CMSGREMOTECLIENTAPPSTATUS._serialized_end=835
-  _CMSGREMOTECLIENTAPPSTATUS_APPUPDATEINFO._serialized_start=315
-  _CMSGREMOTECLIENTAPPSTATUS_APPUPDATEINFO._serialized_end=547
-  _CMSGREMOTECLIENTAPPSTATUS_SHORTCUTINFO._serialized_start=549
-  _CMSGREMOTECLIENTAPPSTATUS_SHORTCUTINFO._serialized_end=628
-  _CMSGREMOTECLIENTAPPSTATUS_APPSTATUS._serialized_start=631
-  _CMSGREMOTECLIENTAPPSTATUS_APPSTATUS._serialized_end=835
-  _CMSGREMOTECLIENTSTARTSTREAM._serialized_start=838
-  _CMSGREMOTECLIENTSTARTSTREAM._serialized_end=1295
-  _CMSGREMOTECLIENTSTARTSTREAM_RESERVEDGAMEPAD._serialized_start=1225
-  _CMSGREMOTECLIENTSTARTSTREAM_RESERVEDGAMEPAD._serialized_end=1295
-  _CMSGREMOTECLIENTSTARTSTREAMRESPONSE._serialized_start=1298
-  _CMSGREMOTECLIENTSTARTSTREAMRESPONSE._serialized_end=1645
-  _CMSGREMOTECLIENTPING._serialized_start=1647
-  _CMSGREMOTECLIENTPING._serialized_end=1669
-  _CMSGREMOTECLIENTPINGRESPONSE._serialized_start=1671
-  _CMSGREMOTECLIENTPINGRESPONSE._serialized_end=1701
-  _CMSGREMOTECLIENTACCEPTEULA._serialized_start=1703
-  _CMSGREMOTECLIENTACCEPTEULA._serialized_end=1786
-  _CMSGREMOTECLIENTGETCONTROLLERCONFIG._serialized_start=1788
-  _CMSGREMOTECLIENTGETCONTROLLERCONFIG._serialized_end=1867
-  _CMSGREMOTECLIENTGETCONTROLLERCONFIGRESPONSE._serialized_start=1869
-  _CMSGREMOTECLIENTGETCONTROLLERCONFIGRESPONSE._serialized_end=1954
-  _CMSGREMOTECLIENTSTREAMINGENABLED._serialized_start=1956
-  _CMSGREMOTECLIENTSTREAMINGENABLED._serialized_end=2007
-  _CMSGREMOTECLIENTWIFIAPSTATUS._serialized_start=2010
-  _CMSGREMOTECLIENTWIFIAPSTATUS._serialized_end=2154
-  _CMSGREMOTECLIENTPAIRWIFIAP._serialized_start=2156
-  _CMSGREMOTECLIENTPAIRWIFIAP._serialized_end=2216
-  _CMSGREMOTECLIENTPAIRWIFIAPRESPONSE._serialized_start=2218
-  _CMSGREMOTECLIENTPAIRWIFIAPRESPONSE._serialized_end=2312
+  _CMSGREMOTECLIENTDOWNLOADSTATUS._serialized_start=223
+  _CMSGREMOTECLIENTDOWNLOADSTATUS._serialized_end=443
+  _CMSGREMOTECLIENTUPLOADSTATUS._serialized_start=446
+  _CMSGREMOTECLIENTUPLOADSTATUS._serialized_end=682
+  _CMSGREMOTECLIENTRESTRICTAUTOUPDATES._serialized_start=685
+  _CMSGREMOTECLIENTRESTRICTAUTOUPDATES._serialized_end=825
+  _APPSTAGEPROGRESS._serialized_start=827
+  _APPSTAGEPROGRESS._serialized_end=936
+  _APPUPDATEINFO._serialized_start=939
+  _APPUPDATEINFO._serialized_end=1414
+  _APPCLOUDSTATUS._serialized_start=1416
+  _APPCLOUDSTATUS._serialized_end=1497
+  _CMSGREMOTECLIENTAPPSTATUS._serialized_start=1500
+  _CMSGREMOTECLIENTAPPSTATUS._serialized_end=1992
+  _CMSGREMOTECLIENTAPPSTATUS_APPSTATUS._serialized_start=1592
+  _CMSGREMOTECLIENTAPPSTATUS_APPSTATUS._serialized_end=1911
+  _CMSGREMOTECLIENTAPPSTATUS_SHORTCUTINFO._serialized_start=1913
+  _CMSGREMOTECLIENTAPPSTATUS_SHORTCUTINFO._serialized_end=1992
+  _CMSGREMOTECLIENTDOWNLOADSMANAGEMENT._serialized_start=1995
+  _CMSGREMOTECLIENTDOWNLOADSMANAGEMENT._serialized_end=2455
+  _CMSGREMOTECLIENTDOWNLOADSMANAGEMENT_CHANGEAPPQUEUEPLACEMENT._serialized_start=2326
+  _CMSGREMOTECLIENTDOWNLOADSMANAGEMENT_CHANGEAPPQUEUEPLACEMENT._serialized_end=2392
+  _CMSGREMOTECLIENTDOWNLOADSMANAGEMENT_CHANGEDOWNLOADINDEX._serialized_start=2394
+  _CMSGREMOTECLIENTDOWNLOADSMANAGEMENT_CHANGEDOWNLOADINDEX._serialized_end=2455
+  _CMSGREMOTECLIENTUPDATEDOWNLOADSCONTROLLER._serialized_start=2457
+  _CMSGREMOTECLIENTUPDATEDOWNLOADSCONTROLLER._serialized_end=2565
+  _CMSGREMOTECLIENTPEERCONTENTSERVERCHANGED._serialized_start=2567
+  _CMSGREMOTECLIENTPEERCONTENTSERVERCHANGED._serialized_end=2676
+  _CMSGREMOTECLIENTDOWNLOADINGAPPCHANGED._serialized_start=2678
+  _CMSGREMOTECLIENTDOWNLOADINGAPPCHANGED._serialized_end=2745
+  _CMSGREMOTECLIENTSUSPENDLANPEERCONTENT._serialized_start=2747
+  _CMSGREMOTECLIENTSUSPENDLANPEERCONTENT._serialized_end=2803
+  _CMSGREMOTECLIENTDOWNLOADSCHEDULECHANGED._serialized_start=2806
+  _CMSGREMOTECLIENTDOWNLOADSCHEDULECHANGED._serialized_end=2969
+  _CMSGREMOTECLIENTDOWNLOADSCHEDULEITEMCHANGED._serialized_start=2971
+  _CMSGREMOTECLIENTDOWNLOADSCHEDULEITEMCHANGED._serialized_end=3032
+  _CMSGREMOTECLIENTAPPUPDATESTOPPED._serialized_start=3035
+  _CMSGREMOTECLIENTAPPUPDATESTOPPED._serialized_end=3201
+  _CMSGREMOTECLIENTAPPUPDATEINFOCOMPLETE._serialized_start=3203
+  _CMSGREMOTECLIENTAPPUPDATEINFOCOMPLETE._serialized_end=3258
+  _CMSGREMOTECLIENTDOWNLOADINGAPPID._serialized_start=3260
+  _CMSGREMOTECLIENTDOWNLOADINGAPPID._serialized_end=3359
+  _CMSGREMOTECLIENTSTARTSTREAM._serialized_start=3362
+  _CMSGREMOTECLIENTSTARTSTREAM._serialized_end=3916
+  _CMSGREMOTECLIENTSTARTSTREAM_RESERVEDGAMEPAD._serialized_start=3846
+  _CMSGREMOTECLIENTSTARTSTREAM_RESERVEDGAMEPAD._serialized_end=3916
+  _CMSGREMOTECLIENTSTARTSTREAMRESPONSE._serialized_start=3919
+  _CMSGREMOTECLIENTSTARTSTREAMRESPONSE._serialized_end=4266
+  _CMSGREMOTECLIENTPING._serialized_start=4268
+  _CMSGREMOTECLIENTPING._serialized_end=4290
+  _CMSGREMOTECLIENTPINGRESPONSE._serialized_start=4292
+  _CMSGREMOTECLIENTPINGRESPONSE._serialized_end=4322
+  _CMSGREMOTECLIENTACCEPTEULA._serialized_start=4324
+  _CMSGREMOTECLIENTACCEPTEULA._serialized_end=4407
+  _CMSGREMOTECLIENTACCEPTALLEULAS._serialized_start=4409
+  _CMSGREMOTECLIENTACCEPTALLEULAS._serialized_end=4457
+  _CMSGREMOTECLIENTGETCONTROLLERCONFIG._serialized_start=4459
+  _CMSGREMOTECLIENTGETCONTROLLERCONFIG._serialized_end=4538
+  _CMSGREMOTECLIENTGETCONTROLLERCONFIGRESPONSE._serialized_start=4540
+  _CMSGREMOTECLIENTGETCONTROLLERCONFIGRESPONSE._serialized_end=4625
+  _CMSGREMOTECLIENTSTREAMINGENABLED._serialized_start=4627
+  _CMSGREMOTECLIENTSTREAMINGENABLED._serialized_end=4678
+  _CMSGREMOTECLIENTWIFIAPSTATUS._serialized_start=4681
+  _CMSGREMOTECLIENTWIFIAPSTATUS._serialized_end=4825
+  _CMSGREMOTECLIENTPAIRWIFIAP._serialized_start=4827
+  _CMSGREMOTECLIENTPAIRWIFIAP._serialized_end=4887
+  _CMSGREMOTECLIENTPAIRWIFIAPRESPONSE._serialized_start=4889
+  _CMSGREMOTECLIENTPAIRWIFIAPRESPONSE._serialized_end=4983
 # @@protoc_insertion_point(module_scope)

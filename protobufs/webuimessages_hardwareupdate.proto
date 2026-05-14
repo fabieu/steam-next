@@ -26,6 +26,7 @@ message CMsgAvailableHardwareUpdate {
 	optional string serial_number = 3;
 	optional string current_ts = 4;
 	optional string update_ts = 5;
+	optional bool mandatory_update = 6;
 }
 
 message CHardwareUpdate_CheckForUpdates_Response {
@@ -34,6 +35,7 @@ message CHardwareUpdate_CheckForUpdates_Response {
 
 message CHardwareUpdate_Update_Request {
 	optional string serial_number = 1;
+	optional bool update_all = 2;
 }
 
 message CHardwareUpdate_Update_Response {

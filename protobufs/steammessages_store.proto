@@ -305,6 +305,9 @@ message CStore_UserPreferences {
 	optional int32 timestamp_content_descriptor_preferences_updated = 11;
 	optional .EProvideDeckFeedbackPreference provide_deck_feedback = 12 [default = k_EProvideDeckFeedbackPreference_Unset];
 	optional string additional_languages = 13;
+	optional .EGameFrameRateReportingPreference game_frame_rate_reporting = 14 [default = k_EGameFrameRateReportingPreference_Unset];
+	optional bool disable_microtrailers = 15;
+	optional bool disable_animated_marketing = 16;
 }
 
 message CStore_UserTagPreferences {
@@ -414,6 +417,7 @@ message CStore_ReloadAllReservationPositionMessages_Notification {
 message CSteamDeckCompatibility_SetFeedback_Request {
 	optional uint32 appid = 1;
 	optional .ESteamDeckCompatibilityFeedback feedback = 2 [default = k_ESteamDeckCompatibilityFeedback_Unset];
+	optional uint32 feedback_details = 3;
 }
 
 message CSteamDeckCompatibility_SetFeedback_Response {
