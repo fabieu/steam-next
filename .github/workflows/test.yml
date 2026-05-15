@@ -1,20 +1,6 @@
 name: Run tests
 
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '.github/**'
-      - '.gitignore'
-      - '.gitattributes'
-      - '*.md'
-      - '*.rst'
-      - 'LICENSE'
-      - 'protobuf_list.txt'
-      - 'docs/**'
-      - 'protobufs/**'
-      - 'recipes/**'
   pull_request:
     branches:
       - master
@@ -29,13 +15,14 @@ on:
       - 'docs/**'
       - 'protobufs/**'
       - 'recipes/**'
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  POETRY_VERSION: 2.2.1
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -57,18 +44,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up python environment
-        uses: actions/setup-python@v6
+      - name: Set up Poetry
+        uses: ./.github/actions/setup-poetry
         with:
           python-version: ${{ matrix.python-version }}
+          install-args: --extras client --with dev
 
-      - name: Display Python version
-        run: python -c "import sys; print(sys.version)"
-
-      - name: Install dependencies
-        run: |
-          pipx install poetry==${{ env.POETRY_VERSION }}
-          poetry install --extras client --with dev --no-interaction --no-ansi
-
-      - name: Run Tests
+      - name: Run tests
         run: poetry run pytest -p no:cov
