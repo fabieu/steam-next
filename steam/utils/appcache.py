@@ -1,5 +1,13 @@
 """
-Appache file parsing examples:
+Parsing entry points for Steam's ``appcache/`` binary files.
+
+``parse_appinfo`` supports appinfo.vdf versions v27 (``'DV\\x07``), v28
+(``(DV\\x07``), and v29 (``)DV\\x07``). ``parse_packageinfo`` supports
+packageinfo.vdf v05 (``'UV\\x06``) and v06 (``(UV\\x06``). Each function
+reads the 4-byte magic, dispatches to the matching reader class in
+:mod:`steam.utils.appcache_readers`, and returns ``(header, iterator)``.
+
+Examples:
 
 .. code:: python
 
@@ -38,125 +46,34 @@ Appache file parsing examples:
 
 """
 
-import struct
+from typing import IO, Any, Iterator
 
-from vdf import binary_load
-
-uint32 = struct.Struct('<I')
-uint64 = struct.Struct('<Q')
+from steam.utils.appcache_readers import get_appinfo_reader, get_packageinfo_reader
 
 
-def parse_appinfo(fp):
-    """Parse appinfo.vdf from the Steam appcache folder
+def parse_appinfo(fp: IO[bytes]) -> tuple[dict[str, Any], Iterator[dict[str, Any]]]:
+    """Parse appinfo.vdf from the Steam appcache folder.
+
+    Dispatches on the file's magic to the matching reader (v27 / v28 / v29).
 
     :param fp: file-like object
     :raises: SyntaxError
     :rtype: (:class:`dict`, :class:`Generator`)
     :return: (header, apps iterator)
     """
-    # format:
-    #   uint32   - MAGIC: "'DV\x07" or "(DV\x07"
-    #   uint32   - UNIVERSE: 1
-    #   ---- repeated app sections ----
-    #   uint32   - AppID
-    #   uint32   - size
-    #   uint32   - infoState
-    #   uint32   - lastUpdated
-    #   uint64   - accessToken
-    #   20bytes  - SHA1
-    #   uint32   - changeNumber
-    #   20bytes  - binary_vdf SHA1 (added in "(DV\x07"
-    #   variable - binary_vdf
-    #   ---- end of section ---------
-    #   uint32   - EOF: 0
-
-    magic = fp.read(4)
-    if magic not in (b"'DV\x07", b"(DV\x07"):
-        raise SyntaxError("Invalid magic, got %s" % repr(magic))
-
-    universe = uint32.unpack(fp.read(4))[0]
-
-    def apps_iter():
-        while True:
-            appid = uint32.unpack(fp.read(4))[0]
-
-            if appid == 0:
-                break
-
-            app = {
-                'appid': appid,
-                'size': uint32.unpack(fp.read(4))[0],
-                'info_state': uint32.unpack(fp.read(4))[0],
-                'last_updated': uint32.unpack(fp.read(4))[0],
-                'access_token': uint64.unpack(fp.read(8))[0],
-                'sha1': fp.read(20),
-                'change_number': uint32.unpack(fp.read(4))[0],
-            }
-
-            if magic == b"(DV\x07":
-                app['data_sha1'] = fp.read(20)
-
-            app['data'] = binary_load(fp)
-
-            yield app
-
-    return ({
-                'magic': magic,
-                'universe': universe,
-            },
-            apps_iter()
-    )
+    reader = get_appinfo_reader(fp)
+    return reader.header, iter(reader)
 
 
-def parse_packageinfo(fp):
-    """Parse packageinfo.vdf from the Steam appcache folder
+def parse_packageinfo(fp: IO[bytes]) -> tuple[dict[str, Any], Iterator[dict[str, Any]]]:
+    """Parse packageinfo.vdf from the Steam appcache folder.
+
+    Dispatches on the file's magic to the matching reader (v05 / v06).
 
     :param fp: file-like object
     :raises: SyntaxError
     :rtype: (:class:`dict`, :class:`Generator`)
     :return: (header, packages iterator)
     """
-    # format:
-    #   uint32   - MAGIC: b"'UV\x06" or b"(UV\x06"
-    #   uint32   - UNIVERSE: 1
-    #   ---- repeated package sections ----
-    #   uint32   - PackageID
-    #   20bytes  - SHA1
-    #   uint32   - changeNumber
-    #   uint64   - token           (only on b"(UV\x06")
-    #   variable - binary_vdf
-    #   ---- end of section ---------
-    #   uint32   - EOF: 0xFFFFFFFF
-
-    magic = fp.read(4)
-    if magic not in (b"'UV\x06", b"(UV\x06"):
-        raise SyntaxError("Invalid magic, got %s" % repr(magic))
-
-    universe = uint32.unpack(fp.read(4))[0]
-
-    def pkgs_iter():
-        while True:
-            packageid = uint32.unpack(fp.read(4))[0]
-
-            if packageid == 0xFFFFFFFF:
-                break
-
-            pkg = {
-                'packageid': packageid,
-                'sha1': fp.read(20),
-                'change_number': uint32.unpack(fp.read(4))[0],
-            }
-
-            if magic == b"(UV\x06":
-                pkg['token'] = uint64.unpack(fp.read(8))[0]
-
-            pkg['data'] = binary_load(fp)
-
-            yield pkg
-
-    return ({
-                'magic': magic,
-                'universe': universe,
-            },
-            pkgs_iter()
-    )
+    reader = get_packageinfo_reader(fp)
+    return reader.header, iter(reader)
