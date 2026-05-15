@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/fabieu/steam-next)](https://github.com/fabieu/steam-next/blob/master/LICENSE)
 [![Docs](https://readthedocs.org/projects/steam-next/badge/?version=latest)](https://steam-next.readthedocs.io/latest/)
 
-A python module for interacting with various parts of [Steam](https://store.steampowered.com/) supporting python `3.9+`.
+A python module for interacting with various parts of [Steam](https://store.steampowered.com/) supporting python `3.10+`.
 
 > [!NOTE]
 > This project builds upon an earlier fork that is no longer maintained.
@@ -51,6 +51,6 @@ pip install -U "steam-next[client]"
 pip install -U steam-next
 ```
 
-> [!IMPORTANT]
+> [!CAUTION]
 > This project is an independent work and is not affiliated with, endorsed by, or associated with Steam or Valve
 > Corporation.
