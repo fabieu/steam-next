@@ -1,6 +1,6 @@
 [project]
 name = "steam-next"
-version = "2.2.0"
+version = "2.2.1"
 description = "Python package for interacting with Steam"
 license = "MIT"
 readme = "README.md"
