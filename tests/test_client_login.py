@@ -79,7 +79,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.BeginAuthSessionViaCredentials#1': [begin_resp(confirmations(), client_id=0)],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'bad')
+        result, token, _ = self.client._get_refresh_token('user', 'bad')
 
         self.assertEqual(result, EResult.InvalidPassword)
         self.assertIsNone(token)
@@ -91,7 +91,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='')],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass')
+        result, token, _ = self.client._get_refresh_token('user', 'pass')
 
         self.assertEqual(result, EResult.AccountLoginDeniedNeedTwoFactor)
         self.assertIsNone(token)
@@ -104,7 +104,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='')],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass')
+        result, _, _ = self.client._get_refresh_token('user', 'pass')
 
         self.assertEqual(result, EResult.AccountLogonDenied)
         self.assertAuthCodeEvent(False, False)
@@ -117,7 +117,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='TOK')],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass', two_factor_code='ABCDE')
+        result, token, _ = self.client._get_refresh_token('user', 'pass', two_factor_code='ABCDE')
 
         self.assertEqual(result, EResult.OK)
         self.assertEqual(token, 'TOK')
@@ -130,7 +130,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.UpdateAuthSessionWithSteamGuardCode#1': [resp(EResult.TwoFactorCodeMismatch)],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass', two_factor_code='WRONG')
+        result, _, _ = self.client._get_refresh_token('user', 'pass', two_factor_code='WRONG')
 
         self.assertEqual(result, EResult.TwoFactorCodeMismatch)
         self.assertAuthCodeEvent(True, True)
@@ -142,7 +142,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token=''), poll_resp(refresh_token='TOK')],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass')
+        result, token, _ = self.client._get_refresh_token('user', 'pass')
 
         self.assertEqual(result, EResult.OK)
         self.assertEqual(token, 'TOK')
@@ -160,7 +160,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='TOK')],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass')
+        result, token, _ = self.client._get_refresh_token('user', 'pass')
 
         self.assertEqual(result, EResult.AccountLoginDeniedNeedTwoFactor)
         self.assertIsNone(token)
@@ -176,7 +176,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='TOK')],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass')
+        result, token, _ = self.client._get_refresh_token('user', 'pass')
 
         self.assertEqual(result, EResult.OK)
         self.assertEqual(token, 'TOK')
@@ -187,7 +187,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.GetPasswordRSAPublicKey#1': [rsa_resp()],
             'Authentication.BeginAuthSessionViaCredentials#1': [begin_resp(confirmations(EMAIL_CODE))],
         })
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass')
+        result, _, _ = self.client._get_refresh_token('user', 'pass')
         self.assertEqual(result, EResult.AccountLogonDenied)
 
         # Second attempt supplies the emailed code: it must reuse the same session and NOT call
@@ -196,7 +196,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.UpdateAuthSessionWithSteamGuardCode#1': [resp(EResult.OK)],
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='TOK')],
         })
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass', auth_code='12345')
+        result, token, _ = self.client._get_refresh_token('user', 'pass', auth_code='12345')
 
         self.assertEqual(result, EResult.OK)
         self.assertEqual(token, 'TOK')
@@ -208,7 +208,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.BeginAuthSessionViaCredentials#1': [begin_resp(confirmations(DEVICE_CODE))],
             'Authentication.UpdateAuthSessionWithSteamGuardCode#1': [resp(EResult.TwoFactorCodeMismatch)],
         })
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass', two_factor_code='WRONG')
+        result, _, _ = self.client._get_refresh_token('user', 'pass', two_factor_code='WRONG')
         self.assertEqual(result, EResult.TwoFactorCodeMismatch)
 
         # A rejected code must not discard the session; the next code retries the same one.
@@ -216,7 +216,7 @@ class RefreshTokenFlow(unittest.TestCase):
             'Authentication.UpdateAuthSessionWithSteamGuardCode#1': [resp(EResult.OK)],
             'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='TOK')],
         })
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass', two_factor_code='RIGHT')
+        result, token, _ = self.client._get_refresh_token('user', 'pass', two_factor_code='RIGHT')
 
         self.assertEqual(result, EResult.OK)
         self.assertEqual(token, 'TOK')
@@ -233,7 +233,7 @@ class RefreshTokenFlow(unittest.TestCase):
                                                        poll_resp(refresh_token='TOK')],
         })
 
-        result, token, steam_id = self.client._get_refresh_token('user', 'pass', two_factor_code='ABCDE')
+        result, token, _ = self.client._get_refresh_token('user', 'pass', two_factor_code='ABCDE')
 
         self.assertEqual(result, EResult.OK)
         self.assertEqual(token, 'TOK')
@@ -248,7 +248,7 @@ class RefreshTokenFlow(unittest.TestCase):
 
         # Drive the poll deadline past without real waiting.
         with patch('steam.client.time', side_effect=[1000.0, 1031.0]):
-            result, token, steam_id = self.client._get_refresh_token('user', 'pass')
+            result, token, _ = self.client._get_refresh_token('user', 'pass')
 
         self.assertEqual(result, EResult.Fail)
         self.assertIsNone(token)

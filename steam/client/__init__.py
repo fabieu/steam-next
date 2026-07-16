@@ -620,25 +620,12 @@ class SteamClient(CMClient, BuiltinBase):
             if isinstance(session, EResult):
                 return session, None, None
 
-        client_id = session['client_id']
-        request_id = session['request_id']
-        steam_id = session['steam_id']
-        interval = session['interval']
         allowed_confirmations = session['allowed_confirmations']
 
-        if code:
-            code_type = (EAuthSessionGuardType.DeviceCode if two_factor_code
-                         else EAuthSessionGuardType.EmailCode)
-            update = self._send_auth_um(
-                'Authentication.UpdateAuthSessionWithSteamGuardCode#1',
-                {'client_id': client_id, 'steamid': steam_id.as_64,
-                 'code': code, 'code_type': code_type})
-
-            # A rejected code is reported by the update response itself. Keep the session so
-            # the caller can retry with a new code without opening a new one (which would send
-            # another email).
-            if update is not None and update.header.eresult != EResult.OK:
-                return self._auth_code_result(allowed_confirmations, code_mismatch=True), None, None
+        # A rejected code is surfaced immediately; keep the session so the caller can retry
+        # with a new code without opening a new one (which would send another email).
+        if code and not self._submit_guard_code(session, code, is_2fa=bool(two_factor_code)):
+            return self._auth_code_result(allowed_confirmations, code_mismatch=True), None, None
 
         needs_code = (EAuthSessionGuardType.DeviceCode in allowed_confirmations
                       or EAuthSessionGuardType.EmailCode in allowed_confirmations)
@@ -650,36 +637,59 @@ class SteamClient(CMClient, BuiltinBase):
         if needs_code and not code:
             return self._auth_code_result(allowed_confirmations, code_mismatch=False), None, None
 
-        # Poll for the refresh token. When the only option is out-of-band confirmation
-        # (mobile app), keep polling for a while so the user has time to approve the login.
-        # A supplied code is validated synchronously above, so once accepted the token is
-        # usually minted within a poll or two — give it a comfortable window regardless so a
-        # slow mint is not mistaken for a bad code.
+        # Poll for the refresh token. When the only option is out-of-band confirmation (mobile
+        # app), keep polling for a while so the user has time to approve the login. A supplied
+        # code is validated synchronously above, so a comfortable window keeps a slow token
+        # mint from being mistaken for a bad code.
         wait_for_confirmation = can_confirm and not code
-        deadline = time() + (60 if wait_for_confirmation else 30)
+        token = self._poll_for_refresh_token(session, timeout=60 if wait_for_confirmation else 30)
+
+        if token:
+            self._auth_session = None
+            return EResult.OK, token, session['steam_id']
+
+        # Timed out without a token: a transient issue (or an un-approved confirmation) the
+        # caller can retry — not a wrong code.
+        return EResult.Fail, None, None
+
+    def _submit_guard_code(self, session, code, is_2fa):
+        """Submit a Steam Guard code to the auth session.
+
+        Returns ``True`` when the code was accepted (or the server gave no verdict), ``False``
+        when it was rejected.
+        """
+        code_type = EAuthSessionGuardType.DeviceCode if is_2fa else EAuthSessionGuardType.EmailCode
+        update = self._send_auth_um(
+            'Authentication.UpdateAuthSessionWithSteamGuardCode#1',
+            {'client_id': session['client_id'], 'steamid': session['steam_id'].as_64,
+             'code': code, 'code_type': code_type})
+
+        return update is None or update.header.eresult == EResult.OK
+
+    def _poll_for_refresh_token(self, session, timeout):
+        """Poll ``PollAuthSessionStatus`` until a refresh token is minted or ``timeout`` passes.
+
+        Returns the refresh token, or ``None`` on timeout / failure.
+        """
+        deadline = time() + timeout
 
         while True:
             poll = self._send_auth_um('Authentication.PollAuthSessionStatus#1',
-                                      {'client_id': client_id, 'request_id': request_id})
+                                      {'client_id': session['client_id'],
+                                       'request_id': session['request_id']})
             if poll is None:
-                return EResult.Fail, None, None
+                return None
             if poll.body.refresh_token:
-                self._auth_session = None
-                return EResult.OK, poll.body.refresh_token, steam_id
+                return poll.body.refresh_token
             # Steam can rotate the client_id mid-session; keep polling with the new one.
             if poll.body.new_client_id:
-                client_id = session['client_id'] = poll.body.new_client_id
+                session['client_id'] = poll.body.new_client_id
             remaining = deadline - time()
             if remaining <= 0:
-                break
+                return None
             # Honour the server interval, but never sleep past the deadline (guards against a
             # bogus/huge interval hanging the login).
-            self.sleep(min(interval, remaining))
-
-        # Timed out without a token. A rejected code is already surfaced above, so a timeout
-        # here is a transient issue (or an un-approved out-of-band confirmation) the caller can
-        # retry — not a wrong code.
-        return EResult.Fail, None, None
+            self.sleep(min(session['interval'], remaining))
 
     def _send_logon(self, username, access_token, login_id=None, steam_id=None):
         """Build and send ``CMsgClientLogon``, waiting for the response."""

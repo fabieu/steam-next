@@ -86,10 +86,11 @@ class crypto_testcase(unittest.TestCase):
         from Cryptodome.Cipher import PKCS1_v1_5
         from Cryptodome.PublicKey import RSA
 
-        priv = RSA.generate(1024)
-        password = 'café-пароль-123'  # non-ASCII must not raise
+        priv = RSA.generate(2048)
+        plaintext = 'café-пароль-123'  # non-ASCII must be utf-8 encoded, not raise
 
-        b64 = crypto.rsa_encrypt_password(format(priv.n, 'x'), format(priv.e, 'x'), password)
+        b64 = crypto.rsa_encrypt_password(format(priv.n, 'x'), format(priv.e, 'x'), plaintext)
 
-        decrypted = PKCS1_v1_5.new(priv).decrypt(b64decode(b64), None)
-        self.assertEqual(decrypted, password.encode('utf-8'))
+        # Steam mandates PKCS#1 v1.5, so the round-trip must decrypt with the same scheme.
+        decrypted = PKCS1_v1_5.new(priv).decrypt(b64decode(b64), None)  # NOSONAR
+        self.assertEqual(decrypted, plaintext.encode('utf-8'))

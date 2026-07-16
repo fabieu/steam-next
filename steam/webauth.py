@@ -191,7 +191,7 @@ class WebAuth:
                                    r['response']['publickey_exp'],
                                    self.password)
 
-        return tuple((b64, r['response']['timestamp']))
+        return (b64, r['response']['timestamp'])
 
     def _start_session_with_credentials(self, account_encrypted_password: str, timestamp: int):
         """Start login session via BeginAuthSessionViaCredentials"""
