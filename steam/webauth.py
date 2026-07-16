@@ -53,7 +53,7 @@ from typing import Any
 
 import requests
 
-from steam.core.crypto import rsa_publickey, pkcs1v15_encrypt
+from steam.core.crypto import rsa_encrypt_password, pkcs1v15_encrypt
 from steam.enums.proto import EAuthSessionGuardType
 from steam.steamid import SteamID
 from steam.utils.web import generate_session_id, make_requests_session
@@ -187,14 +187,11 @@ class WebAuth:
         """
         r = self._get_rsa_key()
 
-        mod = int(r['response']['publickey_mod'], 16)
-        exp = int(r['response']['publickey_exp'], 16)
+        b64 = rsa_encrypt_password(r['response']['publickey_mod'],
+                                   r['response']['publickey_exp'],
+                                   self.password)
 
-        pub_key = rsa_publickey(mod, exp)
-        encrypted = pkcs1v15_encrypt(pub_key, self.password.encode('ascii'))
-        b64 = b64encode(encrypted)
-
-        return tuple((b64.decode('ascii'), r['response']['timestamp']))
+        return tuple((b64, r['response']['timestamp']))
 
     def _start_session_with_credentials(self, account_encrypted_password: str, timestamp: int):
         """Start login session via BeginAuthSessionViaCredentials"""

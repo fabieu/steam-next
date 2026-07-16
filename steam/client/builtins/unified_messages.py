@@ -34,13 +34,15 @@ class UnifiedMessages:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def send_um(self, method_name, params=None):
+    def send_um(self, method_name, params=None, emsg=EMsg.ServiceMethodCallFromClient):
         """Send service method request
 
         :param method_name: method name (e.g. ``Player.GetGameBadgeLevels#1``)
         :type  method_name: :class:`str`
         :param params: message parameters
         :type  params: :class:`dict`
+        :param emsg: (optional) request message type, e.g. :attr:`.EMsg.ServiceMethodCallFromClientNonAuthed` for pre-logon calls
+        :type  emsg: :class:`.EMsg`
         :return: ``job_id`` identifier
         :rtype: :class:`str`
 
@@ -51,7 +53,7 @@ class UnifiedMessages:
         if proto is None:
             raise ValueError("Failed to find method named: %s" % method_name)
 
-        message = MsgProto(EMsg.ServiceMethodCallFromClient)
+        message = MsgProto(emsg)
         message.header.target_job_name = method_name
         message.body = proto()
 
@@ -60,7 +62,8 @@ class UnifiedMessages:
 
         return self.send_job(message)
 
-    def send_um_and_wait(self, method_name, params=None, timeout=10, raises=False):
+    def send_um_and_wait(self, method_name, params=None, timeout=10, raises=False,
+                         emsg=EMsg.ServiceMethodCallFromClient):
         """Send service method request and wait for response
 
         :param method_name: method name (e.g. ``Player.GetGameBadgeLevels#1``)
@@ -71,9 +74,11 @@ class UnifiedMessages:
         :type  timeout: :class:`int`
         :param raises: (optional) On timeout if :class:`False` return :class:`None`, else raise :class:`gevent.Timeout`
         :type  raises: :class:`bool`
+        :param emsg: (optional) request message type, e.g. :attr:`.EMsg.ServiceMethodCallFromClientNonAuthed` for pre-logon calls
+        :type  emsg: :class:`.EMsg`
         :return: response message
         :rtype: proto message instance
         :raises: :class:`gevent.Timeout`
         """
-        job_id = self.send_um(method_name, params)
+        job_id = self.send_um(method_name, params, emsg=emsg)
         return self.wait_msg(job_id, timeout, raises=raises)
