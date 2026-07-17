@@ -76,10 +76,7 @@ class SteamClient(CMClient, BuiltinBase):
         self._confirm_greenlet = None
 
         #: friendly name reported to Steam during the auth session
-        try:
-            hostname = socket.gethostname() or __appname__
-        except Exception:
-            hostname = __appname__
+        hostname = socket.gethostname() or __appname__
         self.device_friendly_name = "%s (%s)" % (hostname, __appname__)
 
         BuiltinBase.__init__(self)
@@ -202,7 +199,7 @@ class SteamClient(CMClient, BuiltinBase):
     def _handle_logon(self, msg):
         CMClient._handle_logon(self, msg)
 
-        result = EResult(msg.body.eresult)
+        result = self._eresult(msg.body.eresult)
 
         if result == EResult.OK:
             self._reconnect_backoff_c = 0
@@ -578,6 +575,16 @@ class SteamClient(CMClient, BuiltinBase):
         except Exception:
             return None
 
+    @staticmethod
+    def _eresult(value):
+        """Coerce a raw eresult int to :class:`.EResult`, tolerating values our vendored
+        enum does not know (Steam occasionally introduces new ones) instead of raising.
+        """
+        try:
+            return EResult(value)
+        except ValueError:
+            return EResult.Fail
+
     def _send_auth_um(self, method_name, params):
         """Send a pre-logon ``IAuthenticationService`` Unified Message and wait for the response.
 
@@ -735,7 +742,26 @@ class SteamClient(CMClient, BuiltinBase):
                 self._send_logon(username, access_token=token, login_id=login_id,
                                  steam_id=session['steam_id'])
         finally:
-            self._confirm_greenlet = None
+            # Only clear the handle if it still points at us; a newer login() may have
+            # already replaced it with a fresh poll that must not be orphaned.
+            if self._confirm_greenlet is gevent.getcurrent():
+                self._confirm_greenlet = None
+
+    def _await_confirmation(self):
+        """Block until a pending out-of-band approval completes the logon.
+
+        While a background confirmation poll started by a previous :meth:`login` call is
+        running (the account can be approved via the Steam Mobile app / email link), this
+        leaves the gevent hub free so that poll can finish. Returns ``True`` if the logon
+        completed, ``False`` if there was nothing to wait for or the approval did not
+        arrive within :attr:`confirmation_timeout`.
+        """
+        if self.logged_on:
+            return True
+        if self._confirm_greenlet is None:
+            return False
+        self.wait_event(self.EVENT_LOGGED_ON, timeout=self.confirmation_timeout)
+        return self.logged_on
 
     def _submit_guard_code(self, session, code, is_2fa):
         """Submit a Steam Guard code to the auth session.
@@ -812,7 +838,7 @@ class SteamClient(CMClient, BuiltinBase):
             self._auth_session = None
             self.sleep(0.5)
 
-        return EResult(resp.body.eresult) if resp else EResult.Fail
+        return self._eresult(resp.body.eresult) if resp else EResult.Fail
 
     def anonymous_login(self):
         """Login as anonymous user
@@ -839,7 +865,7 @@ class SteamClient(CMClient, BuiltinBase):
         self.send(message)
 
         resp = self.wait_msg(EMsg.ClientLogOnResponse, timeout=30)
-        return EResult(resp.body.eresult) if resp else EResult.Fail
+        return self._eresult(resp.body.eresult) if resp else EResult.Fail
 
     def logout(self):
         """
@@ -866,13 +892,18 @@ class SteamClient(CMClient, BuiltinBase):
         while True:
             self.sleep(300)
 
-    def cli_login(self, username='', password=''):
+    def cli_login(self, username='', password='', wait_for_confirmation=True):
         """Generates CLI prompts to complete the login process
 
         :param username: optionally provide username
         :type  username: :class:`str`
         :param password: optionally provide password
         :type  password: :class:`str`
+        :param wait_for_confirmation: when the account can be approved out-of-band (Steam
+            Mobile app / email link), wait up to :attr:`confirmation_timeout` seconds for
+            that approval before prompting for a Steam Guard code. Set to :class:`False`
+            to always prompt for a code immediately.
+        :type  wait_for_confirmation: :class:`bool`
         :return: logon result, see `CMsgClientLogonResponse.eresult <https://github.com/fabieu/steam-next/blob/513c68ca081dc9409df932ad86c66100164380a6/protobufs/steammessages_clientserver.proto#L95-L118>`_
         :rtype: :class:`.EResult`
 
@@ -906,15 +937,35 @@ class SteamClient(CMClient, BuiltinBase):
                          ):
             self.sleep(0.1)
 
+            # A background out-of-band confirmation may have completed the logon while we
+            # yielded above; don't prompt for a code we no longer need.
+            if self.logged_on:
+                result = EResult.OK
+                break
+
             if result == EResult.InvalidPassword:
                 password = getpass("Invalid password for %s. Enter password: " % repr(username))
 
             elif result in (EResult.AccountLogonDenied, EResult.InvalidLoginAuthCode):
+                if wait_for_confirmation and self._confirm_greenlet is not None:
+                    print("Approve the sign in via the link in your Steam email, "
+                          "or wait to enter a code...")
+                    if self._await_confirmation():
+                        result = EResult.OK
+                        break
+
                 prompt = ("Enter email code: " if result == EResult.AccountLogonDenied else
                           "Incorrect code. Enter email code: ")
                 auth_code, two_factor_code = input(prompt), None
 
             elif result in (EResult.AccountLoginDeniedNeedTwoFactor, EResult.TwoFactorCodeMismatch):
+                if wait_for_confirmation and self._confirm_greenlet is not None:
+                    print("Approve the sign in on your Steam Mobile app, "
+                          "or wait to enter a code...")
+                    if self._await_confirmation():
+                        result = EResult.OK
+                        break
+
                 prompt = ("Enter 2FA code: " if result == EResult.AccountLoginDeniedNeedTwoFactor else
                           "Incorrect code. Enter 2FA code: ")
                 auth_code, two_factor_code = None, input(prompt)

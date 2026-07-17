@@ -3,7 +3,7 @@ import unittest
 
 import gevent
 import gevent.queue
-from mock import patch
+from mock import patch, MagicMock
 
 from steam.core.cm import CMClient
 from steam.enums.emsg import EMsg
@@ -56,6 +56,7 @@ class CMClient_Scenarios(unittest.TestCase):
 
         # run
         cm = CMClient()
+        cm.bootstrap_retry_delay = 0  # no pacing sleep in tests
 
         with gevent.Timeout(3, False):
             cm.connect(retry=1)
@@ -66,6 +67,23 @@ class CMClient_Scenarios(unittest.TestCase):
         self.server_list.bootstrap_from_webapi.assert_called_once_with()
         self.server_list.bootstrap_from_dns.assert_called_once_with()
         self.conn.connect.assert_not_called()
+
+    @patch.object(CMClient, 'emit')
+    @patch.object(CMClient, '_recv_messages')
+    def test_discovery_failure_paces_retries(self, mock_recv, mock_emit):
+        # setup -- discovery never yields servers (e.g. offline, or DNS unavailable for wss)
+        self.server_list.__len__.return_value = 0
+
+        # run
+        cm = CMClient()
+        cm.bootstrap_retry_delay = 7
+        cm.sleep = MagicMock()
+
+        with gevent.Timeout(3, False):
+            cm.connect(retry=3)
+
+        # verify -- each empty round is paced so the loop cannot busy-spin
+        cm.sleep.assert_any_call(7)
 
     @patch.object(CMClient, 'emit')
     @patch.object(CMClient, '_recv_messages')

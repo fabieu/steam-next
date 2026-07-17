@@ -193,6 +193,22 @@ class RefreshTokenFlow(unittest.TestCase):
 
         self.client._send_logon.assert_not_called()
 
+    def test_background_confirmation_does_not_clobber_newer_greenlet(self):
+        # A newer login() may have replaced _confirm_greenlet with a fresh poll; a finishing
+        # older poll must not null it out (which would orphan the newer one).
+        session = {'username': 'user', 'client_id': 5, 'request_id': b'req',
+                   'steam_id': SteamID(STEAMID64), 'interval': 5,
+                   'allowed_confirmations': confirmations(DEVICE_CONFIRMATION)}
+        self.stub({'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='')]})
+        self.client._send_logon = MagicMock()
+        newer = object()  # stands in for a greenlet spawned by a later login()
+        self.client._confirm_greenlet = newer
+
+        with patch('steam.client.time', side_effect=[1000.0, 1000.0 + self.client.confirmation_timeout + 1]):
+            self.client._background_confirmation(session, 'user', login_id=0)
+
+        self.assertIs(self.client._confirm_greenlet, newer)
+
     def test_unknown_confirmation_type_does_not_crash(self):
         self.stub({
             'Authentication.GetPasswordRSAPublicKey#1': [rsa_resp()],
@@ -348,6 +364,16 @@ class SendLogon(unittest.TestCase):
 
         self.assertEqual(self.captured['msg'].header.steamid, STEAMID64)
 
+    def test_unknown_eresult_returns_fail(self):
+        # A logon eresult our vendored enum does not know must not crash _send_logon.
+        self.client.wait_msg = MagicMock(
+            return_value=SimpleNamespace(body=SimpleNamespace(eresult=991337)))
+
+        result = self.client._send_logon('user', access_token='TOK', login_id=0)
+
+        self.assertEqual(result, EResult.Fail)
+        self.assertIsNone(self.client.refresh_token)
+
 
 class NonAuthedServiceMethod(unittest.TestCase):
     def setUp(self):
@@ -453,6 +479,12 @@ class HandleLogon(unittest.TestCase):
         self._logon(EResult.TryAnotherCM)
         self.assertEqual(self.client.refresh_token, 'TOK')
 
+    def test_unknown_eresult_does_not_crash(self):
+        # An eresult not in our vendored enum must not raise (Steam may add new ones).
+        self._logon(991337)
+        self.client.disconnect.assert_called()
+        self.assertFalse(self.client.logged_on)
+
 
 class PreLogin(unittest.TestCase):
     def test_resets_stale_steamid(self):
@@ -464,6 +496,96 @@ class PreLogin(unittest.TestCase):
 
         self.assertEqual(client._pre_login(), EResult.OK)
         self.assertIsNone(client.steam_id)
+
+
+class AwaitConfirmation(unittest.TestCase):
+    def setUp(self):
+        self.client = SteamClient()
+
+    def test_true_when_already_logged_on(self):
+        self.client.logged_on = True
+        self.assertTrue(self.client._await_confirmation())
+
+    def test_false_when_nothing_pending(self):
+        self.client.logged_on = False
+        self.client._confirm_greenlet = None
+        self.assertFalse(self.client._await_confirmation())
+
+    def test_waits_for_logged_on_event(self):
+        self.client.logged_on = False
+        self.client._confirm_greenlet = object()  # pretend a poll is running
+
+        def approve(*a, **kw):
+            self.client.logged_on = True
+        self.client.wait_event = MagicMock(side_effect=approve)
+
+        self.assertTrue(self.client._await_confirmation())
+        self.client.wait_event.assert_called_once_with(
+            self.client.EVENT_LOGGED_ON, timeout=self.client.confirmation_timeout)
+
+
+class CliLogin(unittest.TestCase):
+    def setUp(self):
+        self.client = SteamClient()
+        self.client.sleep = MagicMock()
+
+    def test_waits_for_out_of_band_approval(self):
+        # login() reports a code is needed but a background confirmation poll is active;
+        # with wait_for_confirmation the approval completes the logon and no code is asked.
+        self.client.login = MagicMock(return_value=EResult.AccountLoginDeniedNeedTwoFactor)
+        self.client._confirm_greenlet = object()
+        self.client._await_confirmation = MagicMock(return_value=True)
+
+        with patch('builtins.input', side_effect=AssertionError("should not prompt")), \
+                patch('builtins.print'):
+            result = self.client.cli_login('user', 'pass')
+
+        self.assertEqual(result, EResult.OK)
+        self.client._await_confirmation.assert_called_once()
+        self.client.login.assert_called_once_with('user', 'pass')
+
+    def test_no_wait_prompts_for_code_immediately(self):
+        self.client.login = MagicMock(side_effect=[EResult.AccountLoginDeniedNeedTwoFactor,
+                                                   EResult.OK])
+        self.client._confirm_greenlet = object()
+        self.client._await_confirmation = MagicMock()
+
+        with patch('builtins.input', return_value='12345'):
+            result = self.client.cli_login('user', 'pass', wait_for_confirmation=False)
+
+        self.assertEqual(result, EResult.OK)
+        self.client._await_confirmation.assert_not_called()
+        self.client.login.assert_called_with('user', 'pass', None, '12345')
+
+    def test_logon_completed_in_background_skips_prompt(self):
+        # The out-of-band poll completes the logon while cli_login sleeps between attempts;
+        # it must notice and not prompt for a code it no longer needs.
+        self.client.login = MagicMock(return_value=EResult.AccountLoginDeniedNeedTwoFactor)
+        self.client._confirm_greenlet = object()
+
+        def approve(_):
+            self.client.logged_on = True
+        self.client.sleep = MagicMock(side_effect=approve)
+
+        with patch('builtins.input', side_effect=AssertionError("should not prompt")), \
+                patch('builtins.print'):
+            result = self.client.cli_login('user', 'pass')
+
+        self.assertEqual(result, EResult.OK)
+
+    def test_wait_skipped_when_no_confirmation_pending(self):
+        # wait_for_confirmation is on, but the account offers no out-of-band approval
+        # (no background poll), so it prompts for a code without waiting.
+        self.client.login = MagicMock(side_effect=[EResult.AccountLoginDeniedNeedTwoFactor,
+                                                   EResult.OK])
+        self.client._confirm_greenlet = None
+        self.client._await_confirmation = MagicMock()
+
+        with patch('builtins.input', return_value='12345'):
+            result = self.client.cli_login('user', 'pass')
+
+        self.assertEqual(result, EResult.OK)
+        self.client._await_confirmation.assert_not_called()
 
 
 if __name__ == '__main__':

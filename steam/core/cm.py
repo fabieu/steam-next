@@ -62,6 +62,7 @@ class CMClient(EventEmitter):
     verbose_debug = False  #: print message connects in debug
 
     auto_discovery = True  #: enables automatic CM discovery
+    bootstrap_retry_delay = 5  #: seconds to wait between failed CM discovery attempts
     cm_servers = None  #: a instance of :class:`.CMServerList`
     current_server_addr = None  #: (ip, port) tuple
     _seen_logon = False
@@ -138,6 +139,11 @@ class CMClient(EventEmitter):
 
             if not self.cm_servers.bootstrap_from_webapi():
                 self.cm_servers.bootstrap_from_dns()
+
+            if len(self.cm_servers) == 0:
+                # No source yielded servers (offline, or DNS is unavailable for the
+                # websocket transport). Pace retries so the loop cannot busy-spin.
+                self.sleep(self.bootstrap_retry_delay)
 
         for i, server_addr in enumerate(cycle(self.cm_servers), start=next(i) - 1):
             if retry and i >= retry:
