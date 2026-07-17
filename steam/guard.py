@@ -3,17 +3,16 @@ This submodule contains various functionality related to Steam Guard.
 
 :class:`SteamAuthenticator` provides methods for genereating codes
 and enabling 2FA on a Steam account. Operations managing the authenticator
-on an account require an instance of either :class:`.MobileWebAuth` or
-:class:`.SteamClient`. The instance needs to be logged in.
+on an account require a logged in :class:`.SteamClient` instance.
 
 Adding an authenticator
 
 .. code:: python
 
-    wa = MobileWebAuth('steamuser')
-    wa.cli_login()
+    client = SteamClient()
+    client.cli_login()
 
-    sa = SteamAuthenticator(backend=wa)
+    sa = SteamAuthenticator(backend=client)
     sa.add()    # SMS code will be send to the account's phone number
     sa.secrets  # dict with authenticator secrets (SAVE THEM!!)
 
@@ -69,20 +68,17 @@ from base64 import b64decode, b64encode
 from binascii import hexlify
 from time import time
 
-import requests
-
 from steam import webapi
 from steam.core.crypto import hmac_sha1, sha1_hash
 from steam.enums import ETwoFactorTokenType
 from steam.enums.common import EResult
 from steam.utils.proto import proto_to_dict
-from steam.webauth import MobileWebAuth
 
 
 class SteamAuthenticator:
     """Add/Remove authenticator from an account. Generate 2FA and confirmation codes."""
     _finalize_attempts = 5
-    backend = None  #: instance of :class:`.MobileWebAuth` or :class:`.SteamClient`
+    backend = None  #: instance of :class:`.SteamClient`
     steam_time_offset = None  #: offset from steam server time
     align_time_every = 0  #: how often to align time with Steam (``0`` never, otherwise interval in seconds)
     _offset_last_check = 0
@@ -93,7 +89,7 @@ class SteamAuthenticator:
         :param secret: a dict of authenticator secrets
         :type  secret: dict
         :param backend: logged on session for steam user
-        :type  backend: :class:`.MobileWebAuth`, :class:`.SteamClient`
+        :type  backend: :class:`.SteamClient`
         """
         self.secrets = secrets or {}
         self.backend = backend
@@ -143,37 +139,23 @@ class SteamAuthenticator:
     def _send_request(self, action, params):
         backend = self.backend
 
-        if isinstance(backend, MobileWebAuth):
-            if not backend.logged_on:
-                raise SteamAuthenticatorError("MobileWebAuth instance not logged in")
+        if not backend.logged_on:
+            raise SteamAuthenticatorError("SteamClient instance not logged in")
 
-            params['access_token'] = backend.oauth_token
-            params['http_timeout'] = 10
+        resp = backend.send_um_and_wait("TwoFactor.%s#1" % action,
+                                        params, timeout=10)
 
-            try:
-                resp = webapi.post('ITwoFactorService', action, 1, params=params)
-            except requests.exceptions.RequestException as exp:
-                raise SteamAuthenticatorError("Error adding via WebAPI: %s" % str(exp))
+        if resp is None:
+            raise SteamAuthenticatorError("Failed. Request timeout")
+        if resp.header.eresult != EResult.OK:
+            raise SteamAuthenticatorError("Failed: %s (%s)" % (resp.header.error_message,
+                                                               repr(resp.header.eresult)))
 
-            resp = resp['response']
-        else:
-            if not backend.logged_on:
-                raise SteamAuthenticatorError("SteamClient instance not logged in")
+        resp = proto_to_dict(resp.body)
 
-            resp = backend.send_um_and_wait("TwoFactor.%s#1" % action,
-                                            params, timeout=10)
-
-            if resp is None:
-                raise SteamAuthenticatorError("Failed. Request timeout")
-            if resp.header.eresult != EResult.OK:
-                raise SteamAuthenticatorError("Failed: %s (%s)" % (resp.header.error_message,
-                                                                   repr(resp.header.eresult)))
-
-            resp = proto_to_dict(resp.body)
-
-            if action == 'AddAuthenticator':
-                for key in ['shared_secret', 'identity_secret', 'secret_1']:
-                    resp[key] = b64encode(resp[key]).decode('ascii')
+        if action == 'AddAuthenticator':
+            for key in ['shared_secret', 'identity_secret', 'secret_1']:
+                resp[key] = b64encode(resp[key]).decode('ascii')
 
         return resp
 
@@ -242,8 +224,6 @@ class SteamAuthenticator:
         """
         if not self.secrets:
             raise SteamAuthenticatorError("No authenticator secrets available?")
-        if not isinstance(self.backend, MobileWebAuth):
-            raise SteamAuthenticatorError("Only available via MobileWebAuth")
 
         resp = self._send_request('RemoveAuthenticator', {
             'steamid': self.backend.steam_id,
@@ -304,18 +284,15 @@ class SteamAuthenticator:
         :rtype: :class:`requests.Session`
         :raises: :class:`RuntimeError` when session is unavailable
         """
-        if isinstance(self.backend, MobileWebAuth):
-            return self.backend.session
-        else:
-            if self.backend.logged_on:
-                sess = self.backend.get_web_session()
+        if not self.backend.logged_on:
+            raise RuntimeError("SteamClient instance is not connected")
 
-                if sess is None:
-                    raise RuntimeError("Failed to get a web session. Try again in a few minutes")
-                else:
-                    return sess
-            else:
-                raise RuntimeError("SteamClient instance is not connected")
+        sess = self.backend.get_web_session()
+
+        if sess is None:
+            raise RuntimeError("Failed to get a web session. Try again in a few minutes")
+
+        return sess
 
     def add_phone_number(self, phone_number):
         """Add phone number to account

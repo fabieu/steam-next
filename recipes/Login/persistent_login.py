@@ -1,5 +1,8 @@
 import logging
 
+import steam.monkey
+steam.monkey.patch_minimal()  # required: the WebSocket CM transport needs cooperative sockets
+
 from steam.client import SteamClient
 from steam.enums import EResult
 

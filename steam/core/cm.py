@@ -13,7 +13,7 @@ import gevent.socket as socket
 from eventemitter import EventEmitter
 
 from steam.core import crypto
-from steam.core.connection import TCPConnection
+from steam.core.connection import TCPConnection, WebsocketConnection
 from steam.core.msg import Msg, MsgProto
 from steam.enums import EResult, EUniverse
 from steam.enums.emsg import EMsg
@@ -58,6 +58,7 @@ class CMClient(EventEmitter):
 
     PROTOCOL_TCP = 0  #: TCP protocol enum
     PROTOCOL_UDP = 1  #: UDP protocol enum
+    PROTOCOL_WEBSOCKET = 2  #: WebSocket protocol enum
     verbose_debug = False  #: print message connects in debug
 
     auto_discovery = True  #: enables automatic CM discovery
@@ -79,13 +80,17 @@ class CMClient(EventEmitter):
     _heartbeat_loop = None
     _LOG = logging.getLogger("CMClient")
 
-    def __init__(self, protocol=PROTOCOL_TCP):
+    def __init__(self, protocol=PROTOCOL_WEBSOCKET):
+        self.protocol = protocol
         self.cm_servers = CMServerList()
 
         if protocol == CMClient.PROTOCOL_TCP:
             self.connection = TCPConnection()
+        elif protocol == CMClient.PROTOCOL_WEBSOCKET:
+            self.connection = WebsocketConnection()
+            self.cm_servers.websocket = True
         else:
-            raise ValueError("Only TCP is supported")
+            raise ValueError("Only TCP and WebSocket are supported")
 
         self.on(EMsg.ChannelEncryptRequest, self.__handle_encrypt_request),
         self.on(EMsg.Multi, self.__handle_multi),
@@ -154,6 +159,18 @@ class CMClient(EventEmitter):
         self.connected = True
         self.emit(self.EVENT_CONNECTED)
         self._recv_loop = gevent.spawn(self._recv_messages)
+
+        if self.protocol == CMClient.PROTOCOL_WEBSOCKET:
+            # wss already secures the channel; there is no ChannelEncrypt handshake to wait for.
+            # The CM does expect a ClientHello as the first message though -- without it the CM
+            # ignores everything else and closes the connection after a short timeout.
+            hello = MsgProto(EMsg.ClientHello)
+            hello.body.protocol_version = 65580
+            self.send(hello)
+
+            self.channel_secured = True
+            self.emit(self.EVENT_CHANNEL_SECURED)
+
         self._connecting = False
         return True
 
@@ -201,6 +218,15 @@ class CMClient(EventEmitter):
             message.steamID = self.steam_id
         if self.session_id:
             message.sessionID = self.session_id
+
+        # WebSocket CM messages carry a fuller header than the TCP ones: the Steam realm plus
+        # explicit (present) steamid / client_sessionid, matching what real clients send.
+        if self.protocol == CMClient.PROTOCOL_WEBSOCKET and message.proto:
+            message.header.realm = 1
+            if not message.header.steamid:
+                message.header.steamid = 0
+            if not message.header.client_sessionid:
+                message.header.client_sessionid = 0
 
         if self.verbose_debug:
             self._LOG.debug("Outgoing: %s\n%s" % (repr(message), str(message)))
@@ -429,6 +455,7 @@ class CMServerList:
     last_updated = 0  #: timestamp of when the list was last updated
     cell_id = 0  #: cell id of the server list
     bad_timestamp = 300  #: how long bad mark lasts in seconds
+    websocket = False  #: when ``True`` bootstrap fetches WebSocket CM endpoints
 
     def __init__(self):
         self._LOG = logging.getLogger("CMServerList")
@@ -450,6 +477,11 @@ class CMServerList:
         """
         Fetches CM server list from WebAPI and replaces the current one
         """
+        if self.websocket:
+            # DNS bootstrap only yields TCP CMs; a WebSocket client must use the WebAPI.
+            self._LOG.error("DNS bootstrap is not available for the WebSocket transport")
+            return False
+
         self._LOG.debug("Attempting bootstrap via DNS")
 
         try:
@@ -496,7 +528,8 @@ class CMServerList:
             self._LOG.error("GetCMList failed with %s" % repr(result))
             return False
 
-        serverlist = resp['response']['serverlist']
+        key = 'serverlist_websockets' if self.websocket else 'serverlist'
+        serverlist = resp['response'][key]
         self._LOG.debug("Received %d servers from WebAPI" % len(serverlist))
 
         def str_to_tuple(serveraddr):

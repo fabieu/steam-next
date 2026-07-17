@@ -151,23 +151,47 @@ class RefreshTokenFlow(unittest.TestCase):
     def called_methods(self):
         return [c.args[0] for c in self.client._send_auth_um.call_args_list]
 
-    def test_authenticator_asks_for_code_without_polling(self):
-        # Account with the mobile authenticator offers both a code and app-confirmation.
+    def test_authenticator_asks_for_code_and_polls_in_background(self):
+        # Account with the mobile authenticator offers both a code and app-confirmation:
+        # ask for a code immediately, and start a background poll for the phone approval.
         self.stub({
             'Authentication.GetPasswordRSAPublicKey#1': [rsa_resp()],
             'Authentication.BeginAuthSessionViaCredentials#1': [
                 begin_resp(confirmations(DEVICE_CODE, DEVICE_CONFIRMATION))],
-            'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='TOK')],
         })
+        self.client._start_confirmation = MagicMock()
 
         result, token, _ = self.client._get_refresh_token('user', 'pass')
 
         self.assertEqual(result, EResult.AccountLoginDeniedNeedTwoFactor)
         self.assertIsNone(token)
         self.assertAuthCodeEvent(True, False)
-        # It must not block polling / sleeping when a code can be entered instead.
-        self.assertNotIn('Authentication.PollAuthSessionStatus#1', self.called_methods())
-        self.client.sleep.assert_not_called()
+        self.client._start_confirmation.assert_called_once()
+
+    def test_background_confirmation_completes_logon_on_approval(self):
+        session = {'username': 'user', 'client_id': 5, 'request_id': b'req',
+                   'steam_id': SteamID(STEAMID64), 'interval': 5,
+                   'allowed_confirmations': confirmations(DEVICE_CONFIRMATION)}
+        self.stub({'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='TOK')]})
+        self.client._send_logon = MagicMock()
+
+        self.client._background_confirmation(session, 'user', login_id=0)
+
+        self.client._send_logon.assert_called_once()
+        self.assertEqual(self.client._send_logon.call_args.kwargs['access_token'], 'TOK')
+        self.assertIsNone(self.client._auth_session)
+
+    def test_background_confirmation_noop_when_not_approved(self):
+        session = {'username': 'user', 'client_id': 5, 'request_id': b'req',
+                   'steam_id': SteamID(STEAMID64), 'interval': 5,
+                   'allowed_confirmations': confirmations(DEVICE_CONFIRMATION)}
+        self.stub({'Authentication.PollAuthSessionStatus#1': [poll_resp(refresh_token='')]})
+        self.client._send_logon = MagicMock()
+
+        with patch('steam.client.time', side_effect=[1000.0, 1000.0 + self.client.confirmation_timeout + 1]):
+            self.client._background_confirmation(session, 'user', login_id=0)
+
+        self.client._send_logon.assert_not_called()
 
     def test_unknown_confirmation_type_does_not_crash(self):
         self.stub({
@@ -254,6 +278,50 @@ class RefreshTokenFlow(unittest.TestCase):
         self.assertIsNone(token)
         self.assertNoAuthCodeEvent()
 
+    def test_begin_error_surfaces_real_eresult(self):
+        # A rate-limited Begin (no client_id) must not be reported as a wrong password.
+        rate_limited = resp(EResult.RateLimitExceeded, client_id=0, request_id=b'',
+                            steamid=0, allowed_confirmations=confirmations(), interval=5)
+        self.stub({
+            'Authentication.GetPasswordRSAPublicKey#1': [rsa_resp()],
+            'Authentication.BeginAuthSessionViaCredentials#1': [rate_limited],
+        })
+
+        result, token, _ = self.client._get_refresh_token('user', 'pass')
+
+        self.assertEqual(result, EResult.RateLimitExceeded)
+        self.assertIsNone(token)
+
+    def test_begin_unknown_eresult_falls_back_to_invalid_password(self):
+        # An eresult our vendored enum does not know must not crash the login.
+        unknown = resp(client_id=0, request_id=b'', steamid=0,
+                       allowed_confirmations=confirmations(), interval=5)
+        unknown.header.eresult = 991337
+        self.stub({
+            'Authentication.GetPasswordRSAPublicKey#1': [rsa_resp()],
+            'Authentication.BeginAuthSessionViaCredentials#1': [unknown],
+        })
+
+        result, token, _ = self.client._get_refresh_token('user', 'pass')
+
+        self.assertEqual(result, EResult.InvalidPassword)
+        self.assertIsNone(token)
+
+    def test_guard_code_submit_timeout_not_accepted(self):
+        # A timed-out code submission (None) must be treated as unconfirmed, not accepted:
+        # it must not fall through to polling (no PollAuthSessionStatus is stubbed).
+        self.stub({
+            'Authentication.GetPasswordRSAPublicKey#1': [rsa_resp()],
+            'Authentication.BeginAuthSessionViaCredentials#1': [begin_resp(confirmations(DEVICE_CODE))],
+            'Authentication.UpdateAuthSessionWithSteamGuardCode#1': [None],
+        })
+
+        result, token, _ = self.client._get_refresh_token('user', 'pass', two_factor_code='ABCDE')
+
+        self.assertEqual(result, EResult.TwoFactorCodeMismatch)
+        self.assertIsNone(token)
+        self.assertNotIn('Authentication.PollAuthSessionStatus#1', self.called_methods())
+
 
 class SendLogon(unittest.TestCase):
     def setUp(self):
@@ -325,6 +393,77 @@ class NonAuthedServiceMethod(unittest.TestCase):
         out = self.client._send_auth_um('Authentication.GetPasswordRSAPublicKey#1', {'account_name': 'user'})
 
         self.assertIsNone(out)
+
+
+def make_token(steamid64):
+    """Build a minimal Steam-style JWT access token with ``sub`` = steamid64."""
+    from base64 import urlsafe_b64encode
+    import json as _json
+
+    def seg(d):
+        return urlsafe_b64encode(_json.dumps(d).encode()).rstrip(b'=').decode()
+
+    return "%s.%s.sig" % (seg({'alg': 'EdDSA'}), seg({'sub': str(steamid64)}))
+
+
+class TokenLogin(unittest.TestCase):
+    def setUp(self):
+        self.client = SteamClient()
+        self.client._pre_login = MagicMock(return_value=EResult.OK)
+        self.captured = {}
+        self.client._send_logon = MagicMock(
+            side_effect=lambda *a, **kw: self.captured.update(kw) or EResult.OK)
+        self.client._get_refresh_token = MagicMock()
+
+    def test_direct_token_derives_steamid_from_jwt(self):
+        token = make_token(STEAMID64)
+
+        self.client.login('user', access_token=token)
+
+        self.client._get_refresh_token.assert_not_called()
+        self.assertEqual(self.captured['access_token'], token)
+        self.assertEqual(self.captured['steam_id'].as_64, STEAMID64)
+
+    def test_unparseable_token_falls_back_to_no_steamid(self):
+        self.client.login('user', access_token='not-a-jwt')
+
+        self.assertIsNone(self.captured['steam_id'])
+
+
+class HandleLogon(unittest.TestCase):
+    def setUp(self):
+        self.client = SteamClient()
+        self.client.disconnect = MagicMock()
+        self.client.emit = MagicMock()
+
+    def _logon(self, eresult):
+        from steam.core.cm import CMClient
+        self.client.refresh_token = 'TOK'
+        msg = SimpleNamespace(body=SimpleNamespace(eresult=int(eresult)))
+        with patch.object(CMClient, '_handle_logon'):
+            self.client._handle_logon(msg)
+
+    def test_expired_token_is_cleared(self):
+        for eresult in (EResult.InvalidPassword, EResult.AccessDenied,
+                        EResult.Expired, EResult.Revoked):
+            self._logon(eresult)
+            self.assertIsNone(self.client.refresh_token, "%r should clear the token" % eresult)
+
+    def test_transient_failure_keeps_token(self):
+        self._logon(EResult.TryAnotherCM)
+        self.assertEqual(self.client.refresh_token, 'TOK')
+
+
+class PreLogin(unittest.TestCase):
+    def test_resets_stale_steamid(self):
+        client = SteamClient()
+        client.steam_id = SteamID(STEAMID64)
+        client.logged_on = False
+        client.connected = True
+        client.channel_secured = True
+
+        self.assertEqual(client._pre_login(), EResult.OK)
+        self.assertIsNone(client.steam_id)
 
 
 if __name__ == '__main__':

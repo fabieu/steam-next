@@ -12,12 +12,6 @@ The session can be used to access ``steamcommunity.com``, ``store.steampowered.c
 .. note::
     If you are using :class:`.SteamClient` take a look at :meth:`.SteamClient.get_web_session()`
 
-.. note::
-    If you need to authenticate as a mobile device for things like trading confirmations
-    use :class:`MobileWebAuth` instead. The login process is identical, and in addition
-    you will get :attr:`.oauth_token`.
-
-
 Example usage:
 
 .. code:: python
@@ -45,15 +39,12 @@ Example usage:
     user.session.get('https://store.steampowered.com/account/history/')
 
 """
-import json
-from base64 import b64encode
 from getpass import getpass
-from time import time
 from typing import Any
 
 import requests
 
-from steam.core.crypto import rsa_encrypt_password, pkcs1v15_encrypt
+from steam.core.crypto import rsa_encrypt_password
 from steam.enums.proto import EAuthSessionGuardType
 from steam.steamid import SteamID
 from steam.utils.web import generate_session_id, make_requests_session
@@ -426,112 +417,6 @@ class WebAuth:
                 self._finalize_login()
 
                 return self.session
-
-
-# TODO: DEPRECATED, must be rewritten, like WebAuth
-class MobileWebAuth(WebAuth):
-    """Identical to :class:`WebAuth`, except it authenticates as a mobile device."""
-    oauth_token = None  #: holds oauth_token after successful login
-
-    def _send_login(self, password='', captcha='', email_code='', code=''):
-        data = {
-            'username': self.username,
-            "password": b64encode(pkcs1v15_encrypt(self.password, password.encode('ascii'))),
-            "emailauth": email_code,
-            "emailsteamid": str(self.steam_id) if email_code else '',
-            "twofactorcode": code,
-            "captchagid": self.captcha_gid,
-            "captcha_text": captcha,
-            "loginfriendlyname": "python-steam webauth",
-            "rsatimestamp": self.timestamp,
-            "remember_login": 'true',
-            "donotcache": int(time() * 100000),
-            "oauth_client_id": "DE45CD61",
-            "oauth_scope": "read_profile write_profile read_client write_client",
-        }
-
-        self.session.cookies.set('mobileClientVersion', '0 (2.1.3)')
-        self.session.cookies.set('mobileClient', 'android')
-
-        try:
-            return self.session.post(
-                'https://steamcommunity.com/login/dologin/', data=data,
-                timeout=15).json()
-        except requests.exceptions.RequestException as e:
-            raise HTTPError(str(e))
-        finally:
-            self.session.cookies.pop('mobileClientVersion', None)
-            self.session.cookies.pop('mobileClient', None)
-
-    def _finalize_login(self, login_response):
-        data = json.loads(login_response['oauth'])
-        self.steam_id = SteamID(data['steamid'])
-        self.oauth_token = data['oauth_token']
-
-    def oauth_login(self, oauth_token='', steam_id='', language='english'):
-        """Attempts a mobile authenticator login using an oauth token, which can be obtained from a previously logged-in
-        `MobileWebAuth`
-
-        :param oauth_token: oauth token string, if it wasn't provided on instance init
-        :type  oauth_token: :class:`str`
-        :param steam_id: `SteamID` of the account to log into, if it wasn't provided on instance init
-        :type  steam_id: :class:`str` or :class:`SteamID`
-        :param language: select language for steam web pages (sets language cookie)
-        :type  language: :class:`str`
-        :return: a session on success and :class:`None` otherwise
-        :rtype: :class:`requests.Session`, :class:`None`
-        :raises HTTPError: any problem with http request, timeouts, 5xx, 4xx etc
-        :raises LoginIncorrect: Invalid token or SteamID
-        """
-        if oauth_token:
-            self.oauth_token = oauth_token
-        elif self.oauth_token:
-            oauth_token = self.oauth_token
-        else:
-            raise LoginIncorrect('token is not specified')
-
-        if steam_id:
-            self.steam_id = SteamID(steam_id)
-        elif not self.steam_id:
-            raise LoginIncorrect('steam_id is not specified')
-
-        steam_id = self.steam_id.as_64
-
-        data = {
-            'access_token': oauth_token
-        }
-
-        try:
-            resp = self.session.post(
-                'https://api.steampowered.com/IMobileAuthService/GetWGToken/v0001',
-                data=data)
-        except requests.exceptions.RequestException as e:
-            raise HTTPError(str(e))
-
-        try:
-            resp_data = resp.json()['response']
-        except json.decoder.JSONDecodeError as e:
-            if 'Please verify your <pre>key=</pre> parameter.' in resp.text:
-                raise LoginIncorrect('invalid token')
-            else:
-                raise e
-
-        self.session_id = generate_session_id()
-
-        for domain in ['store.steampowered.com', 'help.steampowered.com',
-                       'steamcommunity.com']:
-            self.session.cookies.set('birthtime', '-3333', domain=domain)
-            self.session.cookies.set('sessionid', self.session_id, domain=domain)
-            self.session.cookies.set('mobileClientVersion', '0 (2.1.3)', domain=domain)
-            self.session.cookies.set('mobileClient', 'android', domain=domain)
-            self.session.cookies.set('steamLogin', str(steam_id) + "%7C%7C" + resp_data['token'], domain=domain)
-            self.session.cookies.set('steamLoginSecure', str(steam_id) + "%7C%7C" + resp_data['token_secure'],
-                                     domain=domain, secure=True)
-            self.session.cookies.set('Steam_Language', language, domain=domain)
-
-        self.logged_on = True
-
-        return self.session
 
 
 class WebAuthException(Exception):

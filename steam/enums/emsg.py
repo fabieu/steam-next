@@ -1961,6 +1961,7 @@ class EMsg(SteamIntEnum):
     ClientServerTimestampRequest = 9802
     ClientServerTimestampResponse = 9803
     ServiceMethodCallFromClientNonAuthed = 9804
+    ClientHello = 9805
 
     ClientLANP2PRequestChunk = 9900
     ClientLANP2PBase = 9900

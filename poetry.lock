@@ -1415,6 +1415,24 @@ files = [
 ]
 
 [[package]]
+name = "websocket-client"
+version = "1.9.0"
+description = "WebSocket client for Python with low level API options"
+optional = true
+python-versions = ">=3.9"
+groups = ["main"]
+markers = "extra == \"client\""
+files = [
+    {file = "websocket_client-1.9.0-py3-none-any.whl", hash = "sha256:af248a825037ef591efbf6ed20cc5faa03d3b47b9e5a2230a529eeee1c1fc3ef"},
+    {file = "websocket_client-1.9.0.tar.gz", hash = "sha256:9e813624b6eb619999a97dc7958469217c3176312b3a16a4bd1bc7e08a46ec98"},
+]
+
+[package.extras]
+docs = ["Sphinx (>=6.0)", "myst-parser (>=2.0.0)", "sphinx_rtd_theme (>=1.1.0)"]
+optional = ["python-socks", "wsaccel"]
+test = ["pytest", "websockets"]
+
+[[package]]
 name = "wrapt"
 version = "2.2.2"
 description = "Module for decorators, wrappers and monkey patching."
@@ -1592,10 +1610,10 @@ test = ["coverage[toml]", "zope.event", "zope.testing"]
 testing = ["coverage[toml]", "zope.event", "zope.testing"]
 
 [extras]
-client = ["gevent", "gevent-eventemitter", "protobuf"]
+client = ["gevent", "gevent-eventemitter", "protobuf", "websocket-client"]
 docs = ["sphinx", "sphinx_rtd_theme"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "909019948a7c62fffe64bbaff920cbf3a405b1b03ec0b378c9cec5360f0a4fb3"
+content-hash = "139ea72d6edd282c936ff45a8dd3862202c998bd66212fc255cfca1ab8bdcc26"
