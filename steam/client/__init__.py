@@ -940,47 +940,72 @@ class SteamClient(CMClient, BuiltinBase):
             # A background out-of-band confirmation may have completed the logon while we
             # yielded above; don't prompt for a code we no longer need.
             if self.logged_on:
-                result = EResult.OK
-                break
+                return EResult.OK
 
             if result == EResult.InvalidPassword:
                 password = getpass("Invalid password for %s. Enter password: " % repr(username))
 
-            elif result in (EResult.AccountLogonDenied, EResult.InvalidLoginAuthCode):
-                if wait_for_confirmation and self._confirm_greenlet is not None:
-                    print("Approve the sign in via the link in your Steam email, "
-                          "or wait to enter a code...")
-                    if self._await_confirmation():
-                        result = EResult.OK
-                        break
-
-                prompt = ("Enter email code: " if result == EResult.AccountLogonDenied else
-                          "Incorrect code. Enter email code: ")
-                auth_code, two_factor_code = input(prompt), None
-
-            elif result in (EResult.AccountLoginDeniedNeedTwoFactor, EResult.TwoFactorCodeMismatch):
-                if wait_for_confirmation and self._confirm_greenlet is not None:
-                    print("Approve the sign in on your Steam Mobile app, "
-                          "or wait to enter a code...")
-                    if self._await_confirmation():
-                        result = EResult.OK
-                        break
-
-                prompt = ("Enter 2FA code: " if result == EResult.AccountLoginDeniedNeedTwoFactor else
-                          "Incorrect code. Enter 2FA code: ")
-                auth_code, two_factor_code = None, input(prompt)
-
             elif result in (EResult.TryAnotherCM, EResult.ServiceUnavailable):
-                if prompt_for_unavailable and result == EResult.ServiceUnavailable:
-                    while True:
-                        answer = input("Steam is down. Keep retrying? [y/n]: ").lower()
-                        if answer in 'yn': break
+                keep_going, prompt_for_unavailable = self._cli_handle_unavailable(
+                    result, prompt_for_unavailable)
+                if not keep_going:
+                    break
 
-                    prompt_for_unavailable = False
-                    if answer == 'n': break
-
-                self.reconnect(maxdelay=15)  # implements reconnect throttling
+            else:
+                confirmed, auth_code, two_factor_code = self._cli_prompt_guard_code(
+                    result, wait_for_confirmation)
+                if confirmed:
+                    return EResult.OK
 
             result = self.login(username, password, auth_code, two_factor_code)
 
         return result
+
+    def _cli_prompt_guard_code(self, result, wait_for_confirmation):
+        """Confirm the sign in out-of-band or prompt for a Steam Guard code.
+
+        Handles the email-code and Steam Mobile 2FA cases for :meth:`cli_login`.
+
+        :return: ``(confirmed, auth_code, two_factor_code)`` where ``confirmed`` is
+            :class:`True` when the login was approved out-of-band; otherwise exactly
+            one of the codes carries the value entered at the prompt.
+        """
+        email = result in (EResult.AccountLogonDenied, EResult.InvalidLoginAuthCode)
+
+        message = ("Approve the sign in via the link in your Steam email, or wait to enter a code..."
+                   if email else
+                   "Approve the sign in on your Steam Mobile app, or wait to enter a code...")
+        if wait_for_confirmation and self._confirm_greenlet is not None:
+            print(message)
+            if self._await_confirmation():
+                return True, None, None
+
+        if email:
+            prompt = ("Enter email code: " if result == EResult.AccountLogonDenied else
+                      "Incorrect code. Enter email code: ")
+            return False, input(prompt), None
+
+        prompt = ("Enter 2FA code: " if result == EResult.AccountLoginDeniedNeedTwoFactor else
+                  "Incorrect code. Enter 2FA code: ")
+        return False, None, input(prompt)
+
+    def _cli_handle_unavailable(self, result, prompt_for_unavailable):
+        """Handle a transient CM error for :meth:`cli_login` by reconnecting.
+
+        On the first :attr:`EResult.ServiceUnavailable` the user is asked once whether
+        to keep retrying.
+
+        :return: ``(keep_going, prompt_for_unavailable)`` where ``keep_going`` is
+            :class:`False` when the user declined to keep retrying.
+        """
+        if prompt_for_unavailable and result == EResult.ServiceUnavailable:
+            while True:
+                answer = input("Steam is down. Keep retrying? [y/n]: ").lower()
+                if answer in 'yn': break
+
+            prompt_for_unavailable = False
+            if answer == 'n':
+                return False, prompt_for_unavailable
+
+        self.reconnect(maxdelay=15)  # implements reconnect throttling
+        return True, prompt_for_unavailable
