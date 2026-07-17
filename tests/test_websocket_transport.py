@@ -21,6 +21,7 @@ class FakeWS:
         self._incoming = GQueue()
 
     def settimeout(self, _):
+        # no-op: the fake is driven by gevent queues, so socket timeouts don't apply
         pass
 
     def send_binary(self, data):
@@ -119,14 +120,14 @@ class WebsocketBootstrapTest(unittest.TestCase):
         sl = CMServerList()
         sl.websocket = True
         resp = {'response': {'result': 1,
-                             'serverlist': ['1.2.3.4:27017'],
+                             'serverlist': ['192.0.2.4:27017'],
                              'serverlist_websockets': ['cm.example.net:27019']}}
 
         with patch('steam.webapi.get', return_value=resp):
             self.assertTrue(sl.bootstrap_from_webapi())
 
         self.assertIn(('cm.example.net', 27019), sl.list)
-        self.assertNotIn(('1.2.3.4', 27017), sl.list)
+        self.assertNotIn(('192.0.2.4', 27017), sl.list)
 
     def test_dns_bootstrap_disabled_for_websocket(self):
         sl = CMServerList()

@@ -120,7 +120,7 @@ class CMClient_Scenarios(unittest.TestCase):
         self.assertEqual(emsg, int(EMsg.ClientHello))
 
 
-class TCPChannelEncrypt_Scenario(unittest.TestCase):
+class TCPChannelEncryptScenario(unittest.TestCase):
     """The TCP transport (opt-in via ``PROTOCOL_TCP``) still performs the AES
     ChannelEncrypt handshake, unlike the wss default."""
 

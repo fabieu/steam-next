@@ -688,11 +688,8 @@ class SteamClient(CMClient, BuiltinBase):
                        or EAuthSessionGuardType.EmailConfirmation in allowed_confirmations)
 
         if not code and needs_code:
-            # Ask for a code, but if the account can also be approved out-of-band, keep polling
-            # for that approval in the background so the user can just tap Approve instead.
-            if can_confirm:
-                self._start_confirmation(session, username, login_id)
-            return self._auth_code_result(allowed_confirmations, code_mismatch=False), None, None
+            return self._request_guard_code(session, username, login_id,
+                                            allowed_confirmations, can_confirm)
 
         # Poll for the token: a confirmation-only guard gets the full approval window; a supplied
         # code / no guard just needs the (near-instant) mint.
@@ -706,6 +703,16 @@ class SteamClient(CMClient, BuiltinBase):
         # Timed out without a token: a transient issue (or an un-approved confirmation) the
         # caller can retry — not a wrong code.
         return EResult.Fail, None, None
+
+    def _request_guard_code(self, session, username, login_id, allowed_confirmations, can_confirm):
+        """Ask the caller for a Steam Guard code.
+
+        If the account can also be approved out-of-band, keep polling for that approval in the
+        background so the user can just tap *Approve* instead of entering a code.
+        """
+        if can_confirm:
+            self._start_confirmation(session, username, login_id)
+        return self._auth_code_result(allowed_confirmations, code_mismatch=False), None, None
 
     def _start_confirmation(self, session, username, login_id):
         """Spawn a background poll that completes the logon if the login is approved out-of-band."""
