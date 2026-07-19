@@ -417,7 +417,13 @@ class CMClient(EventEmitter):
             interval = msg.body.heartbeat_seconds
             self._heartbeat_loop = gevent.spawn(self.__heartbeat, interval)
         else:
-            self.emit(self.EVENT_ERROR, EResult(result))
+            # Tolerate an eresult our vendored enum does not know (Steam occasionally
+            # introduces new ones) instead of raising out of the message handler greenlet.
+            try:
+                eresult = EResult(result)
+            except ValueError:
+                eresult = EResult.Fail
+            self.emit(self.EVENT_ERROR, eresult)
             self.disconnect()
 
     def _handle_cm_list(self, msg):
@@ -535,7 +541,12 @@ class CMServerList:
             return False
 
         key = 'serverlist_websockets' if self.websocket else 'serverlist'
-        serverlist = resp['response'][key]
+        serverlist = resp['response'].get(key)
+
+        if not serverlist:
+            self._LOG.error("GetCMList response missing '%s'" % key)
+            return False
+
         self._LOG.debug("Received %d servers from WebAPI" % len(serverlist))
 
         def str_to_tuple(serveraddr):

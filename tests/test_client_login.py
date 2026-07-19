@@ -462,11 +462,14 @@ class HandleLogon(unittest.TestCase):
         self.client.disconnect = MagicMock()
         self.client.emit = MagicMock()
 
-    def _logon(self, eresult):
+    def _logon(self, eresult, patch_base=True):
         from steam.core.cm import CMClient
         self.client.refresh_token = 'TOK'
         msg = SimpleNamespace(body=SimpleNamespace(eresult=int(eresult)))
-        with patch.object(CMClient, '_handle_logon'):
+        if patch_base:
+            with patch.object(CMClient, '_handle_logon'):
+                self.client._handle_logon(msg)
+        else:
             self.client._handle_logon(msg)
 
     def test_expired_token_is_cleared(self):
@@ -481,7 +484,9 @@ class HandleLogon(unittest.TestCase):
 
     def test_unknown_eresult_does_not_crash(self):
         # An eresult not in our vendored enum must not raise (Steam may add new ones).
-        self._logon(991337)
+        # Exercise the real base CMClient._handle_logon -- that is where the raw eresult
+        # is coerced, so patching it out would hide a crash there.
+        self._logon(991337, patch_base=False)
         self.client.disconnect.assert_called()
         self.assertFalse(self.client.logged_on)
 
@@ -496,6 +501,44 @@ class PreLogin(unittest.TestCase):
 
         self.assertEqual(client._pre_login(), EResult.OK)
         self.assertIsNone(client.steam_id)
+
+
+class LoginGuards(unittest.TestCase):
+    def test_logged_on_short_circuits_only_for_same_user(self):
+        client = SteamClient()
+        client.logged_on = True
+        client.username = 'A'
+        client._send_logon = MagicMock()
+
+        self.assertEqual(client.login('A'), EResult.OK)
+        client._send_logon.assert_not_called()
+
+    def test_login_for_different_user_while_logged_on_raises(self):
+        # Must not silently return OK for a different account (_pre_login rejects it).
+        client = SteamClient()
+        client.logged_on = True
+        client.username = 'A'
+
+        with self.assertRaises(RuntimeError):
+            client.login('B', 'pass')
+
+    def test_failed_login_for_new_user_clears_stale_token(self):
+        # Logged in as A with A's token, then a failed credential login for B must not
+        # leave B paired with A's token (relogin() would log on as the wrong account).
+        client = SteamClient()
+        client._pre_login = MagicMock(return_value=EResult.OK)
+        client.username = 'A'
+        client.refresh_token = 'tokenA'
+        client._auth_session = {'username': 'A'}
+        client._get_refresh_token = MagicMock(
+            return_value=(EResult.InvalidPassword, None, None))
+
+        result = client.login('B', 'wrong')
+
+        self.assertEqual(result, EResult.InvalidPassword)
+        self.assertIsNone(client.refresh_token)
+        self.assertIsNone(client._auth_session)
+        self.assertFalse(client.relogin_available)
 
 
 class AwaitConfirmation(unittest.TestCase):
@@ -586,6 +629,18 @@ class CliLogin(unittest.TestCase):
 
         self.assertEqual(result, EResult.OK)
         self.client._await_confirmation.assert_not_called()
+
+    def test_unavailable_empty_answer_reprompts(self):
+        # Pressing Enter (empty input) must not be taken as "keep retrying"; it reprompts
+        # until a clear y/n is given.
+        self.client.reconnect = MagicMock()
+
+        with patch('builtins.input', side_effect=['', 'n']):
+            keep_going, prompt_for_unavailable = self.client._cli_handle_unavailable(
+                EResult.ServiceUnavailable, True)
+
+        self.assertFalse(keep_going)
+        self.client.reconnect.assert_not_called()
 
 
 if __name__ == '__main__':

@@ -134,6 +134,15 @@ class WebsocketBootstrapTest(unittest.TestCase):
         sl.websocket = True
         self.assertFalse(sl.bootstrap_from_dns())
 
+    def test_bootstrap_missing_websocket_key_returns_false(self):
+        # A response without 'serverlist_websockets' must fail gracefully, not raise KeyError.
+        sl = CMServerList()
+        sl.websocket = True
+        resp = {'response': {'result': 1, 'serverlist': ['192.0.2.4:27017']}}
+
+        with patch('steam.webapi.get', return_value=resp):
+            self.assertFalse(sl.bootstrap_from_webapi())
+
 
 if __name__ == '__main__':
     unittest.main()

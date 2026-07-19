@@ -528,8 +528,10 @@ class SteamClient(CMClient, BuiltinBase):
         """
         self._LOG.debug("Attempting login")
 
-        # A background confirmation poll may already have logged us on.
-        if self.logged_on:
+        # A background confirmation poll may already have logged us on for this account.
+        # A login for a different account must still fall through to _pre_login (which
+        # rejects logging in while already logged on).
+        if self.logged_on and username == self.username:
             return EResult.OK
 
         # This attempt supersedes any background confirmation poll from a previous one.
@@ -539,6 +541,14 @@ class SteamClient(CMClient, BuiltinBase):
 
         if eresult != EResult.OK:
             return eresult
+
+        if username != self.username:
+            # A stored refresh_token / pending auth session belongs to the previous account.
+            # Drop both so a failed credential login can't leave a mismatched
+            # (username, refresh_token) pair that relogin() would use to log on as the wrong
+            # account, and so we never reuse a stale auth session across an account switch.
+            self.refresh_token = None
+            self._auth_session = None
 
         self.username = username
 
@@ -1001,7 +1011,7 @@ class SteamClient(CMClient, BuiltinBase):
         if prompt_for_unavailable and result == EResult.ServiceUnavailable:
             while True:
                 answer = input("Steam is down. Keep retrying? [y/n]: ").lower()
-                if answer in 'yn': break
+                if answer in ('y', 'n'): break
 
             prompt_for_unavailable = False
             if answer == 'n':
