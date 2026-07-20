@@ -1,5 +1,25 @@
 # Change notes
 
+## Unreleased
+
+This release brings breaking changes
+
+### steam.client
+
+- `SteamClient`/`CMClient` now default to the WebSocket CM transport (`protocol=CMClient.PROTOCOL_WEBSOCKET`) instead of TCP. Pass `protocol=CMClient.PROTOCOL_TCP` explicitly to keep the previous behavior
+- The WebSocket transport requires cooperative sockets outside a fully gevent app; call `steam.monkey.patch_minimal()` first
+- `CMServerList.bootstrap_from_dns()` no longer returns servers when configured for the WebSocket transport (DNS bootstrap only yields TCP CM endpoints)
+- `SteamClient.login()` no longer accepts a `login_key` argument; password logins now run the `IAuthenticationService` credential flow and an `access_token` (refresh token) can be passed instead
+- Removed `SteamClient.login_key` and the `new_login_key` event; replaced by `SteamClient.refresh_token`. `relogin()` now uses `refresh_token`
+
+### steam.webauth
+
+- Removed `MobileWebAuth`
+
+### steam.guard
+
+- `SteamAuthenticator.backend` no longer accepts a `MobileWebAuth` instance; only a logged in `SteamClient` is supported
+
 ## 2.0.0
 
 This release brings breaking changes
