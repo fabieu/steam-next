@@ -208,36 +208,6 @@ class SteamAuthenticator:
 
         self.steam_time_offset = int(resp['server_time']) - time()
 
-    def remove(self, revocation_code=None):
-        """Remove authenticator
-
-        :param revocation_code: revocation code for account (e.g. R12345)
-        :type  revocation_code: str
-
-        .. note::
-            After removing authenticator Steam Guard will be set to email codes
-
-        .. warning::
-            Doesn't work via :class:`.SteamClient`. Disabled by Valve
-
-        :raises: :class:`SteamAuthenticatorError`
-        """
-        if not self.secrets:
-            raise SteamAuthenticatorError("No authenticator secrets available?")
-
-        resp = self._send_request('RemoveAuthenticator', {
-            'steamid': self.backend.steam_id,
-            'revocation_code': revocation_code if revocation_code else self.revocation_code,
-            'steamguard_scheme': 1,
-        })
-
-        if not resp['success']:
-            raise SteamAuthenticatorError("Failed to remove authenticator. (attempts remaining: %s)" % (
-                resp['revocation_attempts_remaining'],
-            ))
-
-        self.secrets.clear()
-
     def status(self):
         """Fetch authenticator status for the account
 

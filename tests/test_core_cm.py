@@ -6,6 +6,7 @@ import gevent.queue
 from mock import patch, MagicMock
 
 from steam.core.cm import CMClient
+from steam.enums import ETransport
 from steam.enums.emsg import EMsg
 from steam.utils.proto import clear_proto_bit
 
@@ -139,7 +140,7 @@ class CMClient_Scenarios(unittest.TestCase):
 
 
 class TCPChannelEncryptScenario(unittest.TestCase):
-    """The TCP transport (opt-in via ``PROTOCOL_TCP``) still performs the AES
+    """The TCP transport (opt-in via ``ETransport.TCP``) still performs the AES
     ChannelEncrypt handshake, unlike the wss default."""
 
     test_channel_key = b'SESSION KEY LOL'
@@ -190,7 +191,7 @@ class TCPChannelEncryptScenario(unittest.TestCase):
         self.conn.connect.return_value = True
 
         # run ------------
-        cm = CMClient(CMClient.PROTOCOL_TCP)
+        cm = CMClient(ETransport.TCP)
         cm.connected = True
         gevent.spawn(cm._recv_messages)
 

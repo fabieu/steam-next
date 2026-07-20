@@ -564,7 +564,7 @@ class AwaitConfirmation(unittest.TestCase):
 
         self.assertTrue(self.client._await_confirmation())
         self.client.wait_event.assert_called_once_with(
-            self.client.EVENT_LOGGED_ON, timeout=self.client.confirmation_timeout)
+            self.client.EVENT_LOGGED_ON, timeout=self.client.confirmation_timeout + 30)
 
 
 class CliLogin(unittest.TestCase):

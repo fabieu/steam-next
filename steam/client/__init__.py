@@ -30,7 +30,7 @@ from steam.client.builtins import BuiltinBase
 from steam.core.cm import CMClient
 from steam.core.crypto import sha1_hash, rsa_encrypt_password
 from steam.core.msg import MsgProto
-from steam.enums import EResult, EOSType
+from steam.enums import EResult, EOSType, ETransport
 from steam.enums.emsg import EMsg
 from steam.enums.proto import EAuthSessionGuardType, EAuthTokenPlatformType
 from steam.steamid import SteamID
@@ -54,9 +54,9 @@ class SteamClient(CMClient, BuiltinBase):
     chat_mode = 2  #: chat mode (0=old chat, 2=new chat)
     confirmation_timeout = 60  #: seconds to wait for a device/email confirmation approval
 
-    def __init__(self, protocol=CMClient.PROTOCOL_WEBSOCKET):
+    def __init__(self, protocol=ETransport.WebSocket):
         # Steam only serves the pre-logon credential auth flow over the WebSocket CM
-        # endpoints, so the client defaults to WebSocket. Pass ``PROTOCOL_TCP`` for a
+        # endpoints, so the client defaults to WebSocket. Pass ``ETransport.TCP`` for a
         # token/anonymous-only session that should use the raw TCP CMs instead.
         CMClient.__init__(self, protocol)
 
@@ -150,10 +150,19 @@ class SteamClient(CMClient, BuiltinBase):
         except IOError as e:
             self._LOG.error("Failed reading %s (%s)", repr(filepath), str(e))
         else:
+            # The cache is transport agnostic: each transport's server list is stored
+            # under its own key so switching transports doesn't discard the other's cache.
+            transport = self.protocol.name
+            transport_data = data.get(transport)
+
+            if not transport_data:
+                self._LOG.debug("No cached CM server list for %s transport", transport)
+                return
+
             self.cm_servers.clear()
-            self.cm_servers.merge_list(data['servers'])
-            self.cm_servers.last_updated = data.get('last_updated', 0)
-            self.cell_id = self.cm_servers.cell_id = data.get('cell_id', 0)
+            self.cm_servers.merge_list(transport_data['servers'])
+            self.cm_servers.last_updated = transport_data.get('last_updated', 0)
+            self.cell_id = self.cm_servers.cell_id = transport_data.get('cell_id', 0)
 
     def _handle_cm_list(self, msg):
         if (self.cm_servers.last_updated + 3600 * 24 > time()
@@ -164,6 +173,8 @@ class SteamClient(CMClient, BuiltinBase):
 
         if self.credential_location:
             filepath = os.path.join(self.credential_location, 'cm_servers.json')
+            transport = self.protocol.name
+            data = {}
 
             if os.path.exists(filepath):
                 try:
@@ -171,15 +182,19 @@ class SteamClient(CMClient, BuiltinBase):
                         data = json.load(f)
                 except ValueError:
                     self._LOG.error("Failed parsing %s", repr(filepath))
+                    data = {}
                 except IOError as e:
                     self._LOG.error("Failed reading %s (%s)", repr(filepath), str(e))
+                    data = {}
                 else:
-                    if data.get('last_updated', 0) + 3600 * 24 > time():
+                    if data.get(transport, {}).get('last_updated', 0) + 3600 * 24 > time():
                         return
 
                 self._LOG.debug("Persisted CM server list is stale")
 
-            data = {
+            # Only this transport's section is replaced, so the other transport's
+            # cached list survives.
+            data[transport] = {
                 'cell_id': self.cm_servers.cell_id,
                 'last_updated': self.cm_servers.last_updated,
                 'servers': list(zip(map(ip4_from_int, msg.body.cm_addresses), msg.body.cm_ports)),
@@ -664,6 +679,7 @@ class SteamClient(CMClient, BuiltinBase):
         # unrecognised type (e.g. a newly added one) must not blow up the login.
         self._auth_session = {
             'username': username,
+            'password': password,
             'client_id': begin.body.client_id,
             'request_id': begin.body.request_id,
             'steam_id': SteamID(begin.body.steamid),
@@ -686,8 +702,10 @@ class SteamClient(CMClient, BuiltinBase):
 
         # Reuse the session opened by a previous login() attempt for this user, so retries and
         # code submissions hit the same session instead of triggering a fresh email / push.
+        # A changed password can't be applied to an already-open session, so that also forces
+        # a fresh one.
         session = self._auth_session
-        if not (session and session['username'] == username):
+        if not (session and session['username'] == username and session['password'] == password):
             session = self._begin_auth_session(username, password)
             if isinstance(session, EResult):
                 return session, None, None
@@ -740,7 +758,7 @@ class SteamClient(CMClient, BuiltinBase):
     def _cancel_confirmation(self):
         """Stop any running background confirmation poll."""
         if self._confirm_greenlet is not None:
-            self._confirm_greenlet.kill(block=False)
+            self._confirm_greenlet.kill()
             self._confirm_greenlet = None
 
     def _background_confirmation(self, session, username, login_id):
@@ -770,7 +788,7 @@ class SteamClient(CMClient, BuiltinBase):
             return True
         if self._confirm_greenlet is None:
             return False
-        self.wait_event(self.EVENT_LOGGED_ON, timeout=self.confirmation_timeout)
+        self.wait_event(self.EVENT_LOGGED_ON, timeout=self.confirmation_timeout + 30)
         return self.logged_on
 
     def _submit_guard_code(self, session, code, is_2fa):

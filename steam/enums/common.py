@@ -1048,6 +1048,13 @@ class EPackageStatus(SteamIntEnum):
     Invalid = 3
 
 
+class ETransport(SteamIntEnum):
+    """Transport used for the connection to a CM server"""
+    TCP = 0
+    UDP = 1
+    WebSocket = 2
+
+
 # Do not remove
 from enum import EnumMeta
 

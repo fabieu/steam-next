@@ -15,7 +15,7 @@ from eventemitter import EventEmitter
 from steam.core import crypto
 from steam.core.connection import TCPConnection, WebsocketConnection
 from steam.core.msg import Msg, MsgProto
-from steam.enums import EResult, EUniverse
+from steam.enums import EResult, ETransport, EUniverse
 from steam.enums.emsg import EMsg
 from steam.steamid import SteamID
 from steam.utils import ip4_from_int
@@ -56,9 +56,6 @@ class CMClient(EventEmitter):
     """All incoming messages are emitted with their :class:`.EMsg` number.
     """
 
-    PROTOCOL_TCP = 0  #: TCP protocol enum
-    PROTOCOL_UDP = 1  #: UDP protocol enum
-    PROTOCOL_WEBSOCKET = 2  #: WebSocket protocol enum
     verbose_debug = False  #: print message connects in debug
 
     auto_discovery = True  #: enables automatic CM discovery
@@ -81,15 +78,15 @@ class CMClient(EventEmitter):
     _heartbeat_loop = None
     _LOG = logging.getLogger("CMClient")
 
-    def __init__(self, protocol=PROTOCOL_WEBSOCKET):
-        self.protocol = protocol
+    def __init__(self, protocol=ETransport.WebSocket):
+        self.protocol = ETransport(protocol)
         self.cm_servers = CMServerList()
+        self.cm_servers.transport = self.protocol
 
-        if protocol == CMClient.PROTOCOL_TCP:
+        if self.protocol == ETransport.TCP:
             self.connection = TCPConnection()
-        elif protocol == CMClient.PROTOCOL_WEBSOCKET:
+        elif self.protocol == ETransport.WebSocket:
             self.connection = WebsocketConnection()
-            self.cm_servers.websocket = True
         else:
             raise ValueError("Only TCP and WebSocket are supported")
 
@@ -166,7 +163,7 @@ class CMClient(EventEmitter):
         self.emit(self.EVENT_CONNECTED)
         self._recv_loop = gevent.spawn(self._recv_messages)
 
-        if self.protocol == CMClient.PROTOCOL_WEBSOCKET:
+        if self.protocol == ETransport.WebSocket:
             # wss already secures the channel; there is no ChannelEncrypt handshake to wait for.
             # The CM does expect a ClientHello as the first message though -- without it the CM
             # ignores everything else and closes the connection after a short timeout.
@@ -227,7 +224,7 @@ class CMClient(EventEmitter):
 
         # WebSocket CM messages carry a fuller header than the TCP ones: the Steam realm plus
         # explicit (present) steamid / client_sessionid, matching what real clients send.
-        if self.protocol == CMClient.PROTOCOL_WEBSOCKET and message.proto:
+        if self.protocol == ETransport.WebSocket and message.proto:
             message.header.realm = 1
             if not message.header.steamid:
                 message.header.steamid = 0
@@ -467,7 +464,7 @@ class CMServerList:
     last_updated = 0  #: timestamp of when the list was last updated
     cell_id = 0  #: cell id of the server list
     bad_timestamp = 300  #: how long bad mark lasts in seconds
-    websocket = False  #: when ``True`` bootstrap fetches WebSocket CM endpoints
+    transport = ETransport.TCP  #: :class:`.ETransport` this server list was populated for
 
     def __init__(self):
         self._LOG = logging.getLogger("CMServerList")
@@ -489,7 +486,7 @@ class CMServerList:
         """
         Fetches CM server list from WebAPI and replaces the current one
         """
-        if self.websocket:
+        if self.transport == ETransport.WebSocket:
             # DNS bootstrap only yields TCP CMs; a WebSocket client must use the WebAPI.
             self._LOG.error("DNS bootstrap is not available for the WebSocket transport")
             return False
@@ -540,7 +537,7 @@ class CMServerList:
             self._LOG.error("GetCMList failed with %s" % repr(result))
             return False
 
-        key = 'serverlist_websockets' if self.websocket else 'serverlist'
+        key = 'serverlist_websockets' if self.transport == ETransport.WebSocket else 'serverlist'
         serverlist = resp['response'].get(key)
 
         if not serverlist:

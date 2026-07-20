@@ -8,6 +8,7 @@ from mock import patch, MagicMock
 from steam.core.cm import CMClient, CMServerList
 from steam.core.connection import WebsocketConnection
 from steam.core.msg import MsgProto
+from steam.enums import ETransport
 from steam.enums.emsg import EMsg
 
 
@@ -83,12 +84,12 @@ class WebsocketConnectionTest(unittest.TestCase):
 
 class WebsocketCMClientTest(unittest.TestCase):
     def test_protocol_selects_websocket_connection(self):
-        client = CMClient(CMClient.PROTOCOL_WEBSOCKET)
+        client = CMClient(ETransport.WebSocket)
         self.assertIsInstance(client.connection, WebsocketConnection)
-        self.assertTrue(client.cm_servers.websocket)
+        self.assertEqual(client.cm_servers.transport, ETransport.WebSocket)
 
     def test_send_is_not_aes_encrypted(self):
-        client = CMClient(CMClient.PROTOCOL_WEBSOCKET)
+        client = CMClient(ETransport.WebSocket)
         captured = []
         client.connection.put_message = lambda data: captured.append(data)
 
@@ -100,7 +101,7 @@ class WebsocketCMClientTest(unittest.TestCase):
         self.assertEqual(captured, [msg.serialize()])
 
     def test_connect_marks_channel_secured_without_handshake(self):
-        client = CMClient(CMClient.PROTOCOL_WEBSOCKET)
+        client = CMClient(ETransport.WebSocket)
         client.cm_servers.merge_list([('cm.example.net', 27019)])
         client.connection.connect = MagicMock(return_value=True)
 
@@ -118,7 +119,7 @@ class WebsocketCMClientTest(unittest.TestCase):
 class WebsocketBootstrapTest(unittest.TestCase):
     def test_bootstrap_uses_websocket_serverlist(self):
         sl = CMServerList()
-        sl.websocket = True
+        sl.transport = ETransport.WebSocket
         resp = {'response': {'result': 1,
                              'serverlist': ['192.0.2.4:27017'],
                              'serverlist_websockets': ['cm.example.net:27019']}}
@@ -131,13 +132,13 @@ class WebsocketBootstrapTest(unittest.TestCase):
 
     def test_dns_bootstrap_disabled_for_websocket(self):
         sl = CMServerList()
-        sl.websocket = True
+        sl.transport = ETransport.WebSocket
         self.assertFalse(sl.bootstrap_from_dns())
 
     def test_bootstrap_missing_websocket_key_returns_false(self):
         # A response without 'serverlist_websockets' must fail gracefully, not raise KeyError.
         sl = CMServerList()
-        sl.websocket = True
+        sl.transport = ETransport.WebSocket
         resp = {'response': {'result': 1, 'serverlist': ['192.0.2.4:27017']}}
 
         with patch('steam.webapi.get', return_value=resp):
