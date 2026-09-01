@@ -22,7 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 client = [
     "protobuf (>=6.33.6,<7.0)",
-    "gevent>=26.7.0",
+    "gevent>=26.8.0",
     "gevent-eventemitter (>=2.1,<3.0)",
 ]
 docs = [
