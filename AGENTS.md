@@ -8,7 +8,7 @@ repository.
 `steam-next` is a Python library for interacting with Steam (CM servers, WebAPI, CDN/depots, Web auth, 2FA, SteamID,
 master server queries). It is a maintained fork of the original `ValvePython/steam` project. The `SteamClient` stack is
 `gevent`-based; everything else works without gevent. Public installation extra `client` pulls in `gevent`,
-`gevent-eventemitter`, and `protobuf`.
+`gevent-eventemitter`, `protobuf`, and `websocket-client`.
 
 Supported Python: 3.10–3.14.
 

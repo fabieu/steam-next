@@ -240,7 +240,7 @@ class WebsocketConnection(Connection):
     def _close_socket(self):
         if self.ws:
             try:
-                self.ws.close()
+                self.ws.shutdown()
             except Exception:
                 pass
             self.ws = None

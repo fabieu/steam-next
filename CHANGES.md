@@ -6,7 +6,7 @@ This release brings breaking changes
 
 ### steam.client
 
-- `SteamClient`/`CMClient` default to the WebSocket CM transport (`protocol=ETransport.WebSocket`); pass `protocol=ETransport.TCP` to keep the previous behavior. `CMClient.PROTOCOL_TCP`/`PROTOCOL_UDP`/`PROTOCOL_WEBSOCKET` are removed in favor of `steam.enums.ETransport`
+- `SteamClient`/`CMClient` default to the WebSocket CM transport (`protocol=ETransport.WebSocket`); pass `protocol=ETransport.TCP` to keep the previous behavior. `CMClient.PROTOCOL_TCP`/`PROTOCOL_UDP` are removed in favor of `steam.enums.ETransport`
 - The WebSocket transport requires cooperative sockets outside a fully gevent app; call `steam.monkey.patch_minimal()` first
 - `CMServerList.bootstrap_from_dns()` returns no servers for the WebSocket transport
 - `SteamClient.login()` no longer accepts `login_key`; password logins run the `IAuthenticationService` credential flow. New arguments `access_token` (refresh token, instead of a password) and `machine_auth_token`. Raises `RuntimeError` when already logged on and `ValueError` for an `access_token` that is not a Steam client refresh token

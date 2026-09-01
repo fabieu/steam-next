@@ -32,7 +32,7 @@ class FakeWS:
         # blocks cooperatively until fed / killed; frames are (opcode, data) tuples
         return self._incoming.get()
 
-    def close(self):
+    def shutdown(self):
         self.closed = True
 
     def feed(self, data):
