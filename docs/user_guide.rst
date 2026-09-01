@@ -155,6 +155,8 @@ The library comes with some Steam client features implemented, see :doc:`api/ste
 
 .. warning::
     :class:`.SteamClient` no longer applies gevent monkey patches by default.
+    The default WebSocket transport needs cooperative sockets, so outside of a fully gevent
+    application call :func:`steam.monkey.patch_minimal` before anything else is imported.
     See :mod:`steam.monkey` for details how make stdlib gevent cooperative.
 
 CLI example
@@ -164,6 +166,9 @@ In this example, the user will be prompted for credential and once logged in wil
 After that we logout.
 
 .. code:: python
+
+    import steam.monkey
+    steam.monkey.patch_minimal()
 
     from steam.client import SteamClient
     from steam.enums.emsg import EMsg
@@ -185,6 +190,89 @@ After that we logout.
     client.logout()
 
 You can find more examples at https://github.com/fabieu/steam-next/tree/master/recipes
+
+Logging in
+----------
+
+:meth:`login() <steam.client.SteamClient.login>` logs in with a username and password.
+Steam no longer accepts passwords at the CM directly, so the client first obtains a refresh token
+via the ``IAuthenticationService`` credential flow and then logs on with it.
+The result is an :class:`.EResult`.
+
+.. code:: python
+
+    from steam.enums import EResult
+
+    result = client.login('username', 'password')
+
+    if result != EResult.OK:
+        print("Login failed: %s" % repr(result))
+
+When the account is protected by Steam Guard the first attempt returns
+:attr:`.EResult.AccountLogonDenied` (email code) or :attr:`.EResult.AccountLoginDeniedNeedTwoFactor`
+(authenticator code) and fires the ``auth_code_required`` event. Repeat the call with the code.
+A rejected authenticator code returns :attr:`.EResult.TwoFactorCodeMismatch`.
+
+.. code:: python
+
+    @client.on(client.EVENT_AUTH_CODE_REQUIRED)
+    def auth_code_prompt(is_2fa, code_mismatch):
+        if is_2fa:
+            code = input("Enter 2FA Code: ")
+            client.login('username', 'password', two_factor_code=code)
+        else:
+            code = input("Enter Email Code: ")
+            client.login('username', 'password', auth_code=code)
+
+Any failed attempt drops the connection; the next :meth:`login() <steam.client.SteamClient.login>`
+reconnects automatically. Transient CM problems are reported as :attr:`.EResult.ServiceUnavailable`
+or :attr:`.EResult.TryAnotherCM` and can simply be retried.
+:meth:`cli_login() <steam.client.SteamClient.cli_login>` wraps all of the above with console prompts.
+
+Refresh tokens
+~~~~~~~~~~~~~~
+
+A successful password login yields a refresh token, available as
+:attr:`SteamClient.refresh_token <steam.client.SteamClient.refresh_token>` and announced by the
+``refresh_token`` event. Persist it to log in later without a password or a Steam Guard code:
+
+.. code:: python
+
+    @client.on(client.EVENT_REFRESH_TOKEN)
+    def save_token(refresh_token):
+        with open('refresh_token.txt', 'w') as f:
+            f.write(refresh_token)
+
+    # later, possibly in a new process
+    with open('refresh_token.txt') as f:
+        client.login('username', access_token=f.read())
+
+Only a refresh token issued for the Steam client is accepted; anything else raises ``ValueError``.
+Within the same instance :meth:`relogin() <steam.client.SteamClient.relogin>` reuses the stored
+token, see :attr:`relogin_available <steam.client.SteamClient.relogin_available>`.
+Set :attr:`renew_refresh_tokens <steam.client.SteamClient.renew_refresh_tokens>` to ``True`` to
+have the token renewed after every logon; each renewal fires ``refresh_token`` again.
+
+Machine auth tokens
+~~~~~~~~~~~~~~~~~~~
+
+Accounts guarded by email codes receive a machine auth token once a code was accepted.
+Passing it back on the next password login skips the code. The token is available as
+:attr:`SteamClient.machine_auth_token <steam.client.SteamClient.machine_auth_token>` and announced
+by the ``machine_auth_token`` event. When
+:attr:`credential_location <steam.client.SteamClient.credential_location>` is set it is stored
+there as ``machineAuthToken.<username>.txt`` and picked up automatically.
+
+.. code:: python
+
+    client.set_credential_location('.')  # stores machineAuthToken.<username>.txt here
+
+    # or handle the token yourself
+    @client.on(client.EVENT_MACHINE_AUTH_TOKEN)
+    def save_machine_token(machine_auth_token):
+        pass
+
+    client.login('username', 'password', machine_auth_token=machine_auth_token)
 
 Sending a message
 -----------------
@@ -264,5 +352,14 @@ Either using :class:`WebAuth <steam.webauth.WebAuth>`, or via a :meth:`SteamClie
 
     session = client.get_web_session()  # returns requests.Session
     session.get('https://store.steampowered.com')
+
+:class:`.SteamClient` negotiates a web session after every user logon and fires the ``web_session``
+event with it, so it can also be picked up without calling :meth:`get_web_session() <steam.client.builtins.web.Web.get_web_session>`.
+
+.. code:: python
+
+    @client.on(client.EVENT_WEB_SESSION)
+    def web_session_ready(session):
+        session.get('https://store.steampowered.com')
 
 For more details about :class:`WebAuth <steam.webauth.WebAuth>`, see :mod:`steam.webauth`

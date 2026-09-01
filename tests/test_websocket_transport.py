@@ -116,31 +116,59 @@ class WebsocketCMClientTest(unittest.TestCase):
         self.assertEqual(secured, [True])
 
 
+def cm_entry(endpoint, cmtype='websockets', realm='steamglobal', wtd_load='1.0'):
+    return {'endpoint': endpoint, 'legacy_endpoint': endpoint, 'type': cmtype,
+            'dc': 'fra1', 'realm': realm, 'load': '1', 'wtd_load': wtd_load}
+
+
 class WebsocketBootstrapTest(unittest.TestCase):
     def test_bootstrap_uses_websocket_serverlist(self):
         sl = CMServerList()
         sl.transport = ETransport.WebSocket
-        resp = {'response': {'result': 1,
-                             'serverlist': ['192.0.2.4:27017'],
-                             'serverlist_websockets': ['cm.example.net:27019']}}
+        resp = {'response': {'serverlist': [
+            cm_entry('192.0.2.4:27017', cmtype='netfilter'),
+            cm_entry('cm-b.example.net:27019', wtd_load='5.0'),
+            cm_entry('cm-a.example.net:443', wtd_load='0.5'),
+            cm_entry('cm-china.example.net:443', realm='steamchina'),
+        ]}}
 
-        with patch('steam.webapi.get', return_value=resp):
+        with patch('steam.webapi.get', return_value=resp) as get:
             self.assertTrue(sl.bootstrap_from_webapi())
 
-        self.assertIn(('cm.example.net', 27019), sl.list)
-        self.assertNotIn(('192.0.2.4', 27017), sl.list)
+        # GetCMListForConnect for the websocket transport
+        self.assertEqual(get.call_args.args[:3], ('ISteamDirectory', 'GetCMListForConnect', 1))
+        self.assertEqual(get.call_args.kwargs['params']['cmtype'], 'websockets')
+
+        # only global-realm websocket CMs, least loaded first
+        self.assertEqual(list(sl.list), [('cm-a.example.net', 443), ('cm-b.example.net', 27019)])
+
+    def test_bootstrap_tcp_requests_netfilter(self):
+        sl = CMServerList()
+        sl.transport = ETransport.TCP
+        resp = {'response': {'serverlist': [cm_entry('192.0.2.4:27017', cmtype='netfilter'),
+                                            cm_entry('cm.example.net:443')]}}
+
+        with patch('steam.webapi.get', return_value=resp) as get:
+            self.assertTrue(sl.bootstrap_from_webapi())
+
+        self.assertEqual(get.call_args.kwargs['params']['cmtype'], 'netfilter')
+        self.assertEqual(list(sl.list), [('192.0.2.4', 27017)])
 
     def test_dns_bootstrap_disabled_for_websocket(self):
         sl = CMServerList()
         sl.transport = ETransport.WebSocket
         self.assertFalse(sl.bootstrap_from_dns())
 
-    def test_bootstrap_missing_websocket_key_returns_false(self):
-        # A response without 'serverlist_websockets' must fail gracefully, not raise KeyError.
+    def test_bootstrap_without_matching_servers_returns_false(self):
+        # A response with no websocket CMs must fail gracefully, not raise.
         sl = CMServerList()
         sl.transport = ETransport.WebSocket
-        resp = {'response': {'result': 1, 'serverlist': ['192.0.2.4:27017']}}
+        resp = {'response': {'serverlist': [cm_entry('192.0.2.4:27017', cmtype='netfilter')]}}
 
+        with patch('steam.webapi.get', return_value=resp):
+            self.assertFalse(sl.bootstrap_from_webapi())
+
+        resp = {'response': {}}
         with patch('steam.webapi.get', return_value=resp):
             self.assertFalse(sl.bootstrap_from_webapi())
 

@@ -5,7 +5,7 @@ from collections import defaultdict
 from gzip import GzipFile
 from io import BytesIO
 from itertools import cycle, count
-from random import shuffle
+from random import choice
 from time import time
 
 import gevent
@@ -152,6 +152,7 @@ class CMClient(EventEmitter):
             if self.connection.connect(server_addr):
                 break
             self._LOG.debug("Failed to connect. Retrying...")
+            self.cm_servers.mark_bad(server_addr)
 
             diff = time() - start
 
@@ -165,12 +166,6 @@ class CMClient(EventEmitter):
 
         if self.protocol == ETransport.WebSocket:
             # wss already secures the channel; there is no ChannelEncrypt handshake to wait for.
-            # The CM does expect a ClientHello as the first message though -- without it the CM
-            # ignores everything else and closes the connection after a short timeout.
-            hello = MsgProto(EMsg.ClientHello)
-            hello.body.protocol_version = 65580
-            self.send(hello)
-
             self.channel_secured = True
             self.emit(self.EVENT_CHANNEL_SECURED)
 
@@ -222,14 +217,17 @@ class CMClient(EventEmitter):
         if self.session_id:
             message.sessionID = self.session_id
 
-        # WebSocket CM messages carry a fuller header than the TCP ones: the Steam realm plus
-        # explicit (present) steamid / client_sessionid, matching what real clients send.
-        if self.protocol == ETransport.WebSocket and message.proto:
-            message.header.realm = 1
-            if not message.header.steamid:
+        # Pre-logon messages (ClientHello, NonAuthed service calls) carry
+        # steamid=0 / client_sessionid=0, and every proto header has both fields present.
+        if message.proto:
+            if message.msg in (EMsg.ClientHello, EMsg.ServiceMethodCallFromClientNonAuthed):
                 message.header.steamid = 0
-            if not message.header.client_sessionid:
                 message.header.client_sessionid = 0
+            else:
+                if not message.header.HasField('steamid'):
+                    message.header.steamid = 0
+                if not message.header.HasField('client_sessionid'):
+                    message.header.client_sessionid = 0
 
         if self.verbose_debug:
             self._LOG.debug("Outgoing: %s\n%s" % (repr(message), str(message)))
@@ -463,7 +461,7 @@ class CMServerList:
     Bad = 2
     last_updated = 0  #: timestamp of when the list was last updated
     cell_id = 0  #: cell id of the server list
-    bad_timestamp = 300  #: how long bad mark lasts in seconds
+    bad_timestamp = 120  #: how long bad mark lasts in seconds
     transport = ETransport.TCP  #: :class:`.ETransport` this server list was populated for
 
     def __init__(self):
@@ -514,7 +512,9 @@ class CMServerList:
 
     def bootstrap_from_webapi(self, cell_id=0):
         """
-        Fetches CM server list from WebAPI and replaces the current one
+        Fetches CM server list from WebAPI (``ISteamDirectory/GetCMListForConnect``) and
+        replaces the current one. Only ``steamglobal`` realm servers of
+        this list's :attr:`transport` are kept, least loaded first.
 
         :param cellid: cell id (0 = global)
         :type cellid: :class:`int`
@@ -523,57 +523,64 @@ class CMServerList:
         """
         self._LOG.debug("Attempting bootstrap via WebAPI")
 
+        cmtype = 'websockets' if self.transport == ETransport.WebSocket else 'netfilter'
+
         from steam import webapi
         try:
-            resp = webapi.get('ISteamDirectory', 'GetCMList', 1, params={'cellid': cell_id,
-                                                                         'http_timeout': 3})
+            resp = webapi.get('ISteamDirectory', 'GetCMListForConnect', 1,
+                              params={'cellid': cell_id, 'cmtype': cmtype, 'http_timeout': 3})
         except Exception as exp:
             self._LOG.error("WebAPI boostrap failed: %s" % str(exp))
             return False
 
-        result = EResult(resp['response']['result'])
+        serverlist = (resp.get('response') or {}).get('serverlist') or []
+        if isinstance(serverlist, dict):
+            serverlist = list(serverlist.values())
 
-        if result != EResult.OK:
-            self._LOG.error("GetCMList failed with %s" % repr(result))
+        servers = [s for s in serverlist
+                   if s.get('realm') == 'steamglobal' and s.get('type') == cmtype and s.get('endpoint')]
+
+        if not servers:
+            self._LOG.error("GetCMListForConnect returned no %s servers" % cmtype)
             return False
 
-        key = 'serverlist_websockets' if self.transport == ETransport.WebSocket else 'serverlist'
-        serverlist = resp['response'].get(key)
+        servers.sort(key=lambda s: float(s.get('wtd_load') or 0))
 
-        if not serverlist:
-            self._LOG.error("GetCMList response missing '%s'" % key)
-            return False
-
-        self._LOG.debug("Received %d servers from WebAPI" % len(serverlist))
+        self._LOG.debug("Received %d servers from WebAPI" % len(servers))
 
         def str_to_tuple(serveraddr):
-            ip, port = serveraddr.split(':')
+            ip, port = serveraddr.rsplit(':', 1)
             return str(ip), int(port)
 
         self.clear()
         self.cell_id = cell_id
-        self.merge_list(map(str_to_tuple, serverlist))
+        self.merge_list(str_to_tuple(s['endpoint']) for s in servers)
 
         return True
 
     def __iter__(self):
+        """Yields server addresses, a random pick among the five best remaining good servers
+        each time (the list is kept in the order it was populated, least loaded first).
+        A bad mark expires after :attr:`bad_timestamp` seconds.
+        """
         def cm_server_iter():
             if not self.list:
                 self._LOG.error("Server list is empty.")
                 return
 
-            good_servers = list(filter(lambda x: x[1]['quality'] == CMServerList.Good,
-                                       self.list.items()
-                                       ))
+            now = time()
+            good_servers = [addr for addr, meta in self.list.items()
+                            if meta['quality'] == CMServerList.Good
+                            or meta['timestamp'] + self.bad_timestamp < now]
 
             if len(good_servers) == 0:
                 self._LOG.debug("No good servers left. Reseting...")
                 self.reset_all()
                 return
 
-            shuffle(good_servers)
-
-            for server_addr, meta in good_servers:
+            while good_servers:
+                server_addr = choice(good_servers[:5])
+                good_servers.remove(server_addr)
                 yield server_addr
 
         return cm_server_iter()

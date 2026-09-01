@@ -392,6 +392,7 @@ class EOSType(SteamIntEnum):
     Windows10 = 16
     Win2016 = 17
     WinMAX = 18
+    Windows11 = 20
     Max = 26
 
 

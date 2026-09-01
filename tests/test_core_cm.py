@@ -6,6 +6,7 @@ import gevent.queue
 from mock import patch, MagicMock
 
 from steam.core.cm import CMClient
+from steam.core.msg import MsgProto
 from steam.enums import ETransport
 from steam.enums.emsg import EMsg
 from steam.utils.proto import clear_proto_bit
@@ -116,7 +117,7 @@ class CMClient_Scenarios(unittest.TestCase):
         mock_recv.assert_called_once_with()
 
     @patch.object(CMClient, '_recv_messages')
-    def test_connect_secures_channel_and_sends_hello(self, mock_recv):
+    def test_connect_secures_channel_without_handshake(self, mock_recv):
         # setup
         self.conn.connect.return_value = True
         self.server_list.__len__.return_value = 10
@@ -129,14 +130,81 @@ class CMClient_Scenarios(unittest.TestCase):
 
         gevent.idle()
 
-        # verify -- TLS secures the channel (no ChannelEncrypt negotiated), and the first and
-        # only message the CM receives is a ClientHello.
+        # verify -- TLS secures the channel (no ChannelEncrypt negotiated) and nothing is
+        # sent until a logon / password auth starts.
         self.assertTrue(cm.channel_secured)
         self.assertIsNone(cm.channel_key)
-        self.conn.put_message.assert_called_once()
-        sent = self.conn.put_message.call_args[0][0]
-        emsg = clear_proto_bit(struct.unpack_from('<I', sent)[0])
-        self.assertEqual(emsg, int(EMsg.ClientHello))
+        self.conn.put_message.assert_not_called()
+
+    @patch.object(CMClient, 'emit')
+    @patch.object(CMClient, '_recv_messages')
+    def test_connect_marks_failed_server_bad(self, mock_recv, mock_emit):
+        self.conn.connect.side_effect = [False, True]
+        self.server_list.__len__.return_value = 10
+
+        cm = CMClient()
+        cm.sleep = MagicMock()
+        with gevent.Timeout(2, False):
+            cm.connect(retry=2)
+
+        self.server_list.mark_bad.assert_called_once_with(('cm.example.net', 27019))
+
+    def sent_message(self, emsg):
+        data = self.conn.put_message.call_args[0][0]
+        self.assertEqual(clear_proto_bit(struct.unpack_from('<I', data)[0]), int(emsg))
+        return MsgProto(emsg, data)
+
+    def test_send_prelogon_messages_carry_zero_ids(self):
+        # ClientHello / NonAuthed service calls: steamid=0, client_sessionid=0 explicitly present.
+        # realm is not stamped by the transport.
+        cm = CMClient()
+        cm.steam_id = 76561197960287930
+        cm.session_id = 7
+
+        cm.send(MsgProto(EMsg.ClientHello))
+
+        header = self.sent_message(EMsg.ClientHello).header
+        self.assertTrue(header.HasField('steamid'))
+        self.assertEqual(header.steamid, 0)
+        self.assertTrue(header.HasField('client_sessionid'))
+        self.assertEqual(header.client_sessionid, 0)
+        self.assertFalse(header.HasField('realm'))
+
+    def test_send_stamps_present_ids_on_other_messages(self):
+        cm = CMClient()
+
+        cm.send(MsgProto(EMsg.ClientHeartBeat))
+
+        header = self.sent_message(EMsg.ClientHeartBeat).header
+        self.assertTrue(header.HasField('steamid'))
+        self.assertTrue(header.HasField('client_sessionid'))
+        self.assertFalse(header.HasField('realm'))
+
+
+class CMServerListIteration(unittest.TestCase):
+    def make_list(self, n):
+        from steam.core.cm import CMServerList
+        sl = CMServerList()
+        sl.merge_list([('cm%d.example.net' % i, 443) for i in range(n)])
+        return sl
+
+    def test_picks_among_five_best_first(self):
+        sl = self.make_list(8)
+        addrs = [a for a in sl]
+
+        self.assertEqual(sorted(addrs), sorted(sl.list))
+        # the first pick always comes from the five least loaded (first five) servers
+        self.assertIn(addrs[0], list(sl.list)[:5])
+
+    def test_bad_servers_skipped_until_mark_expires(self):
+        sl = self.make_list(3)
+        bad = list(sl.list)[0]
+        sl.mark_bad(bad)
+
+        self.assertNotIn(bad, list(sl))
+
+        sl.list[bad]['timestamp'] -= sl.bad_timestamp + 1
+        self.assertIn(bad, list(sl))
 
 
 class TCPChannelEncryptScenario(unittest.TestCase):
