@@ -52,6 +52,7 @@ def _spoofed_hostname():
 
 def _make_machine_id(account_name):
     """Binary KV ``MessageObject`` with ``BB3``/``FF2``/``3B3`` hashes derived from the account name."""
+
     def sha1_hex(text):
         return hashlib.sha1(text.encode('utf-8')).hexdigest().encode('ascii')
 
@@ -66,12 +67,19 @@ def _make_machine_id(account_name):
 
 
 def _detect_os_type():
-    """OS type reported in ``CMsgClientLogon``."""
+    """OS type reported in ``CMsgClientLogon``, as an unsigned 32bit value.
+
+    ``client_os_type`` is a ``uint32``, while the macOS and Linux :class:`.EOSType` values
+    are negative, so they go on the wire as their two's complement.
+    """
     if sys.platform == 'win32':
-        return EOSType.Windows10
-    if sys.platform == 'darwin':
-        return EOSType.MacOSUnknown
-    return EOSType.LinuxUnknown
+        os_type = EOSType.Windows10
+    elif sys.platform == 'darwin':
+        os_type = EOSType.MacOSUnknown
+    else:
+        os_type = EOSType.LinuxUnknown
+
+    return int(os_type) & 0xFFFFFFFF
 
 
 def _decode_jwt(token):
@@ -1108,9 +1116,9 @@ class SteamClient(CMClient, BuiltinBase):
         result = self.login(username, password)
 
         while result in self._GUARD_CODE_RESULTS + (EResult.TryAnotherCM,
-                                                   EResult.ServiceUnavailable,
-                                                   EResult.InvalidPassword,
-                                                   ):
+                                                    EResult.ServiceUnavailable,
+                                                    EResult.InvalidPassword,
+                                                    ):
             self.sleep(0.1)
 
             if result == EResult.InvalidPassword:

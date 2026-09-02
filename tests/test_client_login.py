@@ -499,6 +499,17 @@ class SendLogon(unittest.TestCase):
         self.assertFalse(body.HasField('eresult_sentryfile'))
         self.assertFalse(body.HasField('sha_sentryfile'))
 
+    def test_os_type_is_sent_unsigned_on_every_platform(self):
+        for platform, os_type in (('win32', EOSType.Windows10),
+                                  ('darwin', EOSType.MacOSUnknown),
+                                  ('linux', EOSType.LinuxUnknown)):
+            with self.subTest(platform=platform):
+                with patch('steam.client.sys.platform', platform):
+                    self.client._send_logon('user', access_token='TOK')
+
+                body = self.captured['msg'].body
+                self.assertEqual(body.client_os_type, int(os_type) & 0xFFFFFFFF)
+
     def test_session_fields_omitted_when_unknown(self):
         self.client._send_logon('user', access_token='TOK')
 
