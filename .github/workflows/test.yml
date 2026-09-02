@@ -16,6 +16,7 @@ on:
       - 'protobufs/**'
       - 'recipes/**'
   workflow_call:
+  workflow_dispatch:
 
 concurrency:
   group: run-tests-${{ github.ref }}

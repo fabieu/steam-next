@@ -5,6 +5,8 @@ updates:
     schedule:
       interval: "monthly"
       time: "07:00"
+    commit-message:
+      prefix: "deps"
     labels:
       - "dependencies"
     assignees:
@@ -25,6 +27,8 @@ updates:
     schedule:
       interval: "monthly"
       time: "07:00"
+    commit-message:
+      prefix: "deps"
     labels:
       - "dependencies"
     assignees:
