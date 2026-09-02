@@ -137,7 +137,8 @@ hub.
   no PR run of its own because release-please opens it with the default `GITHUB_TOKEN`.
 - `.github/workflows/release-please.yml` — the whole release pipeline, on every push to `master`. `release-please`
   maintains a release PR that bumps `[project] version` in `pyproject.toml` and prepends the generated notes to
-  `CHANGELOG.md`; merging that PR tags the release (bare version, no `v` prefix) and creates the GitHub release. Only
+  `CHANGELOG.md`; merging that PR tags the release and creates the GitHub release, both named with the bare version
+  and no `v` prefix. Only
   then (`release_created`) does the same run call the reusable test workflow and, if it is green, check out the tag,
   build the dist and publish to PyPI via **OIDC trusted publishing** (`pypa/gh-action-pypi-publish`, environment
   `pypi`). There is no `PYPI_TOKEN` — trusted publishing is configured PyPI-side. Config lives in
