@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/fabieu/steam-next/compare/3.0.0...3.0.1) (2026-09-02)
+
+
+### Dependencies
+
+* bump websocket-client from 1.9.0 to 1.9.2 in the minor-updates group ([#32](https://github.com/fabieu/steam-next/issues/32)) ([827c923](https://github.com/fabieu/steam-next/commit/827c923be95582c870efcad2d857195116899329))
+
 ## [3.0.0](https://github.com/fabieu/steam-next/compare/2.2.1...3.0.0) (2026-09-02)
 
 
