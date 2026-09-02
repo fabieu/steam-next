@@ -142,4 +142,4 @@ hub.
   build the dist and publish to PyPI via **OIDC trusted publishing** (`pypa/gh-action-pypi-publish`, environment
   `pypi`). There is no `PYPI_TOKEN` — trusted publishing is configured PyPI-side. Config lives in
   `release-please-config.json`, the last released version in `.release-please-manifest.json`.
-- Third-party actions are SHA-pinned with version comments; first-party `actions/*` use major-version tags.
+- Every external action is pinned to a full-length commit SHA with a version comment; Dependabot updates them.
