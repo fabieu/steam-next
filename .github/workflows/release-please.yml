@@ -9,9 +9,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-permissions:
-  contents: read
-
 jobs:
   release-please:
     name: Create release
@@ -33,6 +30,8 @@ jobs:
     needs:
       - release-please
     if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: read
     uses: ./.github/workflows/test.yml
 
   build:
@@ -42,6 +41,8 @@ jobs:
     needs:
       - release-please
       - test
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
