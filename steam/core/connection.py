@@ -71,9 +71,17 @@ class Connection:
         self.recv_queue.queue.clear()
         self.recv_queue.put(StopIteration)
 
-        self.socket.close()
+        self._close_socket()
 
         logger.debug("Disconnected.")
+
+    def _frame(self, message):
+        """Wrap an outgoing message for the wire. Overridable per transport."""
+        return struct.pack(Connection.FMT, len(message), Connection.MAGIC) + message
+
+    def _close_socket(self):
+        """Tear down the underlying socket. Overridable per transport."""
+        self.socket.close()
 
     def __iter__(self):
         return self.recv_queue
@@ -84,7 +92,7 @@ class Connection:
     def _writer_loop(self):
         while True:
             message = self.send_queue.get()
-            packet = struct.pack(Connection.FMT, len(message), Connection.MAGIC) + message
+            packet = self._frame(message)
             try:
                 self._write_data(packet)
             except:
@@ -161,3 +169,98 @@ class UDPConnection(Connection):
 
     def _write_data(self, data):
         pass
+
+
+class WebsocketConnection(Connection):
+    """CM connection over a secure WebSocket (``wss://<host>:<port>/cmsocket/``).
+
+    Steam's modern ``IAuthenticationService`` credential flow is only served over the
+    WebSocket CM endpoints, not the raw TCP ones. This transport differs from
+    :class:`TCPConnection` in two ways:
+
+    * **Framing** -- each Steam message is a single binary WebSocket frame. There is no
+      ``VT01`` magic + length prefix (the WebSocket layer already delimits messages).
+    * **Encryption** -- TLS secures the channel, so there is no Steam AES
+      ``ChannelEncrypt`` handshake and messages are sent as-is.
+
+    .. note::
+        ``recv()`` blocks the reader greenlet. Outside a fully gevent application call
+        :meth:`steam.monkey.patch_minimal` first so the underlying socket cooperates.
+    """
+
+    CONNECT_TIMEOUT = 15  #: seconds to wait for the WebSocket handshake
+
+    def __init__(self):
+        super().__init__()
+        self.ws = None
+
+    def connect(self, server_addr):
+        import websocket  # lazy import: only the websocket transport needs it
+
+        try:
+            import gevent.monkey
+            unpatched = [m for m in ('socket', 'ssl') if not gevent.monkey.is_module_patched(m)]
+            if unpatched:
+                logger.warning("Websocket transport needs cooperative %s; "
+                               "call steam.monkey.patch_minimal() outside a gevent app",
+                               ' and '.join(unpatched))
+        except Exception:
+            pass
+
+        host, port = server_addr
+        url = "wss://%s:%s/cmsocket/" % (host, port)
+        logger.debug("Attempting websocket connection to %s", url)
+
+        try:
+            self.ws = websocket.create_connection(url, timeout=self.CONNECT_TIMEOUT,
+                                                  enable_multithread=True)
+        except Exception as exp:
+            logger.debug("Websocket connection failed: %s", exp)
+            return False
+
+        self.ws.settimeout(None)  # block in the reader greenlet until a frame arrives
+        self.socket = self.ws.sock  # exposes local_address / getsockname
+        self.server_addr = server_addr
+        self.recv_queue.queue.clear()
+
+        self._reader = gevent.spawn(self._reader_loop)
+        self._writer = gevent.spawn(self._writer_loop)
+
+        logger.debug("Connected.")
+        self.event_connected.set()
+        return True
+
+    def _frame(self, message):
+        # A Steam message is one binary WebSocket frame -- no VT01 length prefix.
+        return message
+
+    def _write_data(self, data):
+        self.ws.send_binary(data)
+
+    def _close_socket(self):
+        if self.ws:
+            try:
+                self.ws.shutdown()
+            except Exception:
+                pass
+            self.ws = None
+
+    def _reader_loop(self):
+        import websocket  # for ABNF opcodes
+
+        while True:
+            try:
+                opcode, data = self.ws.recv_data()  # auto-handles ping/pong internally
+            except Exception as exp:
+                logger.debug("Connection error (reader): %r", exp)
+                self.disconnect()
+                return
+
+            if opcode == websocket.ABNF.OPCODE_BINARY:
+                self.recv_queue.put(data)
+            elif opcode == websocket.ABNF.OPCODE_CLOSE:
+                code = int.from_bytes(data[:2], 'big') if len(data) >= 2 else None
+                logger.debug("Websocket closed by peer: code=%s reason=%r", code, data[2:])
+                self.disconnect()
+                return
+            # text frames are ignored -- the CM only sends binary

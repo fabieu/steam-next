@@ -1,5 +1,32 @@
 # Change notes
 
+## Unreleased
+
+This release brings breaking changes
+
+### steam.client
+
+- `SteamClient`/`CMClient` default to the WebSocket CM transport (`protocol=ETransport.WebSocket`); pass `protocol=ETransport.TCP` to keep the previous behavior. `CMClient.PROTOCOL_TCP`/`PROTOCOL_UDP` are removed in favor of `steam.enums.ETransport`
+- The WebSocket transport requires cooperative sockets outside a fully gevent app; call `steam.monkey.patch_minimal()` first
+- `CMServerList.bootstrap_from_dns()` returns no servers for the WebSocket transport
+- `SteamClient.login()` no longer accepts `login_key`; password logins run the `IAuthenticationService` credential flow. New arguments `access_token` (refresh token, instead of a password) and `machine_auth_token`. Raises `RuntimeError` when already logged on and `ValueError` for an `access_token` that is not a Steam client refresh token
+- Removed `SteamClient.login_key` and the `new_login_key` event; added `SteamClient.refresh_token` (used by `relogin()`) and the `refresh_token` event
+- Added `SteamClient.machine_auth_token` and the `machine_auth_token` event; the token is persisted under `credential_location` as `machineAuthToken.<username>.txt`
+- Added the `web_session` event, emitted after each user logon, and `SteamClient.renew_refresh_tokens` (default `False`)
+- `get_web_session_cookies()` no longer returns a `steamLogin` cookie; `steamLoginSecure` is derived from an access token
+- A Steam Guard code is always requested via `auth_code_required`; a rejected email code is reported as `AccountLogonDenied`. Transport failures and timeouts during login are reported as `ServiceUnavailable`, and any login failure drops the connection
+- `SteamClient.send()` drops messages while not logged on, except those needed for logon
+- `cli_login()` no longer accepts `wait_for_confirmation`
+- Added `EOSType.Windows11`
+
+### steam.webauth
+
+- Removed `MobileWebAuth`
+
+### steam.guard
+
+- `SteamAuthenticator.backend` no longer accepts a `MobileWebAuth` instance; only a logged in `SteamClient` is supported
+
 ## 2.0.0
 
 This release brings breaking changes

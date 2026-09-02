@@ -1,13 +1,216 @@
+import struct
 import unittest
 
 import gevent
 import gevent.queue
-from mock import patch
+from mock import patch, MagicMock
 
 from steam.core.cm import CMClient
+from steam.core.msg import MsgProto
+from steam.enums import ETransport
+from steam.enums.emsg import EMsg
+from steam.utils.proto import clear_proto_bit
 
 
 class CMClient_Scenarios(unittest.TestCase):
+    def setUp(self):
+        # mock out the default WebsocketConnection transport
+        patcher = patch('steam.core.cm.WebsocketConnection', autospec=True)
+        self.addCleanup(patcher.stop)
+        self.conn = patcher.start().return_value
+
+        # mock out CMServerList (yields WebSocket endpoints)
+        patcher = patch('steam.core.cm.CMServerList', autospec=True)
+        self.addCleanup(patcher.stop)
+        self.server_list = patcher.start().return_value
+        self.server_list.__iter__.return_value = [('cm.example.net', 27019 + i) for i in range(10)]
+        self.server_list.bootstrap_from_webapi.return_value = False
+        self.server_list.bootstrap_from_dns.return_value = False
+
+    @patch.object(CMClient, 'emit')
+    @patch.object(CMClient, '_recv_messages')
+    def test_connect(self, mock_recv, mock_emit):
+        # setup
+        self.conn.connect.return_value = True
+        self.server_list.__len__.return_value = 10
+
+        # run
+        cm = CMClient()
+
+        with gevent.Timeout(2, False):
+            cm.connect(retry=1)
+
+        gevent.idle()
+
+        # verify
+        self.conn.connect.assert_called_once_with(('cm.example.net', 27019))
+        # wss has no ChannelEncrypt handshake: the channel is secured on connect.
+        mock_emit.assert_any_call('connected')
+        mock_emit.assert_any_call('channel_secured')
+        mock_recv.assert_called_once_with()
+
+    @patch.object(CMClient, 'emit')
+    @patch.object(CMClient, '_recv_messages')
+    def test_connect_auto_discovery_failing(self, mock_recv, mock_emit):
+        # setup
+        self.conn.connect.return_value = True
+        self.server_list.__len__.return_value = 0
+
+        # run
+        cm = CMClient()
+        cm.bootstrap_retry_delay = 0  # no pacing sleep in tests
+
+        with gevent.Timeout(3, False):
+            cm.connect(retry=1)
+
+        gevent.idle()
+
+        # verify
+        self.server_list.bootstrap_from_webapi.assert_called_once_with()
+        self.server_list.bootstrap_from_dns.assert_called_once_with()
+        self.conn.connect.assert_not_called()
+
+    @patch.object(CMClient, 'emit')
+    @patch.object(CMClient, '_recv_messages')
+    def test_discovery_failure_paces_retries(self, mock_recv, mock_emit):
+        # setup -- discovery never yields servers (e.g. offline, or DNS unavailable for wss)
+        self.server_list.__len__.return_value = 0
+
+        # run
+        cm = CMClient()
+        cm.bootstrap_retry_delay = 7
+        cm.sleep = MagicMock()
+
+        with gevent.Timeout(3, False):
+            cm.connect(retry=3)
+
+        # verify -- each empty round is paced so the loop cannot busy-spin
+        cm.sleep.assert_any_call(7)
+
+    @patch.object(CMClient, 'emit')
+    @patch.object(CMClient, '_recv_messages')
+    def test_connect_auto_discovery_success(self, mock_recv, mock_emit):
+        # setup
+        self.conn.connect.return_value = True
+        self.server_list.__len__.return_value = 0
+
+        def fake_servers(*args, **kwargs):
+            self.server_list.__len__.return_value = 10
+            return True
+
+        self.server_list.bootstrap_from_webapi.side_effect = fake_servers
+
+        # run
+        cm = CMClient()
+
+        with gevent.Timeout(3, False):
+            cm.connect(retry=1)
+
+        gevent.idle()
+
+        # verify
+        self.server_list.bootstrap_from_webapi.assert_called_once_with()
+        self.server_list.bootstrap_from_dns.assert_not_called()
+        self.conn.connect.assert_called_once_with(('cm.example.net', 27019))
+        mock_emit.assert_any_call('connected')
+        mock_emit.assert_any_call('channel_secured')
+        mock_recv.assert_called_once_with()
+
+    @patch.object(CMClient, '_recv_messages')
+    def test_connect_secures_channel_without_handshake(self, mock_recv):
+        # setup
+        self.conn.connect.return_value = True
+        self.server_list.__len__.return_value = 10
+
+        # run
+        cm = CMClient()
+
+        with gevent.Timeout(2, False):
+            cm.connect(retry=1)
+
+        gevent.idle()
+
+        # verify -- TLS secures the channel (no ChannelEncrypt negotiated) and nothing is
+        # sent until a logon / password auth starts.
+        self.assertTrue(cm.channel_secured)
+        self.assertIsNone(cm.channel_key)
+        self.conn.put_message.assert_not_called()
+
+    @patch.object(CMClient, 'emit')
+    @patch.object(CMClient, '_recv_messages')
+    def test_connect_marks_failed_server_bad(self, mock_recv, mock_emit):
+        self.conn.connect.side_effect = [False, True]
+        self.server_list.__len__.return_value = 10
+
+        cm = CMClient()
+        cm.sleep = MagicMock()
+        with gevent.Timeout(2, False):
+            cm.connect(retry=2)
+
+        self.server_list.mark_bad.assert_called_once_with(('cm.example.net', 27019))
+
+    def sent_message(self, emsg):
+        data = self.conn.put_message.call_args[0][0]
+        self.assertEqual(clear_proto_bit(struct.unpack_from('<I', data)[0]), int(emsg))
+        return MsgProto(emsg, data)
+
+    def test_send_prelogon_messages_carry_zero_ids(self):
+        # ClientHello / NonAuthed service calls: steamid=0, client_sessionid=0 explicitly present.
+        # realm is not stamped by the transport.
+        cm = CMClient()
+        cm.steam_id = 76561197960287930
+        cm.session_id = 7
+
+        cm.send(MsgProto(EMsg.ClientHello))
+
+        header = self.sent_message(EMsg.ClientHello).header
+        self.assertTrue(header.HasField('steamid'))
+        self.assertEqual(header.steamid, 0)
+        self.assertTrue(header.HasField('client_sessionid'))
+        self.assertEqual(header.client_sessionid, 0)
+        self.assertFalse(header.HasField('realm'))
+
+    def test_send_stamps_present_ids_on_other_messages(self):
+        cm = CMClient()
+
+        cm.send(MsgProto(EMsg.ClientHeartBeat))
+
+        header = self.sent_message(EMsg.ClientHeartBeat).header
+        self.assertTrue(header.HasField('steamid'))
+        self.assertTrue(header.HasField('client_sessionid'))
+        self.assertFalse(header.HasField('realm'))
+
+
+class CMServerListIteration(unittest.TestCase):
+    def make_list(self, n):
+        from steam.core.cm import CMServerList
+        sl = CMServerList()
+        sl.merge_list([('cm%d.example.net' % i, 443) for i in range(n)])
+        return sl
+
+    def test_picks_among_five_best_first(self):
+        sl = self.make_list(8)
+        addrs = [a for a in sl]
+
+        self.assertEqual(sorted(addrs), sorted(sl.list))
+        # the first pick always comes from the five least loaded (first five) servers
+        self.assertIn(addrs[0], list(sl.list)[:5])
+
+    def test_bad_servers_skipped_until_mark_expires(self):
+        sl = self.make_list(3)
+        bad = list(sl.list)[0]
+        sl.mark_bad(bad)
+
+        self.assertNotIn(bad, list(sl))
+
+        sl.list[bad]['timestamp'] -= sl.bad_timestamp + 1
+        self.assertIn(bad, list(sl))
+
+
+class TCPChannelEncryptScenario(unittest.TestCase):
+    """The TCP transport (opt-in via ``ETransport.TCP``) still performs the AES
+    ChannelEncrypt handshake, unlike the wss default."""
+
     test_channel_key = b'SESSION KEY LOL'
 
     def setUp(self):
@@ -51,80 +254,12 @@ class CMClient_Scenarios(unittest.TestCase):
         self.server_list.bootstrap_from_webapi.return_value = False
         self.server_list.bootstrap_from_dns.return_value = False
 
-    @patch.object(CMClient, 'emit')
-    @patch.object(CMClient, '_recv_messages')
-    def test_connect(self, mock_recv, mock_emit):
-        # setup
-        self.conn.connect.return_value = True
-        self.server_list.__len__.return_value = 10
-
-        # run
-        cm = CMClient()
-
-        with gevent.Timeout(2, False):
-            cm.connect(retry=1)
-
-        gevent.idle()
-
-        # verify
-        self.conn.connect.assert_called_once_with((127001, 20000))
-        mock_emit.assert_called_once_with('connected')
-        mock_recv.assert_called_once_with()
-
-    @patch.object(CMClient, 'emit')
-    @patch.object(CMClient, '_recv_messages')
-    def test_connect_auto_discovery_failing(self, mock_recv, mock_emit):
-        # setup
-        self.conn.connect.return_value = True
-        self.server_list.__len__.return_value = 0
-
-        # run
-        cm = CMClient()
-
-        with gevent.Timeout(3, False):
-            cm.connect(retry=1)
-
-        gevent.idle()
-
-        # verify
-        self.server_list.bootstrap_from_webapi.assert_called_once_with()
-        self.server_list.bootstrap_from_dns.assert_called_once_with()
-        self.conn.connect.assert_not_called()
-
-    @patch.object(CMClient, 'emit')
-    @patch.object(CMClient, '_recv_messages')
-    def test_connect_auto_discovery_success(self, mock_recv, mock_emit):
-        # setup
-        self.conn.connect.return_value = True
-        self.server_list.__len__.return_value = 0
-
-        def fake_servers(*args, **kwargs):
-            self.server_list.__len__.return_value = 10
-            return True
-
-        self.server_list.bootstrap_from_webapi.side_effect = fake_servers
-
-        # run
-        cm = CMClient()
-
-        with gevent.Timeout(3, False):
-            cm.connect(retry=1)
-
-        gevent.idle()
-
-        # verify
-        self.server_list.bootstrap_from_webapi.assert_called_once_with()
-        self.server_list.bootstrap_from_dns.assert_not_called()
-        self.conn.connect.assert_called_once_with((127001, 20000))
-        mock_emit.assert_called_once_with('connected')
-        mock_recv.assert_called_once_with()
-
     def test_channel_encrypt_sequence(self):
         # setup
         self.conn.connect.return_value = True
 
         # run ------------
-        cm = CMClient()
+        cm = CMClient(ETransport.TCP)
         cm.connected = True
         gevent.spawn(cm._recv_messages)
 
@@ -144,3 +279,7 @@ class CMClient_Scenarios(unittest.TestCase):
             b'\x19\x05\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x01\x00\x00\x00')
 
         cm.wait_event('channel_secured', timeout=2, raises=True)
+
+
+if __name__ == '__main__':
+    unittest.main()

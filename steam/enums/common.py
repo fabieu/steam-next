@@ -392,6 +392,7 @@ class EOSType(SteamIntEnum):
     Windows10 = 16
     Win2016 = 17
     WinMAX = 18
+    Windows11 = 20
     Max = 26
 
 
@@ -1046,6 +1047,13 @@ class EPackageStatus(SteamIntEnum):
     Preorder = 1
     Unavailable = 2
     Invalid = 3
+
+
+class ETransport(SteamIntEnum):
+    """Transport used for the connection to a CM server"""
+    TCP = 0
+    UDP = 1
+    WebSocket = 2
 
 
 # Do not remove

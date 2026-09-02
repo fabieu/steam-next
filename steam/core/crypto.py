@@ -1,7 +1,9 @@
 """
-All function in this module take and return :class:`bytes`
+The low-level primitives in this module take and return :class:`bytes`.
+:func:`rsa_encrypt_password` is a higher-level helper that works with the ``str`` values
+exchanged with Steam's auth service.
 """
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from os import urandom as random_bytes
 from struct import pack
 
@@ -115,3 +117,17 @@ def rsa_publickey(mod, exp):
 
 def pkcs1v15_encrypt(key, message):
     return PKCS1_v1_5.new(key).encrypt(message)
+
+
+def rsa_encrypt_password(publickey_mod, publickey_exp, password):
+    """Encrypt an account password with a Steam RSA public key.
+
+    :param publickey_mod: hex-encoded modulus as returned by Steam
+    :param publickey_exp: hex-encoded exponent as returned by Steam
+    :param password: account password
+    :type  password: :class:`str`
+    :return: base64-encoded encrypted password
+    :rtype: :class:`str`
+    """
+    key = rsa_publickey(int(publickey_mod, 16), int(publickey_exp, 16))
+    return b64encode(pkcs1v15_encrypt(key, password.encode('utf-8'))).decode('ascii')

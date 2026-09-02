@@ -1,10 +1,10 @@
 """
 Web related features
 """
-from steam import webapi
-from steam.core.crypto import generate_session_key, symmetric_encrypt
-from steam.core.msg import MsgProto
-from steam.enums.emsg import EMsg
+from binascii import hexlify
+from os import urandom
+
+from steam.enums import EResult
 from steam.utils.web import make_requests_session, generate_session_id
 
 
@@ -19,10 +19,12 @@ class Web:
     def __handle_disconnect(self):
         self._web_session = None
 
-    # TODO: DEPRECATED. This function not work anymore.
-    # This function must be rewritten to use  WebAuth
     def get_web_session_cookies(self):
-        """Get web authentication cookies via WebAPI's ``AuthenticateUser``
+        """Get web authentication cookies for the logged on user.
+
+        An access token is generated from the logon's :attr:`refresh_token` over the CM
+        (``IAuthenticationService/GenerateAccessTokenForApp``) and used as the ``steamLoginSecure``
+        cookie.
 
         .. note::
             The cookies are valid only while :class:`.SteamClient` instance is logged on.
@@ -30,29 +32,20 @@ class Web:
         :return: dict with authentication cookies
         :rtype: :class:`dict`, :class:`None`
         """
-        if not self.logged_on: return None
+        if not self.logged_on or not self.refresh_token:
+            return None
 
-        resp = self.send_job_and_wait(MsgProto(EMsg.ClientRequestWebAPIAuthenticateUserNonce), timeout=7)
+        resp = self.send_um_and_wait('Authentication.GenerateAccessTokenForApp#1',
+                                     {'refresh_token': self.refresh_token,
+                                      'steamid': self.steam_id.as_64})
 
-        if resp is None: return None
-
-        skey, ekey = generate_session_key()
-
-        data = {
-            'steamid': self.steam_id,
-            'sessionkey': ekey,
-            'encrypted_loginkey': symmetric_encrypt(resp.webapi_authenticate_user_nonce.encode('ascii'), skey),
-        }
-
-        try:
-            resp = webapi.post('ISteamUserAuth', 'AuthenticateUser', 1, params=data)
-        except Exception as exp:
-            self._LOG.debug("get_web_session_cookies error: %s" % str(exp))
+        if resp is None or resp.header.eresult != EResult.OK or not resp.body.access_token:
+            self._LOG.debug("get_web_session_cookies failed: %s",
+                            'timeout' if resp is None else repr(EResult(resp.header.eresult)))
             return None
 
         return {
-            'steamLogin': resp['authenticateuser']['token'],
-            'steamLoginSecure': resp['authenticateuser']['tokensecure'],
+            'steamLoginSecure': '%s%%7C%%7C%s' % (self.steam_id.as_64, resp.body.access_token),
         }
 
     def get_web_session(self, language='english'):
@@ -80,6 +73,7 @@ class Web:
 
         self._web_session = session = make_requests_session()
         session_id = generate_session_id()
+        client_session_id = hexlify(urandom(8)).decode('ascii')
 
         for domain in ['store.steampowered.com', 'help.steampowered.com', 'steamcommunity.com']:
             for name, val in cookies.items():
@@ -89,5 +83,6 @@ class Web:
             session.cookies.set('Steam_Language', language, domain=domain)
             session.cookies.set('birthtime', '-3333', domain=domain)
             session.cookies.set('sessionid', session_id, domain=domain)
+            session.cookies.set('clientsessionid', client_session_id, domain=domain)
 
         return session

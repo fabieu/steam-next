@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+import steam.monkey
+steam.monkey.patch_minimal()  # required: the WebSocket CM transport needs cooperative sockets
+
 from getpass import getpass
 
 from steam.client import SteamClient

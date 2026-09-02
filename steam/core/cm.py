@@ -5,7 +5,7 @@ from collections import defaultdict
 from gzip import GzipFile
 from io import BytesIO
 from itertools import cycle, count
-from random import shuffle
+from random import choice
 from time import time
 
 import gevent
@@ -13,9 +13,9 @@ import gevent.socket as socket
 from eventemitter import EventEmitter
 
 from steam.core import crypto
-from steam.core.connection import TCPConnection
+from steam.core.connection import TCPConnection, WebsocketConnection
 from steam.core.msg import Msg, MsgProto
-from steam.enums import EResult, EUniverse
+from steam.enums import EResult, ETransport, EUniverse
 from steam.enums.emsg import EMsg
 from steam.steamid import SteamID
 from steam.utils import ip4_from_int
@@ -56,11 +56,10 @@ class CMClient(EventEmitter):
     """All incoming messages are emitted with their :class:`.EMsg` number.
     """
 
-    PROTOCOL_TCP = 0  #: TCP protocol enum
-    PROTOCOL_UDP = 1  #: UDP protocol enum
     verbose_debug = False  #: print message connects in debug
 
     auto_discovery = True  #: enables automatic CM discovery
+    bootstrap_retry_delay = 5  #: seconds to wait between failed CM discovery attempts
     cm_servers = None  #: a instance of :class:`.CMServerList`
     current_server_addr = None  #: (ip, port) tuple
     _seen_logon = False
@@ -79,13 +78,17 @@ class CMClient(EventEmitter):
     _heartbeat_loop = None
     _LOG = logging.getLogger("CMClient")
 
-    def __init__(self, protocol=PROTOCOL_TCP):
+    def __init__(self, protocol=ETransport.WebSocket):
+        self.protocol = ETransport(protocol)
         self.cm_servers = CMServerList()
+        self.cm_servers.transport = self.protocol
 
-        if protocol == CMClient.PROTOCOL_TCP:
+        if self.protocol == ETransport.TCP:
             self.connection = TCPConnection()
+        elif self.protocol == ETransport.WebSocket:
+            self.connection = WebsocketConnection()
         else:
-            raise ValueError("Only TCP is supported")
+            raise ValueError("Only TCP and WebSocket are supported")
 
         self.on(EMsg.ChannelEncryptRequest, self.__handle_encrypt_request),
         self.on(EMsg.Multi, self.__handle_multi),
@@ -134,6 +137,11 @@ class CMClient(EventEmitter):
             if not self.cm_servers.bootstrap_from_webapi():
                 self.cm_servers.bootstrap_from_dns()
 
+            if len(self.cm_servers) == 0:
+                # No source yielded servers (offline, or DNS is unavailable for the
+                # websocket transport). Pace retries so the loop cannot busy-spin.
+                self.sleep(self.bootstrap_retry_delay)
+
         for i, server_addr in enumerate(cycle(self.cm_servers), start=next(i) - 1):
             if retry and i >= retry:
                 self._connecting = False
@@ -144,6 +152,7 @@ class CMClient(EventEmitter):
             if self.connection.connect(server_addr):
                 break
             self._LOG.debug("Failed to connect. Retrying...")
+            self.cm_servers.mark_bad(server_addr)
 
             diff = time() - start
 
@@ -154,6 +163,12 @@ class CMClient(EventEmitter):
         self.connected = True
         self.emit(self.EVENT_CONNECTED)
         self._recv_loop = gevent.spawn(self._recv_messages)
+
+        if self.protocol == ETransport.WebSocket:
+            # wss already secures the channel; there is no ChannelEncrypt handshake to wait for.
+            self.channel_secured = True
+            self.emit(self.EVENT_CHANNEL_SECURED)
+
         self._connecting = False
         return True
 
@@ -201,6 +216,18 @@ class CMClient(EventEmitter):
             message.steamID = self.steam_id
         if self.session_id:
             message.sessionID = self.session_id
+
+        # Pre-logon messages (ClientHello, NonAuthed service calls) carry
+        # steamid=0 / client_sessionid=0, and every proto header has both fields present.
+        if message.proto:
+            if message.msg in (EMsg.ClientHello, EMsg.ServiceMethodCallFromClientNonAuthed):
+                message.header.steamid = 0
+                message.header.client_sessionid = 0
+            else:
+                if not message.header.HasField('steamid'):
+                    message.header.steamid = 0
+                if not message.header.HasField('client_sessionid'):
+                    message.header.client_sessionid = 0
 
         if self.verbose_debug:
             self._LOG.debug("Outgoing: %s\n%s" % (repr(message), str(message)))
@@ -385,7 +412,13 @@ class CMClient(EventEmitter):
             interval = msg.body.heartbeat_seconds
             self._heartbeat_loop = gevent.spawn(self.__heartbeat, interval)
         else:
-            self.emit(self.EVENT_ERROR, EResult(result))
+            # Tolerate an eresult our vendored enum does not know (Steam occasionally
+            # introduces new ones) instead of raising out of the message handler greenlet.
+            try:
+                eresult = EResult(result)
+            except ValueError:
+                eresult = EResult.Fail
+            self.emit(self.EVENT_ERROR, eresult)
             self.disconnect()
 
     def _handle_cm_list(self, msg):
@@ -428,7 +461,8 @@ class CMServerList:
     Bad = 2
     last_updated = 0  #: timestamp of when the list was last updated
     cell_id = 0  #: cell id of the server list
-    bad_timestamp = 300  #: how long bad mark lasts in seconds
+    bad_timestamp = 120  #: how long bad mark lasts in seconds
+    transport = ETransport.TCP  #: :class:`.ETransport` this server list was populated for
 
     def __init__(self):
         self._LOG = logging.getLogger("CMServerList")
@@ -450,6 +484,11 @@ class CMServerList:
         """
         Fetches CM server list from WebAPI and replaces the current one
         """
+        if self.transport == ETransport.WebSocket:
+            # DNS bootstrap only yields TCP CMs; a WebSocket client must use the WebAPI.
+            self._LOG.error("DNS bootstrap is not available for the WebSocket transport")
+            return False
+
         self._LOG.debug("Attempting bootstrap via DNS")
 
         try:
@@ -473,7 +512,9 @@ class CMServerList:
 
     def bootstrap_from_webapi(self, cell_id=0):
         """
-        Fetches CM server list from WebAPI and replaces the current one
+        Fetches CM server list from WebAPI (``ISteamDirectory/GetCMListForConnect``) and
+        replaces the current one. Only ``steamglobal`` realm servers of
+        this list's :attr:`transport` are kept, least loaded first.
 
         :param cellid: cell id (0 = global)
         :type cellid: :class:`int`
@@ -482,51 +523,64 @@ class CMServerList:
         """
         self._LOG.debug("Attempting bootstrap via WebAPI")
 
+        cmtype = 'websockets' if self.transport == ETransport.WebSocket else 'netfilter'
+
         from steam import webapi
         try:
-            resp = webapi.get('ISteamDirectory', 'GetCMList', 1, params={'cellid': cell_id,
-                                                                         'http_timeout': 3})
+            resp = webapi.get('ISteamDirectory', 'GetCMListForConnect', 1,
+                              params={'cellid': cell_id, 'cmtype': cmtype, 'http_timeout': 3})
         except Exception as exp:
             self._LOG.error("WebAPI boostrap failed: %s" % str(exp))
             return False
 
-        result = EResult(resp['response']['result'])
+        serverlist = (resp.get('response') or {}).get('serverlist') or []
+        if isinstance(serverlist, dict):
+            serverlist = list(serverlist.values())
 
-        if result != EResult.OK:
-            self._LOG.error("GetCMList failed with %s" % repr(result))
+        servers = [s for s in serverlist
+                   if s.get('realm') == 'steamglobal' and s.get('type') == cmtype and s.get('endpoint')]
+
+        if not servers:
+            self._LOG.error("GetCMListForConnect returned no %s servers" % cmtype)
             return False
 
-        serverlist = resp['response']['serverlist']
-        self._LOG.debug("Received %d servers from WebAPI" % len(serverlist))
+        servers.sort(key=lambda s: float(s.get('wtd_load') or 0))
+
+        self._LOG.debug("Received %d servers from WebAPI" % len(servers))
 
         def str_to_tuple(serveraddr):
-            ip, port = serveraddr.split(':')
+            ip, port = serveraddr.rsplit(':', 1)
             return str(ip), int(port)
 
         self.clear()
         self.cell_id = cell_id
-        self.merge_list(map(str_to_tuple, serverlist))
+        self.merge_list(str_to_tuple(s['endpoint']) for s in servers)
 
         return True
 
     def __iter__(self):
+        """Yields server addresses, a random pick among the five best remaining good servers
+        each time (the list is kept in the order it was populated, least loaded first).
+        A bad mark expires after :attr:`bad_timestamp` seconds.
+        """
         def cm_server_iter():
             if not self.list:
                 self._LOG.error("Server list is empty.")
                 return
 
-            good_servers = list(filter(lambda x: x[1]['quality'] == CMServerList.Good,
-                                       self.list.items()
-                                       ))
+            now = time()
+            good_servers = [addr for addr, meta in self.list.items()
+                            if meta['quality'] == CMServerList.Good
+                            or meta['timestamp'] + self.bad_timestamp < now]
 
             if len(good_servers) == 0:
                 self._LOG.debug("No good servers left. Reseting...")
                 self.reset_all()
                 return
 
-            shuffle(good_servers)
-
-            for server_addr, meta in good_servers:
+            while good_servers:
+                server_addr = choice(good_servers[:5])
+                good_servers.remove(server_addr)
                 yield server_addr
 
         return cm_server_iter()

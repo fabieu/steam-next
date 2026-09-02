@@ -80,3 +80,17 @@ class crypto_testcase(unittest.TestCase):
     def test_sha1_hash(self):
         self.assertEqual(crypto.sha1_hash(b'123'), b'@\xbd\x00\x15c\x08_\xc3Qe2\x9e\xa1\xff\\^\xcb\xdb\xbe\xef')
         self.assertEqual(crypto.sha1_hash(b'999999'), b'\x1fU#\xa8\xf55(\x9b4\x01\xb2\x99X\xd0\x1b)f\xeda\xd2')
+
+    def test_rsa_encrypt_password_roundtrip_unicode(self):
+        from base64 import b64decode
+        from Cryptodome.Cipher import PKCS1_v1_5
+        from Cryptodome.PublicKey import RSA
+
+        priv = RSA.generate(2048)
+        plaintext = 'café-пароль-123'  # non-ASCII must be utf-8 encoded, not raise
+
+        b64 = crypto.rsa_encrypt_password(format(priv.n, 'x'), format(priv.e, 'x'), plaintext)
+
+        # Steam mandates PKCS#1 v1.5, so the round-trip must decrypt with the same scheme.
+        decrypted = PKCS1_v1_5.new(priv).decrypt(b64decode(b64), None)  # NOSONAR
+        self.assertEqual(decrypted, plaintext.encode('utf-8'))
