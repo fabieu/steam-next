@@ -3,6 +3,18 @@
 ## [3.0.0](https://github.com/fabieu/steam-next/compare/2.2.1...3.0.0) (2026-09-02)
 
 
+### Features
+
+* **client:** password login via IAuthenticationService over WebSocket CM ([#25](https://github.com/fabieu/steam-next/issues/25)) ([f4795f4](https://github.com/fabieu/steam-next/commit/f4795f43e1fd0f0662b345cd857390326e4127cc))
+
+
+### Miscellaneous Chores
+
+* release the next version as 3.0.0 ([100aeb7](https://github.com/fabieu/steam-next/commit/100aeb74577affa2a1f9e9dabf0d828cabf28c78))
+
+## [3.0.0](https://github.com/fabieu/steam-next/compare/2.2.1...3.0.0) (2026-09-02)
+
+
 ### ⚠ BREAKING CHANGES
 
 * **client:** `SteamClient`/`CMClient` default to the WebSocket CM transport; pass `protocol=ETransport.TCP` for the previous behavior and replace `CMClient.PROTOCOL_TCP`/`PROTOCOL_UDP` with `steam.enums.ETransport`
