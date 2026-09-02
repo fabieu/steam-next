@@ -79,6 +79,11 @@ Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for a
 - Scope examples already used in history: `appcache`, `ci`.
 - Keep the subject in the imperative mood and under ~72 chars.
 
+Commit messages drive releases: `release-please` derives the next version from them (`fix` → patch, `feat` → minor,
+`!`/`BREAKING CHANGE:` → major) and writes the `CHANGELOG.md` entry from their subjects. Only `feat`, `fix`, `perf`,
+`deps` and `revert` appear in the changelog by default — the remaining types are bumped over silently, so put anything
+users need to read about into one of those types or a `BREAKING CHANGE:` footer.
+
 ## Architecture
 
 ### Layers
@@ -127,9 +132,14 @@ hub.
 ## CI
 
 - `.github/workflows/test.yml` — matrix of 3 OS × 5 Python (3.10–3.14), uses the local composite action
-  `./.github/actions/setup-poetry` (Python + Poetry + `.venv` cache). Triggers on PR and is reusable via
-  `workflow_call`.
-- `.github/workflows/build.yml` — `workflow_dispatch` only. Runs the reusable test workflow, builds the dist, publishes
-  to PyPI via **OIDC trusted publishing** (`pypa/gh-action-pypi-publish`, environment `pypi`), then creates a GitHub
-  release. There is no `PYPI_TOKEN` — trusted publishing is configured PyPI-side.
-- Third-party actions are SHA-pinned with version comments; first-party `actions/*` use major-version tags.
+  `./.github/actions/setup-poetry` (Python + Poetry + `.venv` cache). Triggers on PR, is reusable via `workflow_call`
+  and can be run manually via `workflow_dispatch` against any branch — use that on the release PR branch, which gets
+  no PR run of its own because release-please opens it with the default `GITHUB_TOKEN`.
+- `.github/workflows/release-please.yml` — the whole release pipeline, on every push to `master`. `release-please`
+  maintains a release PR that bumps `[project] version` in `pyproject.toml` and prepends the generated notes to
+  `CHANGELOG.md`; merging that PR tags the release (bare version, no `v` prefix) and creates the GitHub release. Only
+  then (`release_created`) does the same run call the reusable test workflow and, if it is green, check out the tag,
+  build the dist and publish to PyPI via **OIDC trusted publishing** (`pypa/gh-action-pypi-publish`, environment
+  `pypi`). There is no `PYPI_TOKEN` — trusted publishing is configured PyPI-side. Config lives in
+  `release-please-config.json`, the last released version in `.release-please-manifest.json`.
+- Every external action is pinned to a full-length commit SHA with a version comment; Dependabot updates them.
