@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.0.1](https://github.com/fabieu/steam-next/compare/3.0.0...3.0.1) (2026-10-01)
+
+
+### Dependencies
+
+* bump gevent from 26.8.0 to 26.9.0 in the minor-updates group ([#37](https://github.com/fabieu/steam-next/issues/37)) ([c777d4c](https://github.com/fabieu/steam-next/commit/c777d4c379918a5140e8e596cbf25d24ca3feb26))
+* bump urllib3 from 2.7.0 to 2.8.0 ([#38](https://github.com/fabieu/steam-next/issues/38)) ([2f58144](https://github.com/fabieu/steam-next/commit/2f58144912b8dc8cd3b21853d8ab519d4f63b4a9))
+* bump websocket-client from 1.9.0 to 1.9.2 in the minor-updates group ([#32](https://github.com/fabieu/steam-next/issues/32)) ([827c923](https://github.com/fabieu/steam-next/commit/827c923be95582c870efcad2d857195116899329))
+
 ## [3.0.0](https://github.com/fabieu/steam-next/compare/2.2.1...3.0.0) (2026-09-02)
 
 
