@@ -1,5 +1,18 @@
 # Changelog
 
+## [3.0.1](https://github.com/fabieu/steam-next/compare/3.0.0...3.0.1) (2026-11-01)
+
+
+### Dependencies
+
+* bump certifi from 2026.6.17 to 2026.10.18 ([#42](https://github.com/fabieu/steam-next/issues/42)) ([df7bcdb](https://github.com/fabieu/steam-next/commit/df7bcdbd39aebf02f05399ed6d3de33db8bca944))
+* bump gevent from 26.8.0 to 26.9.0 in the minor-updates group ([#37](https://github.com/fabieu/steam-next/issues/37)) ([c777d4c](https://github.com/fabieu/steam-next/commit/c777d4c379918a5140e8e596cbf25d24ca3feb26))
+* bump the gh-actions-dependencies group with 3 updates ([#39](https://github.com/fabieu/steam-next/issues/39)) ([36e7554](https://github.com/fabieu/steam-next/commit/36e75540bf54a1ec5f01931d87ddda6fbd9c5685))
+* bump the minor-updates group with 2 updates ([#41](https://github.com/fabieu/steam-next/issues/41)) ([5471664](https://github.com/fabieu/steam-next/commit/54716646b9182c1e1f5d46b437c82923b8f04db7))
+* bump urllib3 from 2.7.0 to 2.8.0 ([#38](https://github.com/fabieu/steam-next/issues/38)) ([2f58144](https://github.com/fabieu/steam-next/commit/2f58144912b8dc8cd3b21853d8ab519d4f63b4a9))
+* bump vcrpy from 8.3.0 to 8.5.0 in the major-updates group across 1 directory ([#40](https://github.com/fabieu/steam-next/issues/40)) ([7938a35](https://github.com/fabieu/steam-next/commit/7938a3584fee6d0b7005ffae290e6d264e9d8276))
+* bump websocket-client from 1.9.0 to 1.9.2 in the minor-updates group ([#32](https://github.com/fabieu/steam-next/issues/32)) ([827c923](https://github.com/fabieu/steam-next/commit/827c923be95582c870efcad2d857195116899329))
+
 ## [3.0.0](https://github.com/fabieu/steam-next/compare/2.2.1...3.0.0) (2026-09-02)
 
 
